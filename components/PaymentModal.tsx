@@ -12,7 +12,7 @@ interface PaymentModalProps {
 const TOKEN_PACKS = [
     {
         id: 'starter',
-        name: 'Exam Cram',
+        name: 'Starter',
         tokens: 80,
         price: 29,
         icon: Coins,
@@ -22,7 +22,7 @@ const TOKEN_PACKS = [
     },
     {
         id: 'pro',
-        name: 'Semester Pro',
+        name: 'Professional',
         tokens: 400,
         price: 99,
         popular: true,
@@ -33,7 +33,7 @@ const TOKEN_PACKS = [
     },
     {
         id: 'ultra',
-        name: 'Degree Saver',
+        name: 'Ultimate',
         tokens: 1000,
         price: 249,
         icon: Crown,
@@ -144,7 +144,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ onClose, user }) => {
         return (
             <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 animate-fade-in-up">
                 <div className="absolute inset-0 bg-black/90 backdrop-blur-lg" onClick={onClose} />
-                <div className="relative w-full max-w-md bg-gradient-to-b from-slate-900/95 to-slate-950/95 border border-emerald-500/30 rounded-3xl shadow-2xl p-8 text-center animate-scale-in backdrop-blur-xl">
+                <div className="relative w-full max-w-md bg-gradient-to-b from-slate-900/95 to-slate-950/95 border border-emerald-500/30 rounded-3xl shadow-2xl p-6 md:p-8 text-center animate-scale-in backdrop-blur-xl">
                     <div className="w-20 h-20 rounded-full bg-emerald-500/20 flex items-center justify-center mx-auto mb-6 animate-bounce">
                         <CheckCircle className="w-10 h-10 text-emerald-400" />
                     </div>
@@ -177,7 +177,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ onClose, user }) => {
                 {/* Close Button - Fixed in top-right corner */}
                 <button
                     onClick={onClose}
-                    className="absolute top-6 right-6 z-[200] w-10 h-10 rounded-full bg-slate-800/80 hover:bg-slate-700/90 border border-white/20 flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95 group shadow-lg backdrop-blur-sm"
+                    className="absolute top-4 right-4 md:top-6 md:right-6 z-[200] w-8 h-8 md:w-10 md:h-10 rounded-full bg-slate-800/80 hover:bg-slate-700/90 border border-white/20 flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95 group shadow-lg backdrop-blur-sm"
                 >
                     <svg className="w-5 h-5 text-slate-300 group-hover:text-white transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
@@ -185,7 +185,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ onClose, user }) => {
                 </button>
 
                 {/* Header */}
-                <div className="relative bg-gradient-to-r from-slate-800/50 via-slate-900/50 to-slate-800/50 p-8 pr-20 border-b border-white/5 overflow-hidden">
+                <div className="relative bg-gradient-to-r from-slate-800/50 via-slate-900/50 to-slate-800/50 p-6 md:p-8 pr-16 md:pr-20 border-b border-white/5 overflow-hidden">
                     {/* Animated Background Pattern */}
                     <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:20px_20px] opacity-30" />
                     <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-amber-500/50 to-transparent" />
@@ -202,7 +202,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ onClose, user }) => {
                     </div>
                 </div>
 
-                <div className="p-8 max-h-[70vh] overflow-y-auto custom-scrollbar">
+                <div className="p-4 md:p-8 max-h-[70vh] overflow-y-auto custom-scrollbar">
                     {step === 1 ? (
                         <div className="space-y-8 animate-fade-in-right">
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
