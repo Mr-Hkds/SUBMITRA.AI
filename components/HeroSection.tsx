@@ -56,8 +56,8 @@ const HeroSection: React.FC<HeroSectionProps> = ({ url, setUrl, onAnalyze, onWat
 
                 {/* Headline */}
                 <div className="space-y-4 md:space-y-6 relative px-1 md:px-2">
-                    <h1 className="text-2xl sm:text-5xl md:text-7xl lg:text-8xl font-serif font-medium tracking-tight leading-[1.2] md:leading-[1.1] py-2 relative z-10 break-words w-full">
-                        <span className="block text-slate-400 opacity-80 text-xs md:text-xl font-sans font-light tracking-[0.15em] md:tracking-[0.3em] uppercase mb-2 md:mb-4 animate-fade-in-up" style={{ animationDelay: '100ms' }}>
+                    <h1 className="font-serif font-medium tracking-tight leading-[1.15] md:leading-[1.1] py-2 relative z-10 break-words w-full" style={{ fontSize: 'clamp(2rem, 8vw, 6rem)' }}>
+                        <span className="block text-slate-400 opacity-80 font-sans font-light uppercase mb-2 md:mb-4 animate-fade-in-up" style={{ fontSize: 'clamp(0.75rem, 3vw, 1.25rem)', letterSpacing: 'clamp(0.1em, 0.2em, 0.3em)' }}>
                             Precision Engineered
                         </span>
                         <span className="block bg-clip-text text-transparent bg-gradient-to-r from-[#BF953F] via-[#FCF6BA] to-[#B38728] bg-[length:200%_auto] animate-text-shimmer drop-shadow-[0_0_35px_rgba(212,175,55,0.3)] pb-2" style={{ animationDelay: '200ms' }}>
@@ -65,7 +65,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ url, setUrl, onAnalyze, onWat
                         </span>
                     </h1>
 
-                    <p className="text-slate-300 text-xs sm:text-sm md:text-base max-w-2xl mx-auto font-mono leading-relaxed tracking-tight animate-fade-in-up px-2 md:px-4" style={{ animationDelay: '300ms' }}>
+                    <p className="text-slate-300 max-w-2xl mx-auto font-mono leading-relaxed tracking-tight animate-fade-in-up px-2 md:px-4" style={{ fontSize: 'clamp(0.75rem, 2.5vw, 1rem)', animationDelay: '300ms' }}>
                         Deploy thousands of authentic, scientifically-weighted responses to any Google Form.
                         <span className="block mt-4 text-slate-500 font-sans font-medium opacity-80 text-[10px] md:text-xs tracking-[0.1em] md:tracking-[0.2em] uppercase flex flex-col md:block gap-1.5 md:gap-1">
                             <span>Statistical Distribution</span>
@@ -129,7 +129,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ url, setUrl, onAnalyze, onWat
                             <span>Watch Demo</span>
                         </button>
                         <div className="hidden md:block w-1 h-1 rounded-full bg-slate-700" />
-                        <span className="text-[10px] text-slate-500 font-mono uppercase tracking-widest opacity-60">v4.0.1 (Mobile Fix)</span>
+                        <span className="text-[10px] text-slate-500 font-mono uppercase tracking-widest opacity-60">v4.1.0 Stable</span>
                     </div>
 
                     {/* Premium Status Bar */}
