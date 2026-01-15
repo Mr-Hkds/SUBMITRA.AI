@@ -1,4 +1,7 @@
 import React, { useState, useEffect } from 'react';
+
+// Log Version for Vercel Verification
+console.log('🚀 AutoForm AI v0.1.0 Loaded [Razorpay Fixes Included]');
 import { Bot, Copy, CheckCircle, AlertCircle, BarChart3, ArrowRight, ArrowLeft, RotateCcw, Sparkles, Code2, Terminal, Zap, Command, Activity, Cpu, Crown, LogOut, Settings, Lock, Laptop, Monitor, Target } from 'lucide-react';
 import { fetchAndParseForm } from './services/formParser';
 import { analyzeForm as analyzeFormWithStatistics, generateResponseSuggestions } from './services/analysisService';
