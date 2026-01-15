@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowRight, ArrowLeft, CheckCircle, Upload, AlertCircle, QrCode, Coins, Zap, Crown, CreditCard, Shield, Lock } from 'lucide-react';
-import { createPaymentRequest, checkPendingRequest } from '../services/paymentService';
 import { createPaymentOrder, initializeRazorpayCheckout, verifyPaymentSignature } from '../services/razorpayService';
 import { creditTokensAutomatically } from '../services/autoPaymentService';
 import { User } from '../types';
@@ -50,23 +49,12 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ onClose, user }) => {
     const [selectedPack, setSelectedPack] = useState(TOKEN_PACKS[1]); // Default to Pro
 
     const [loading, setLoading] = useState(false);
-    const [checking, setChecking] = useState(true);
+    // checking state removed (manual payment deprecated)
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState(false);
     const [razorpayProcessing, setRazorpayProcessing] = useState(false);
 
-    useEffect(() => {
-        const checkStatus = async () => {
-            if (user.uid) {
-                const isPending = await checkPendingRequest(user.uid);
-                if (isPending) {
-                    setSuccess(true);
-                }
-            }
-            setChecking(false);
-        };
-        checkStatus();
-    }, [user.uid]);
+    // Pending request check removed (manual payment deprecated)
 
     // Razorpay Payment Handler
     const handleRazorpayPayment = async () => {
@@ -150,7 +138,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ onClose, user }) => {
         }
     };
 
-    if (checking) return null;
+    // if (checking) return null; // Removed
 
     if (success) {
         return (
@@ -160,9 +148,9 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ onClose, user }) => {
                     <div className="w-20 h-20 rounded-full bg-emerald-500/20 flex items-center justify-center mx-auto mb-6 animate-bounce">
                         <CheckCircle className="w-10 h-10 text-emerald-400" />
                     </div>
-                    <h3 className="text-2xl font-serif font-bold text-white mb-3">Payment Submitted!</h3>
+                    <h3 className="text-2xl font-serif font-bold text-white mb-3">Tokens Credited!</h3>
                     <p className="text-slate-300 text-sm mb-6 leading-relaxed">
-                        Thank you for trusting us! Your payment will be verified within 24 hours and tokens will be credited to your account.
+                        Thank you for your purchase! Your payment has been secured by Razorpay and tokens have been added to your account instantly.
                     </p>
                     <div className="bg-slate-800/50 border border-white/10 rounded-xl p-4 mb-6">
                         <p className="text-xs text-slate-400 mb-2">Need help?</p>

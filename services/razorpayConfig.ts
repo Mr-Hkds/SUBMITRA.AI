@@ -12,13 +12,11 @@
 
 // RAZORPAY API KEYS - Loaded from .env file (SECURE)
 export const RAZORPAY_CONFIG = {
-    // Key ID: Try env var first, fallback to user provided key (for immediate fix)
-    keyId: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_live_S4HjvRoXeGNKWg',
+    // Key ID from environment variable
+    keyId: import.meta.env.VITE_RAZORPAY_KEY_ID || '',
 
-    // Key Secret: Try env var first, fallback to user provided key
-    // Note: This is still accessible in browser. For production,
-    // move order creation and verification to backend (Firebase Functions)
-    keySecret: import.meta.env.VITE_RAZORPAY_KEY_SECRET || 's1Dx2dzPz39GWrf0u3L3mseR',
+    // Key Secret - NEVER include in frontend code
+    // keySecret: process.env.RAZORPAY_KEY_SECRET, // strictly backend only
 
     // Environment mode
     isTestMode: import.meta.env.VITE_RAZORPAY_TEST_MODE === 'true',

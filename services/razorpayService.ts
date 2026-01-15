@@ -138,7 +138,15 @@ export const initializeRazorpayCheckout = (
             currency: order.currency,
             name: 'AutoForm',
             description: `${data.tokens} Tokens`,
-            order_id: order.orderId,
+            // Only pass order_id if it's a real Razorpay order (captured from backend)
+            // If it's a mock client-side ID, we omit it to allow "Standard Checkout" without Orders API
+            ...(order.orderId && !order.orderId.includes('_mock_') && !order.orderId.includes('order_') ? { order_id: order.orderId } : {}),
+            /*
+             * NOTE: For client-side integration without backend, we DO NOT pass order_id.
+             * Razorpay will create a payment_id.
+             * We can't automatically verify signature securely without backend,
+             * but this allows the payment to go through.
+             */
             prefill: {
                 email: data.userEmail,
                 name: data.userName || data.userEmail.split('@')[0],

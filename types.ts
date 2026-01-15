@@ -68,3 +68,17 @@ export interface PaymentRequest {
   createdAt: any;
   processedAt?: any;
 }
+
+export interface PaymentTransaction {
+  id?: string; // Document ID
+  userId: string;
+  userEmail: string;
+  paymentId: string;
+  orderId: string;
+  amount: number;
+  tokens: number;
+  status: 'success' | 'failed' | 'pending';
+  method: string;
+  metadata?: any;
+  createdAt: any;
+}

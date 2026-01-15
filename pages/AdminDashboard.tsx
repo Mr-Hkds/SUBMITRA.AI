@@ -1,16 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { getPaymentRequests, approvePayment, rejectPayment } from '../services/paymentService';
-import { collection, getDocs, query, where, onSnapshot, doc, deleteDoc, Timestamp, updateDoc } from 'firebase/firestore';
+import { collection, getDocs, query, orderBy, limit, onSnapshot, doc, deleteDoc, updateDoc, Timestamp, where } from 'firebase/firestore';
 import { db } from '../services/firebase';
-import { PaymentRequest, User } from '../types';
-import { CheckCircle, XCircle, ExternalLink, Clock, ShieldCheck, Search, CheckSquare, Square, ArrowLeft, Users, TrendingUp, DollarSign, RefreshCw, Eye, Trash2, Edit2 } from 'lucide-react';
+import { PaymentTransaction, User } from '../types';
+import { CheckCircle, XCircle, Clock, ShieldCheck, ArrowLeft, Users, DollarSign, RefreshCw, Trash2, Edit2, Activity, CreditCard } from 'lucide-react';
 
 const AdminDashboard = ({ user, onBack }: { user: User; onBack: () => void }) => {
-    const [requests, setRequests] = useState<PaymentRequest[]>([]);
+    const [transactions, setTransactions] = useState<PaymentTransaction[]>([]);
     const [loading, setLoading] = useState(true);
-    const [selectedImage, setSelectedImage] = useState<string | null>(null);
-    const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-    const [bulkProcessing, setBulkProcessing] = useState(false);
     const [totalUsers, setTotalUsers] = useState(0);
     const [totalRevenue, setTotalRevenue] = useState(0);
     const [autoRefreshing, setAutoRefreshing] = useState(false);
@@ -23,8 +19,20 @@ const AdminDashboard = ({ user, onBack }: { user: User; onBack: () => void }) =>
 
     const fetchData = async () => {
         setLoading(true);
-        const data = await getPaymentRequests();
-        setRequests(data);
+
+        // Fetch Recent Transactions (Limit 50)
+        try {
+            const q = query(
+                collection(db, 'transactions'),
+                orderBy('createdAt', 'desc'),
+                limit(50)
+            );
+            const snapshot = await getDocs(q);
+            const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as PaymentTransaction));
+            setTransactions(data);
+        } catch (e) {
+            console.error('Failed to fetch transactions:', e);
+        }
 
         // Fetch total users count
         try {
@@ -34,14 +42,14 @@ const AdminDashboard = ({ user, onBack }: { user: User; onBack: () => void }) =>
             console.error('Failed to fetch user count:', e);
         }
 
-        // Fetch total revenue from approved requests
+        // Fetch total revenue (Aggregate all success transactions)
         try {
-            const approvedQuery = query(
-                collection(db, 'payment_requests'),
-                where('status', '==', 'approved')
+            const revenueQuery = query(
+                collection(db, 'transactions'),
+                where('status', '==', 'success')
             );
-            const approvedSnapshot = await getDocs(approvedQuery);
-            const revenue = approvedSnapshot.docs.reduce((sum, doc) => {
+            const revenueSnapshot = await getDocs(revenueQuery);
+            const revenue = revenueSnapshot.docs.reduce((sum, doc) => {
                 return sum + (doc.data().amount || 0);
             }, 0);
             setTotalRevenue(revenue);
@@ -55,28 +63,33 @@ const AdminDashboard = ({ user, onBack }: { user: User; onBack: () => void }) =>
     useEffect(() => {
         fetchData();
 
-        // Real-time listener for pending payment requests
-        const pendingQuery = query(
-            collection(db, 'payment_requests'),
-            where('status', '==', 'pending')
+        // Real-time listener for new transactions
+        const transactionsQuery = query(
+            collection(db, 'transactions'),
+            orderBy('createdAt', 'desc'),
+            limit(10)
         );
 
-        const unsubscribe = onSnapshot(pendingQuery, (snapshot) => {
-            console.log('🔄 Real-time update: Payment requests changed');
-            setAutoRefreshing(true);
-            fetchData().then(() => {
-                setTimeout(() => setAutoRefreshing(false), 1000);
+        const unsubscribe = onSnapshot(transactionsQuery, (snapshot) => {
+            snapshot.docChanges().forEach((change) => {
+                if (change.type === 'added') {
+                    console.log('🔄 New transaction detected');
+                    // Refresh full data to update stats
+                    setAutoRefreshing(true);
+                    fetchData().then(() => {
+                        setTimeout(() => setAutoRefreshing(false), 1000);
+                    });
+                }
             });
         });
 
         // Auto-refresh every 30 seconds as backup
         const refreshInterval = setInterval(() => {
-            console.log('⏰ Auto-refresh triggered');
             setAutoRefreshing(true);
             fetchData().then(() => {
                 setTimeout(() => setAutoRefreshing(false), 1000);
             });
-        }, 30000); // 30 seconds
+        }, 30000);
 
         return () => {
             unsubscribe();
@@ -210,91 +223,6 @@ const AdminDashboard = ({ user, onBack }: { user: User; onBack: () => void }) =>
         }
     };
 
-    const handleApprove = async (req: PaymentRequest) => {
-        if (!confirm(`Approve upgrade for ${req.userEmail}?`)) return;
-        try {
-            await approvePayment(req.id, req.userId);
-            fetchData(); // Refresh
-        } catch (e) {
-            alert("Approval failed");
-        }
-    };
-
-    const handleReject = async (id: string) => {
-        if (!confirm("Reject this request?")) return;
-        try {
-            await rejectPayment(id);
-            fetchData();
-        } catch (e) {
-            alert("Rejection failed");
-        }
-    };
-
-    const toggleSelection = (id: string) => {
-        const newSelected = new Set(selectedIds);
-        if (newSelected.has(id)) {
-            newSelected.delete(id);
-        } else {
-            newSelected.add(id);
-        }
-        setSelectedIds(newSelected);
-    };
-
-    const toggleSelectAll = () => {
-        if (selectedIds.size === requests.length) {
-            setSelectedIds(new Set());
-        } else {
-            setSelectedIds(new Set(requests.map(r => r.id)));
-        }
-    };
-
-    const handleBulkApprove = async () => {
-        if (selectedIds.size === 0) return;
-        if (!confirm(`Approve ${selectedIds.size} selected request(s)?`)) return;
-
-        setBulkProcessing(true);
-        try {
-            const selectedRequests = requests.filter(r => selectedIds.has(r.id));
-            for (const req of selectedRequests) {
-                await approvePayment(req.id, req.userId);
-            }
-            setSelectedIds(new Set());
-            fetchData();
-        } catch (e) {
-            alert("Some approvals failed");
-        } finally {
-            setBulkProcessing(false);
-        }
-    };
-
-    const handleBulkReject = async () => {
-        if (selectedIds.size === 0) return;
-        if (!confirm(`Reject ${selectedIds.size} selected request(s)?`)) return;
-
-        setBulkProcessing(true);
-        try {
-            for (const id of Array.from<string>(selectedIds)) {
-                await rejectPayment(id);
-            }
-            setSelectedIds(new Set());
-            fetchData();
-        } catch (e) {
-            alert("Some rejections failed");
-        } finally {
-            setBulkProcessing(false);
-        }
-    };
-
-    // Helper function to shorten email for mobile display
-    const shortenEmail = (email: string, maxLength: number = 15): string => {
-        if (email.length <= maxLength) return email;
-        const [username, domain] = email.split('@');
-        if (username.length > maxLength - 3) {
-            return `${username.substring(0, maxLength - 3)}...@${domain}`;
-        }
-        return email;
-    };
-
     if (!user.isAdmin) {
         return (
             <div className="flex h-[80vh] items-center justify-center text-slate-500">
@@ -318,7 +246,7 @@ const AdminDashboard = ({ user, onBack }: { user: User; onBack: () => void }) =>
                         </button>
                         <div>
                             <h1 className="text-xl sm:text-3xl font-serif font-bold text-white mb-1">Admin Dashboard</h1>
-                            <p className="text-slate-400 text-xs sm:text-sm hidden sm:block">Manage user upgrades and system status.</p>
+                            <p className="text-slate-400 text-xs sm:text-sm hidden sm:block">Real-time payment monitoring and user management.</p>
                         </div>
                     </div>
                     <div className="flex items-center gap-2 px-2.5 sm:px-3 py-1 bg-amber-500/10 border border-amber-500/20 rounded-full">
@@ -341,7 +269,7 @@ const AdminDashboard = ({ user, onBack }: { user: User; onBack: () => void }) =>
                 </button>
             </div>
 
-            {/* Stats - Mobile Responsive Grid */}
+            {/* Stats Check - KPIs */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-6 mb-8 sm:mb-12">
                 <div
                     onClick={fetchAllUsers}
@@ -349,11 +277,11 @@ const AdminDashboard = ({ user, onBack }: { user: User; onBack: () => void }) =>
                 >
                     <div className="flex items-center justify-between mb-2">
                         <Users className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400 group-hover:scale-110 transition-transform" />
-                        <ExternalLink className="w-3 h-3 sm:w-4 sm:h-4 text-slate-600 group-hover:text-blue-400" />
                     </div>
                     <div className="text-2xl sm:text-3xl font-bold text-white mb-1">{loadingUsers ? <RefreshCw className="w-5 h-5 sm:w-6 sm:h-6 animate-spin" /> : totalUsers.toLocaleString()}</div>
                     <div className="text-[10px] sm:text-xs text-slate-500 uppercase tracking-widest group-hover:text-blue-400 transition-colors">Total Users</div>
                 </div>
+
                 <div className="glass-panel p-4 sm:p-6 rounded-xl border border-white/5 hover:border-emerald-500/20 transition-colors group">
                     <div className="flex items-center justify-between mb-2">
                         <DollarSign className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400 group-hover:scale-110 transition-transform" />
@@ -361,63 +289,33 @@ const AdminDashboard = ({ user, onBack }: { user: User; onBack: () => void }) =>
                     <div className="text-2xl sm:text-3xl font-bold text-emerald-400 mb-1">
                         ₹{totalRevenue.toLocaleString()}
                     </div>
-                    <div className="text-[10px] sm:text-xs text-slate-500 uppercase tracking-widest">Revenue</div>
+                    <div className="text-[10px] sm:text-xs text-slate-500 uppercase tracking-widest">Total Revenue</div>
                 </div>
+
                 <div className="glass-panel p-4 sm:p-6 rounded-xl border border-white/5 hover:border-amber-500/20 transition-colors group">
                     <div className="flex items-center justify-between mb-2">
-                        <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400 group-hover:scale-110 transition-transform" />
+                        <Activity className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400 group-hover:scale-110 transition-transform" />
                     </div>
-                    <div className="text-2xl sm:text-3xl font-bold text-amber-400 mb-1">{requests.length}</div>
-                    <div className="text-[10px] sm:text-xs text-slate-500 uppercase tracking-widest">Pending</div>
+                    <div className="text-2xl sm:text-3xl font-bold text-amber-400 mb-1">{transactions.length}</div>
+                    <div className="text-[10px] sm:text-xs text-slate-500 uppercase tracking-widest">Transactions</div>
                 </div>
+
                 <div className="glass-panel p-4 sm:p-6 rounded-xl border border-white/5 hover:border-purple-500/20 transition-colors group">
                     <div className="flex items-center justify-between mb-2">
-                        <CheckSquare className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400 group-hover:scale-110 transition-transform" />
+                        <CreditCard className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400 group-hover:scale-110 transition-transform" />
                     </div>
-                    <div className="text-2xl sm:text-3xl font-bold text-purple-400 mb-1">{selectedIds.size}</div>
-                    <div className="text-[10px] sm:text-xs text-slate-500 uppercase tracking-widest">Selected</div>
+                    <div className="text-2xl sm:text-3xl font-bold text-purple-400 mb-1">Live</div>
+                    <div className="text-[10px] sm:text-xs text-slate-500 uppercase tracking-widest">Auto Payments</div>
                 </div>
             </div>
 
+            {/* Transactions List */}
             <div className="glass-panel rounded-xl overflow-hidden border border-white/10">
                 <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-white/5 bg-white/[0.02]">
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                        <div className="flex items-center gap-3 sm:gap-4">
-                            <h3 className="font-bold text-white text-xs sm:text-sm uppercase tracking-wider">Payment Queue</h3>
-                            {requests.length > 0 && (
-                                <button
-                                    onClick={toggleSelectAll}
-                                    className="text-xs text-slate-400 hover:text-white flex items-center gap-2 transition-colors"
-                                >
-                                    {selectedIds.size === requests.length ? <CheckSquare className="w-4 h-4" /> : <Square className="w-4 h-4" />}
-                                    <span className="hidden sm:inline">{selectedIds.size === requests.length ? 'Deselect All' : 'Select All'}</span>
-                                    <span className="sm:hidden">{selectedIds.size === requests.length ? 'None' : 'All'}</span>
-                                </button>
-                            )}
-                        </div>
-                        <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-                            {selectedIds.size > 0 && (
-                                <>
-                                    <button
-                                        onClick={handleBulkApprove}
-                                        disabled={bulkProcessing}
-                                        className="flex-1 sm:flex-none px-3 sm:px-4 py-2 rounded-lg bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/20 transition-all text-xs font-semibold disabled:opacity-50 flex items-center justify-center gap-2"
-                                    >
-                                        <CheckCircle className="w-4 h-4" />
-                                        <span className="hidden sm:inline">Approve ({selectedIds.size})</span>
-                                        <span className="sm:hidden">✓ {selectedIds.size}</span>
-                                    </button>
-                                    <button
-                                        onClick={handleBulkReject}
-                                        disabled={bulkProcessing}
-                                        className="flex-1 sm:flex-none px-3 sm:px-4 py-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20 transition-all text-xs font-semibold disabled:opacity-50 flex items-center justify-center gap-2"
-                                    >
-                                        <XCircle className="w-4 h-4" />
-                                        <span className="hidden sm:inline">Reject ({selectedIds.size})</span>
-                                        <span className="sm:hidden">✕ {selectedIds.size}</span>
-                                    </button>
-                                </>
-                            )}
+                    <div className="flex items-center justify-between">
+                        <h3 className="font-bold text-white text-xs sm:text-sm uppercase tracking-wider">Recent Transactions</h3>
+
+                        <div className="flex items-center gap-3">
                             {autoRefreshing && (
                                 <div className="flex items-center gap-2 text-xs text-emerald-400">
                                     <RefreshCw className="w-3 h-3 animate-spin" />
@@ -433,81 +331,54 @@ const AdminDashboard = ({ user, onBack }: { user: User; onBack: () => void }) =>
                 </div>
 
                 {loading ? (
-                    <div className="p-12 text-center text-slate-500 text-sm">Loading requests...</div>
-                ) : requests.length === 0 ? (
-                    <div className="p-12 text-center text-slate-500 text-sm">No pending requests found.</div>
+                    <div className="p-12 text-center text-slate-500 text-sm">Loading transactions...</div>
+                ) : transactions.length === 0 ? (
+                    <div className="p-12 text-center text-slate-500 text-sm">No transactions found.</div>
                 ) : (
                     <div className="divide-y divide-white/5">
-                        {requests.map((req) => (
-                            <div key={req.id} className={`p-4 sm:p-6 transition-colors ${selectedIds.has(req.id) ? 'bg-amber-500/5' : 'hover:bg-white/[0.02]'}`}>
-                                {/* Mobile-Optimized Layout */}
-                                <div className="flex flex-col gap-4">
-                                    {/* Header Row - Checkbox + User Info */}
-                                    <div className="flex items-start gap-3">
-                                        <button
-                                            onClick={() => toggleSelection(req.id)}
-                                            className="text-slate-400 hover:text-amber-400 transition-colors mt-1 flex-shrink-0"
-                                        >
-                                            {selectedIds.has(req.id) ? <CheckSquare className="w-6 h-6 sm:w-5 sm:h-5 text-amber-400" /> : <Square className="w-6 h-6 sm:w-5 sm:h-5" />}
-                                        </button>
-                                        <div className="flex-1 min-w-0">
-                                            <div className="flex items-center gap-2 mb-1 flex-wrap">
-                                                {/* Mobile: Shortened Email */}
-                                                <span className="sm:hidden font-medium text-white text-sm" title={req.userEmail}>
-                                                    {shortenEmail(req.userEmail, 20)}
-                                                </span>
-                                                {/* Desktop: Full Email */}
-                                                <span className="hidden sm:inline font-medium text-white text-base break-all">
-                                                    {req.userEmail}
-                                                </span>
-                                            </div>
-                                            <div className="text-[10px] sm:text-xs text-slate-500 font-mono break-all mb-2">
-                                                {/* Mobile: Shortened ID */}
-                                                <span className="sm:hidden">ID: {req.userId.substring(0, 8)}...</span>
-                                                {/* Desktop: Full ID */}
-                                                <span className="hidden sm:inline">ID: {req.userId}</span>
-                                            </div>
-
-                                            {/* Payment Details - Stacked on Mobile */}
-                                            <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 sm:gap-4 text-xs sm:text-sm">
-                                                <div className="flex items-center gap-1 text-slate-400">
-                                                    <Clock className="w-3 h-3 flex-shrink-0" />
-                                                    <span className="text-[10px] sm:text-xs">{new Date(req.createdAt?.seconds * 1000).toLocaleDateString()}</span>
-                                                </div>
-                                                <div className="font-mono text-emerald-400 font-bold">₹{req.amount}</div>
-                                                <div className="font-mono text-amber-400 font-bold">{req.tokens || 0} Tokens</div>
-                                                <div className="font-mono text-slate-300 text-[10px] sm:text-xs col-span-2 sm:col-span-1">UTR: {req.utr}</div>
-                                            </div>
-                                        </div>
+                        {transactions.map((tx) => (
+                            <div key={tx.id} className="p-4 sm:p-6 hover:bg-white/[0.02] transition-colors">
+                                <div className="flex items-start gap-3">
+                                    {/* Status Icon */}
+                                    <div className="mt-1">
+                                        {tx.status === 'success' ? (
+                                            <CheckCircle className="w-5 h-5 text-emerald-400" />
+                                        ) : tx.status === 'pending' ? (
+                                            <Clock className="w-5 h-5 text-amber-400" />
+                                        ) : (
+                                            <XCircle className="w-5 h-5 text-red-400" />
+                                        )}
                                     </div>
 
-                                    {/* Action Buttons - Full Width on Mobile */}
-                                    <div className="flex items-center gap-2 sm:gap-3">
-                                        {req.screenshotUrl && req.screenshotUrl !== "DELETED_TO_SAVE_STORAGE" && (
-                                            <button
-                                                onClick={() => setSelectedImage(req.screenshotUrl!)}
-                                                className="flex-1 sm:flex-none px-3 sm:px-3 py-2.5 sm:py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-xs text-slate-300 flex items-center justify-center gap-2 transition-colors"
-                                            >
-                                                <Search className="w-3.5 h-3.5 sm:w-3 sm:h-3" />
-                                                <span>Proof</span>
-                                            </button>
-                                        )}
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                            <span className="font-medium text-white text-sm sm:text-base">
+                                                {tx.userEmail}
+                                            </span>
+                                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${tx.status === 'success' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
+                                                    'bg-red-500/10 text-red-400 border border-red-500/20'
+                                                }`}>
+                                                {tx.status}
+                                            </span>
+                                        </div>
+                                        <div className="text-[10px] sm:text-xs text-slate-500 font-mono mb-2">
+                                            ID: {tx.paymentId || tx.id}
+                                        </div>
 
-                                        <div className="flex items-center gap-2 flex-1 sm:flex-none sm:pl-4 sm:border-l sm:border-white/10">
-                                            <button
-                                                onClick={() => handleApprove(req)}
-                                                className="flex-1 sm:flex-none p-3 sm:p-2 rounded-lg bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 border border-emerald-500/20 transition-all active:scale-95"
-                                                title="Approve & Upgrade"
-                                            >
-                                                <CheckCircle className="w-5 h-5 sm:w-4 sm:h-4 mx-auto" />
-                                            </button>
-                                            <button
-                                                onClick={() => handleReject(req.id)}
-                                                className="flex-1 sm:flex-none p-3 sm:p-2 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500/20 border border-red-500/20 transition-all active:scale-95"
-                                                title="Reject"
-                                            >
-                                                <XCircle className="w-5 h-5 sm:w-4 sm:h-4 mx-auto" />
-                                            </button>
+                                        <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 sm:gap-6 text-xs sm:text-sm">
+                                            <div className="flex items-center gap-1 text-slate-400">
+                                                <Clock className="w-3 h-3 flex-shrink-0" />
+                                                <span className="text-[10px] sm:text-xs">
+                                                    {tx.createdAt ? (
+                                                        tx.createdAt instanceof Timestamp
+                                                            ? tx.createdAt.toDate().toLocaleString()
+                                                            : new Date(tx.createdAt).toLocaleString()
+                                                    ) : 'Unknown Date'}
+                                                </span>
+                                            </div>
+                                            <div className="font-mono text-emerald-400 font-bold">₹{tx.amount}</div>
+                                            <div className="font-mono text-amber-400 font-bold">{tx.tokens} Tokens</div>
+                                            <div className="font-mono text-slate-400 text-[10px] sm:text-xs">Method: {tx.method}</div>
                                         </div>
                                     </div>
                                 </div>
@@ -622,25 +493,6 @@ const AdminDashboard = ({ user, onBack }: { user: User; onBack: () => void }) =>
                                 </tbody>
                             </table>
                         </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Proof View Modal */}
-            {selectedImage && (
-                <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md" onClick={() => setSelectedImage(null)}>
-                    <div className="relative max-w-2xl w-full max-h-[90vh] overflow-hidden rounded-xl border border-white/10">
-                        <img
-                            src={selectedImage}
-                            alt="Payment Proof"
-                            className="w-full h-auto object-contain bg-black"
-                        />
-                        <button
-                            className="absolute top-2 right-2 p-2 bg-black/50 hover:bg-black/80 text-white rounded-full"
-                            onClick={() => setSelectedImage(null)}
-                        >
-                            <XCircle className="w-6 h-6" />
-                        </button>
                     </div>
                 </div>
             )}

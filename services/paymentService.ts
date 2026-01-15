@@ -21,21 +21,15 @@ export const createPaymentRequest = async (userId: string, userEmail: string, am
 
         await addDoc(collection(db, REQUESTS_COLLECTION), requestData);
 
-        // Send email notification to admin
+        // Admin email notification removed (Manual payment deprecated)
+        /*
         try {
             const { sendPaymentNotification } = await import('./emailService');
-            await sendPaymentNotification({
-                userEmail,
-                userName: userEmail.split('@')[0], // Extract name from email
-                amount,
-                tokens,
-                utr,
-                timestamp: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })
-            });
+            // sendPaymentNotification call removed
         } catch (emailError) {
-            console.error("Email notification failed (non-critical):", emailError);
-            // Don't throw - payment request was still created successfully
+             console.error("Email notification failed", emailError);
         }
+        */
 
         return true;
     } catch (error) {
