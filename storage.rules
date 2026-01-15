@@ -1,0 +1,24 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Allow users to upload payment proofs
+    // Path: payment_proofs/{userId}/{filename}
+    match /payment_proofs/{userId}/{fileName} {
+      // Allow upload if:
+      // 1. User is authenticated
+      // 2. User ID matches the path
+      // 3. File is smaller than 5MB
+      // 4. File is an image
+      allow write: if request.auth != null
+                   && request.auth.uid == userId
+                   && request.resource.size < 5 * 1024 * 1024
+                   && request.resource.contentType.matches('image/.*');
+                   
+      // Allow read if:
+      // 1. User owns the file OR
+      // 2. User is an admin
+      allow read: if request.auth != null 
+                  && (request.auth.uid == userId || request.auth.token.admin == true);
+    }
+  }
+}

@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AutoForm AI | Enterprise Automation</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            serif: ['"Cormorant Garamond"', 'serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+            sans: ['"Outfit"', 'sans-serif'],
+          },
+          animation: {
+            'shimmer-flow': 'shimmer-flow 3s linear infinite',
+            'sheen-sweep': 'sheen-sweep 4s ease-in-out infinite',
+            'text-flow': 'text-flow 5s linear infinite',
+            'shimmer-soft': 'shimmer 4s infinite cubic-bezier(0.4, 0, 0.2, 1)',
+            'particle-float': 'particle-float 1.5s cubic-bezier(0.4, 0, 0.2, 1) forwards',
+            'scale-in': 'scale-in 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
+            'check-pop': 'check-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s forwards',
+            'slide-up': 'slide-up 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) 0.4s forwards',
+            'fade-in': 'fade-in 0.3s ease-out forwards',
+          },
+
+          keyframes: {
+            'shimmer-flow': {
+              '0%': { transform: 'translateX(-100%)' },
+              '100%': { transform: 'translateX(100%)' }
+            },
+            'sheen-sweep': {
+              '0%': { transform: 'translateX(-150%) skewX(-15deg)' },
+              '100%': { transform: 'translateX(150%) skewX(-15deg)' }
+            },
+            'particle-float': {
+              '0%': { transform: 'translateY(0) scale(0)', opacity: '0' },
+              '10%': { opacity: '1' },
+              '90%': { opacity: '1' },
+              '100%': { transform: 'translateY(-100vh) scale(1)', opacity: '0' },
+            },
+            'scale-in': {
+              '0%': { transform: 'scale(0.5)', opacity: '0' },
+              '50%': { transform: 'scale(1.05)' },
+              '100%': { transform: 'scale(1)', opacity: '1' },
+            },
+            'check-pop': {
+              '0%': { transform: 'scale(0)' },
+              '50%': { transform: 'scale(1.2)' },
+              '100%': { transform: 'scale(1)' },
+            },
+            'slide-up': {
+              '0%': { transform: 'translateY(30px)', opacity: '0' },
+              '100%': { transform: 'translateY(0)', opacity: '1' },
+            },
+            'fade-in': {
+              from: { opacity: '0' },
+              to: { opacity: '1' },
+            },
+          },
+        }
+      }
+    }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Outfit:wght@200;300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+    :root {
+      /* Premium Gold Palette (Metallic) */
+      --gold-primary: #D4AF37;
+      --gold-secondary: #C5A028;
+      --gold-dim: #8A701C;
+      --obsidian: #050505;
+      --glass-border: rgba(255, 255, 255, 0.06);
+      --glass-surface: rgba(10, 10, 10, 0.4);
+    }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      background-color: var(--obsidian);
+      color: #e5e5e5;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* --- CORE BACKGROUNDS --- */
+
+    /* Subtle Mesh Gradient (Aurora) */
+    .bg-mesh-gradient {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 0;
+      background:
+        radial-gradient(circle at 15% 50%, rgba(212, 175, 55, 0.05), transparent 40%),
+        radial-gradient(circle at 85% 30%, rgba(138, 112, 28, 0.04), transparent 40%);
+      filter: contrast(120%) brightness(0.8);
+      pointer-events: none;
+    }
+
+    /* Cinematic Vignette */
+    .bg-vignette {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at center, transparent 0%, #000000 120%);
+      z-index: 0;
+      pointer-events: none;
+      opacity: 0.8;
+    }
+
+    /* Technical Grid (Refined) */
+    .bg-grid-pattern {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      background-image:
+        linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+      background-size: 80px 80px;
+      mask-image: radial-gradient(circle at center, black 40%, transparent 100%);
+      -webkit-mask-image: radial-gradient(circle at center, black 40%, transparent 100%);
+      opacity: 0.6;
+    }
+
+    /* --- ANIMATIONS --- */
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+        filter: blur(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+        filter: blur(0);
+      }
+    }
+
+    .animate-fade-in-up {
+      animation: fadeInUp 1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+      will-change: transform, opacity, filter;
+    }
+
+    @keyframes shimmer-slow {
+      0% {
+        background-position: 200% 0;
+      }
+
+      100% {
+        background-position: -200% 0;
+      }
+    }
+
+    @keyframes shimmer {
+      0% {
+        transform: translateX(0%);
+      }
+
+      100% {
+        transform: translateX(250%);
+      }
+    }
+
+    @keyframes spin-slow {
+      from {
+        transform: rotate(0deg);
+      }
+
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .animate-spin-slow {
+      animation: spin-slow 12s linear infinite;
+    }
+
+    .animate-spin-slower {
+      animation: spin-slow 20s linear infinite;
+    }
+
+    @keyframes text-shimmer {
+      0% {
+        background-position: 200% center;
+      }
+
+      100% {
+        background-position: -200% center;
+      }
+    }
+
+    .animate-text-shimmer {
+      animation: text-shimmer 3s linear infinite;
+    }
+
+    .animate-shimmer {
+      animation: shimmer 3s infinite cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    @keyframes gradient-flow {
+      0% {
+        background-position: 0% 50%;
+      }
+
+      50% {
+        background-position: 100% 50%;
+      }
+
+      100% {
+        background-position: 0% 50%;
+      }
+    }
+
+    .animate-gradient-flow {
+      animation: gradient-flow 3s ease infinite;
+    }
+
+    /* Premium Placeholder Shimmer */
+    @keyframes placeholder-shimmer {
+      0% {
+        background-position: -200% center;
+      }
+
+      100% {
+        background-position: 200% center;
+      }
+    }
+
+    .placeholder-shimmer::placeholder {
+      background: linear-gradient(90deg,
+          #64748b 0%,
+          #cbd5e1 20%,
+          #fbbf24 40%,
+          #fde047 50%,
+          #fbbf24 60%,
+          #cbd5e1 80%,
+          #64748b 100%);
+      background-size: 200% auto;
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: placeholder-shimmer 2.5s linear infinite;
+    }
+
+    .placeholder-shimmer::-webkit-input-placeholder {
+      background: linear-gradient(90deg,
+          #64748b 0%,
+          #cbd5e1 20%,
+          #fbbf24 40%,
+          #fde047 50%,
+          #fbbf24 60%,
+          #cbd5e1 80%,
+          #64748b 100%);
+      background-size: 200% auto;
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: placeholder-shimmer 2.5s linear infinite;
+    }
+
+    .placeholder-shimmer::-moz-placeholder {
+      background: linear-gradient(90deg,
+          #64748b 0%,
+          #cbd5e1 20%,
+          #fbbf24 40%,
+          #fde047 50%,
+          #fbbf24 60%,
+          #cbd5e1 80%,
+          #64748b 100%);
+      background-size: 200% auto;
+      background-clip: text;
+      -moz-background-clip: text;
+      color: transparent;
+      animation: placeholder-shimmer 2.5s linear infinite;
+    }
+
+    .placeholder-shimmer:-ms-input-placeholder {
+      background: linear-gradient(90deg,
+          #64748b 0%,
+          #cbd5e1 20%,
+          #fbbf24 40%,
+          #fde047 50%,
+          #fbbf24 60%,
+          #cbd5e1 80%,
+          #64748b 100%);
+      background-size: 200% auto;
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+      animation: placeholder-shimmer 2.5s linear infinite;
+    }
+
+    /* --- UTILITIES --- */
+
+    ::selection {
+      background: rgba(212, 175, 55, 0.2);
+      color: #fff;
+    }
+
+    .font-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Ultra-Premium Glass Panel */
+    .glass-panel {
+      background: linear-gradient(180deg, rgba(20, 20, 20, 0.6) 0%, rgba(10, 10, 10, 0.4) 100%);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid var(--glass-border);
+      box-shadow:
+        0 4px 6px -1px rgba(0, 0, 0, 0.5),
+        0 2px 4px -1px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    }
+
+    /* Crystal Input Styling */
+    .crystal-input-container {
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid var(--glass-border);
+      box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.8);
+      transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+
+    .crystal-input-container:hover,
+    .crystal-input-container:focus-within {
+      border-color: rgba(212, 175, 55, 0.3);
+      box-shadow:
+        inset 0 2px 10px rgba(0, 0, 0, 0.8),
+        0 0 20px rgba(212, 175, 55, 0.05);
+    }
+
+    /* Gold Button (Metallic) */
+    .gold-button {
+      background: linear-gradient(135deg, #e4c878 0%, #b48e35 100%);
+      position: relative;
+      overflow: hidden;
+      color: #000;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      border: none;
+      transition: all 0.4s ease;
+      z-index: 1;
+    }
+
+    .gold-button::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #f5df9e 0%, #cfa345 100%);
+      opacity: 0;
+      z-index: -1;
+      transition: opacity 0.4s ease;
+    }
+
+    .gold-button:hover::before {
+      opacity: 1;
+    }
+
+    .gold-button:hover {
+      box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
+      transform: translateY(-1px);
+    }
+
+    /* Typography */
+    .text-gold-gradient {
+      background: linear-gradient(to bottom right, #FDE68A, #D4AF37, #927518);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #0a0a0a;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #333;
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #555;
+    }
+
+    /* Range Slider */
+    input[type=range] {
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      background: transparent;
+    }
+
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      height: 16px;
+      width: 16px;
+      border-radius: 50%;
+      background: #D4AF37;
+      border: 4px solid #1a1a1a;
+      box-shadow: 0 0 0 1px #D4AF37;
+      margin-top: -7px;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    input[type=range]::-webkit-slider-thumb:hover {
+      transform: scale(1.1);
+    }
+
+    input[type=range]::-webkit-slider-runnable-track {
+      width: 100%;
+      height: 2px;
+      background: #333;
+    }
+  </style>
+
+  <link rel="stylesheet" href="/index.css">
+
+  <!-- EmailJS SDK -->
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+  <script type="text/javascript">
+      (function () {
+        emailjs.init("QX6p57cN59CkTOalx");
+      })();
+  </script>
+
+  <script type="importmap">
+{
+  "imports": {
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "lucide-react": "https://esm.sh/lucide-react@^0.561.0",
+    "@google/genai": "https://esm.sh/@google/genai@^1.33.0",
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "react": "https://esm.sh/react@^19.2.3"
+  }
+}
+</script>
+</head>
+
+<body>
+  <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+
+</html>
