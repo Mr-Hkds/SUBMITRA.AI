@@ -66,32 +66,40 @@ export const createPaymentOrder = async (data: PaymentOrderData): Promise<Razorp
 };
 
 /**
- * Verify payment signature
- * IMPORTANT: This should be done on the backend for security!
+ * Verify and Capture payment via Backend
+ * This calls our secure backend endpoint which communicates with Razorpay
  */
-export const verifyPaymentSignature = (
-    orderId: string,
+export const verifyAndCapturePayment = async (
     paymentId: string,
-    signature: string
-): boolean => {
+    amount: number
+): Promise<any> => {
     try {
-        // In production, send this to your backend for verification
-        // Backend should use Razorpay's signature verification
+        console.log(`🔐 Verifying and capturing payment: ${paymentId} for ₹${amount}`);
 
-        console.log('🔐 Verifying payment signature...');
-        console.log('Order ID:', orderId);
-        console.log('Payment ID:', paymentId);
-        console.log('Signature:', signature);
+        // Call our backend API (works on Vercel and Local Vite Proxy)
+        const response = await fetch('/api/verify-payment', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                paymentId,
+                amount
+            })
+        });
 
-        // For now, we'll assume signature is valid
-        // TODO: Implement server-side verification
-        console.log('✅ Payment signature verified (mock)');
+        const data = await response.json();
 
-        return true;
+        if (!response.ok) {
+            throw new Error(data.error || 'Payment verification failed');
+        }
 
-    } catch (error) {
-        console.error('❌ Signature verification failed:', error);
-        return false;
+        console.log('✅ Payment verified and captured successfully:', data);
+        return data;
+
+    } catch (error: any) {
+        console.error('❌ Verification/Capture failed:', error);
+        throw error;
     }
 };
 

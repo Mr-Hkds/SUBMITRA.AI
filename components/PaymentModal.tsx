@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowRight, ArrowLeft, CheckCircle, Upload, AlertCircle, QrCode, Coins, Zap, Crown, CreditCard, Shield, Lock, ShieldCheck } from 'lucide-react';
-import { createPaymentOrder, initializeRazorpayCheckout, verifyPaymentSignature } from '../services/razorpayService';
+import { createPaymentOrder, initializeRazorpayCheckout, verifyAndCapturePayment } from '../services/razorpayService';
 import { creditTokensAutomatically } from '../services/autoPaymentService';
 import { User } from '../types';
 
@@ -113,18 +113,16 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ onClose, user }) => {
     // Handle successful Razorpay payment
     const handlePaymentSuccess = async (response: any, orderId: string, paymentEmail: string) => {
         try {
-            console.log('✅ Payment successful, verifying...');
+            console.log('✅ Payment successful, verifying and capturing...');
 
-            // Verify payment signature
-            const isValid = verifyPaymentSignature(
-                orderId,
+            // Verify and Capture payment via backend
+            // We pass the price from selectedPack
+            await verifyAndCapturePayment(
                 response.razorpay_payment_id,
-                response.razorpay_signature
+                selectedPack.price
             );
 
-            if (!isValid) {
-                throw new Error('Payment verification failed. Please contact support.');
-            }
+            // If we reach here, payment is captured successfully
 
             // Credit tokens automatically
             await creditTokensAutomatically(
@@ -141,7 +139,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ onClose, user }) => {
 
         } catch (error: any) {
             console.error('❌ Payment success handler error:', error);
-            setError(error.message || 'Failed to credit tokens. Please contact support with your payment ID.');
+            setError(error.message || 'Failed to capture payment. Please contact support with your payment ID.');
             setRazorpayProcessing(false);
         }
     };
