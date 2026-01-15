@@ -264,6 +264,7 @@ const Footer = () => (
       <div className="flex items-center gap-6 text-[10px] text-slate-500 font-medium tracking-wider uppercase">
         <span className="hover:text-amber-500 transition-colors cursor-pointer">Privacy</span>
         <span className="hover:text-amber-500 transition-colors cursor-pointer">Terms</span>
+        <a href="mailto:NAAGRAAZPRODUCTION@GMAIL.COM" className="hover:text-amber-500 transition-colors cursor-pointer">Support</a>
         <span className="hover:text-amber-500 transition-colors cursor-pointer">Contact</span>
       </div>
     </div>

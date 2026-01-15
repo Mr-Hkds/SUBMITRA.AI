@@ -129,7 +129,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ url, setUrl, onAnalyze, onWat
                             <span>Watch Demo</span>
                         </button>
                         <div className="hidden md:block w-1 h-1 rounded-full bg-slate-700" />
-                        <span className="text-[10px] text-slate-500 font-mono uppercase tracking-widest opacity-60">v4.1.0 Stable</span>
+                        <span className="text-[10px] text-slate-500 font-mono uppercase tracking-widest opacity-60">v4.2.0 Stable</span>
                     </div>
 
                     {/* Premium Status Bar */}

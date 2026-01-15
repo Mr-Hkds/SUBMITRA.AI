@@ -184,7 +184,14 @@ export const trackAuthState = (callback: (user: User | null) => void) => {
                 const userSnap = await getDoc(userRef);
 
                 if (userSnap.exists()) {
-                    callback({ ...userSnap.data(), uid: firebaseUser.uid } as User);
+                    // Merge Firestore data with fresh Auth data (ensure email is up-to-date)
+                    callback({
+                        ...userSnap.data(),
+                        uid: firebaseUser.uid,
+                        email: firebaseUser.email || userSnap.data().email || "", // Prefer Auth email
+                        displayName: firebaseUser.displayName || userSnap.data().displayName || "User",
+                        photoURL: firebaseUser.photoURL || userSnap.data().photoURL || ""
+                    } as User);
                 } else {
                     // Self-heal: Create missing profile
                     await ensureUserProfile(firebaseUser);

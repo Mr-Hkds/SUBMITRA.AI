@@ -155,6 +155,13 @@ export const initializeRazorpayCheckout = (
             retry: {
                 enabled: true,
             },
+            // FORCE PAYMENT CAPTURE
+            // This ensures payments are captured immediately and not left in "Authorized" state
+            // preventing auto-refunds after 10-15 mins.
+            // Note: If sending order_id from backend, capture is usually defined there, 
+            // but this is safe for Standard Checkout.
+            ...(order.orderId && !order.orderId.includes('_mock_') ? {} : { payment_capture: 1 }),
+
             handler: function (response: any) {
                 console.log('✅ Payment successful:', response);
                 onSuccess(response);

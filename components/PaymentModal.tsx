@@ -62,15 +62,23 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ onClose, user }) => {
             setRazorpayProcessing(true);
             setError(null);
 
+            // Ensure we have an email
+            const paymentEmail = user.email || prompt("Please confirm your email address for the receipt:");
+            if (!paymentEmail) {
+                alert("Email is required for payment receipt.");
+                setRazorpayProcessing(false);
+                return;
+            }
+
             console.log('🚀 Initiating Razorpay payment...');
 
             // Create payment order
             const order = await createPaymentOrder({
                 amount: selectedPack.price,
                 tokens: selectedPack.tokens,
-                userEmail: user.email || '',
+                userEmail: paymentEmail,
                 userId: user.uid,
-                userName: user.displayName || user.email?.split('@')[0] || 'User',
+                userName: user.displayName || paymentEmail.split('@')[0] || 'User',
             });
 
             // Initialize Razorpay checkout
@@ -79,13 +87,13 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ onClose, user }) => {
                 {
                     amount: selectedPack.price,
                     tokens: selectedPack.tokens,
-                    userEmail: user.email || '',
+                    userEmail: paymentEmail,
                     userId: user.uid,
                     userName: user.displayName,
                 },
                 async (response) => {
                     // Payment successful
-                    await handlePaymentSuccess(response, order.orderId);
+                    await handlePaymentSuccess(response, order.orderId, paymentEmail);
                 },
                 (error) => {
                     // Payment failed/cancelled
@@ -103,7 +111,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ onClose, user }) => {
     };
 
     // Handle successful Razorpay payment
-    const handlePaymentSuccess = async (response: any, orderId: string) => {
+    const handlePaymentSuccess = async (response: any, orderId: string, paymentEmail: string) => {
         try {
             console.log('✅ Payment successful, verifying...');
 
@@ -124,7 +132,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ onClose, user }) => {
                 selectedPack.tokens,
                 response.razorpay_payment_id,
                 orderId,
-                user.email || ''
+                paymentEmail
             );
 
             console.log('🎉 Tokens credited successfully!');
