@@ -20,14 +20,17 @@ const truncateTitle = (title: string, maxLength: number = 60): string => {
   return title.substring(0, maxLength) + '...';
 };
 
-// Proxy Providers for CORS
+// Proxy Providers for CORS - Prioritize our own API
 const PROXY_PROVIDERS = [
   {
     name: 'Vercel/Local API',
     fetch: async (url: string) => {
-      // This routes through nextjs rewrites in prod or vite proxy in dev
+      // This routes through Vercel serverless function in prod or vite proxy in dev
       const res = await fetch(`/api/fetch-form?url=${encodeURIComponent(url)}`);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({ error: 'Unknown error' }));
+        throw new Error(`HTTP ${res.status}: ${errorData.error || res.statusText}`);
+      }
       return await res.text();
     }
   },
@@ -41,17 +44,13 @@ const PROXY_PROVIDERS = [
     }
   },
   {
-    name: 'CorsProxy',
+    name: 'CORS Anywhere (Heroku)',
     fetch: async (url: string) => {
-      const res = await fetch(`https://corsproxy.io/?${encodeURIComponent(url)}`);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      return await res.text();
-    }
-  },
-  {
-    name: 'ThingProxy',
-    fetch: async (url: string) => {
-      const res = await fetch(`https://thingproxy.freeboard.io/fetch/${url}`);
+      const res = await fetch(`https://cors-anywhere.herokuapp.com/${url}`, {
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       return await res.text();
     }
@@ -59,22 +58,42 @@ const PROXY_PROVIDERS = [
 ];
 
 export const fetchAndParseForm = async (url: string): Promise<{ title: string; questions: FormQuestion[] }> => {
+  // Sanitize URL - remove query parameters
+  const cleanUrl = url.split('?')[0];
+
   let html = '';
   let lastError;
+  const errors: string[] = [];
 
   for (const proxy of PROXY_PROVIDERS) {
     try {
       console.log(`[FormParser] Fetching via ${proxy.name}...`);
-      html = await proxy.fetch(url);
-      if (html && html.includes('FB_PUBLIC_LOAD_DATA_')) break;
-    } catch (e) {
-      console.warn(`[FormParser] ${proxy.name} failed:`, e);
+      html = await proxy.fetch(cleanUrl);
+
+      // Validate we got actual form data
+      if (html && html.includes('FB_PUBLIC_LOAD_DATA_')) {
+        console.log(`[FormParser] ✓ Successfully fetched via ${proxy.name}`);
+        break;
+      } else {
+        throw new Error('Response does not contain valid form data');
+      }
+    } catch (e: any) {
+      const errorMsg = `${proxy.name}: ${e.message}`;
+      console.warn(`[FormParser] ${errorMsg}`);
+      errors.push(errorMsg);
       lastError = e;
     }
   }
 
-  if (!html) {
-    throw new Error('Could not load form. Please check the link or try again. ' + (lastError?.message || ''));
+  if (!html || !html.includes('FB_PUBLIC_LOAD_DATA_')) {
+    console.error('[FormParser] All proxy methods failed:', errors);
+    throw new Error(
+      'Unable to load the form. This may be due to:\n' +
+      '• The form link is invalid or has been deleted\n' +
+      '• The form is not publicly accessible\n' +
+      '• Network connectivity issues\n\n' +
+      'Please verify the form URL and try again.'
+    );
   }
 
   // Extract Data
