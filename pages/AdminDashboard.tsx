@@ -349,7 +349,7 @@ const AdminDashboard = ({ user, onBack }: { user: User; onBack: () => void }) =>
                                 <div className="flex items-start gap-3">
                                     {/* Status Icon */}
                                     <div className="mt-1">
-                                        {tx.status === 'success' ? (
+                                        {(tx.status === 'success' || tx.status === 'completed' || tx.status === 'captured') ? (
                                             <CheckCircle className="w-5 h-5 text-emerald-400" />
                                         ) : tx.status === 'pending' ? (
                                             <Clock className="w-5 h-5 text-amber-400" />
@@ -360,10 +360,15 @@ const AdminDashboard = ({ user, onBack }: { user: User; onBack: () => void }) =>
 
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-2 mb-1 flex-wrap">
-                                            <span className="font-medium text-white text-sm sm:text-base">
+                                            {/* Clickable Email for Direct Contact */}
+                                            <a
+                                                href={`mailto:${tx.userEmail}?subject=AutoForm AI - Special Offer&body=Hi, thanks for using AutoForm!`}
+                                                className="font-medium text-white text-sm sm:text-base hover:text-amber-400 transition-colors underline decoration-dotted underline-offset-4"
+                                                title="Send Email to User"
+                                            >
                                                 {tx.userEmail}
-                                            </span>
-                                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${tx.status === 'success' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
+                                            </a>
+                                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${(tx.status === 'success' || tx.status === 'completed' || tx.status === 'captured') ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
                                                 'bg-red-500/10 text-red-400 border border-red-500/20'
                                                 } `}>
                                                 {tx.status}
@@ -390,11 +395,12 @@ const AdminDashboard = ({ user, onBack }: { user: User; onBack: () => void }) =>
                                         </div>
                                     </div>
 
-                                    {/* Delete Transaction Button */}
+                                    {/* Dismiss / Delete Transaction Button */}
                                     <button
                                         onClick={async (e) => {
                                             e.stopPropagation();
-                                            if (!confirm('Are you sure you want to delete this transaction record? This only deletes the record, not the actual payment.')) return;
+                                            // Confirm dismissal
+                                            if (!confirm('Dismiss this transaction? It will be removed from this list permanently.')) return;
                                             try {
                                                 await deleteDoc(doc(db, 'transactions', tx.id!));
                                                 setTransactions(prev => prev.filter(t => t.id !== tx.id));
@@ -403,8 +409,8 @@ const AdminDashboard = ({ user, onBack }: { user: User; onBack: () => void }) =>
                                                 alert('Failed to delete transaction.');
                                             }
                                         }}
-                                        className="p-2 opacity-0 group-hover:opacity-100 bg-white/5 hover:bg-red-500/20 text-slate-400 hover:text-red-400 rounded-lg transition-all"
-                                        title="Delete Transaction Record"
+                                        className="p-2 opacity-50 group-hover:opacity-100 bg-white/5 hover:bg-slate-700 text-slate-400 hover:text-white rounded-lg transition-all"
+                                        title="Dismiss (Remove from Inbox)"
                                     >
                                         <Trash2 className="w-4 h-4" />
                                     </button>
