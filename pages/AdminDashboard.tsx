@@ -488,7 +488,15 @@ const AdminDashboard = ({ user, onBack }: { user: User; onBack: () => void }) =>
                                                         {u.displayName}
                                                     </div>
                                                 </td>
-                                                <td className="px-6 py-4 text-slate-400">{u.email}</td>
+                                                <td className="px-6 py-4 text-slate-400">
+                                                    <a
+                                                        href={`mailto:${u.email}?subject=AutoForm AI Support`}
+                                                        className="hover:text-amber-400 hover:underline transition-colors decoration-dotted underline-offset-4"
+                                                        title="Send Email"
+                                                    >
+                                                        {u.email}
+                                                    </a>
+                                                </td>
                                                 <td className="px-6 py-4 text-center">
                                                     <span className={`font-mono font-bold ${u.tokens > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                                                         {u.tokens}
