@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 
 // Log Version for Vercel Verification
 console.log('🚀 AutoForm AI v0.1.0 Loaded [Razorpay Fixes Included]');
-import { Bot, Copy, CheckCircle, AlertCircle, BarChart3, ArrowRight, ArrowLeft, RotateCcw, Sparkles, Code2, Terminal, Zap, Command, Activity, Cpu, Crown, LogOut, Settings, Lock, Laptop, Monitor, Target, ShieldCheck } from 'lucide-react';
+import { Bot, Copy, CheckCircle, AlertCircle, BarChart3, ArrowRight, ArrowLeft, RotateCcw, Sparkles, Code2, Terminal, Zap, Command, Activity, Cpu, Crown, LogOut, Settings, Lock, Laptop, Monitor, Target, ShieldCheck, ExternalLink } from 'lucide-react';
 import { fetchAndParseForm } from './services/formParser';
 import { analyzeForm as analyzeFormWithStatistics, generateResponseSuggestions } from './services/analysisService';
 import { generateAutomationScript } from './utils/scriptTemplate';
@@ -726,14 +726,21 @@ function App() {
     }
 
     // 1. VALIDATION: Parse AI Data BEFORE anything else
+    // 1. VALIDATION: Parse AI Data BEFORE anything else
     let aiParsedResponses: Record<string, string[]> = {};
-    if (!aiPromptData.trim()) {
-      setParsingError("⚠️ AI Data is REQUIRED. Please copy the prompt, get data from ChatGPT, and paste it here.");
+
+    // Check if we even need AI Data (only if we have required text fields)
+    const hasRequiredTextFields = analysis?.questions.some(q =>
+      (q.type === 'SHORT_ANSWER' || q.type === 'PARAGRAPH') && q.required
+    );
+
+    if (hasRequiredTextFields && !aiPromptData.trim()) {
+      setParsingError("⚠️ AI Data is REQUIRED for this form. Please copy the prompt, get data from ChatGPT, and paste it here.");
       return;
     }
 
     try {
-      if (analysis) {
+      if (analysis && hasRequiredTextFields) {
         aiParsedResponses = parseAIResponse(aiPromptData, analysis.questions);
         setParsingError(null);
       }
@@ -1132,64 +1139,66 @@ function App() {
                     {/* Right Col: Data Preview */}
                     <div className="lg:col-span-2 flex flex-col gap-6">
 
-                      {/* AI DATA INJECTION (REQUIRED) - Now in Right Col */}
-                      <div className={`glass-panel p-6 rounded-xl space-y-4 border-l-2 relative overflow-hidden ${parsingError ? 'border-red-500 bg-red-500/5' : 'border-amber-500/50'}`}>
-                        {/* Ambient Glow */}
-                        <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+                      {/* AI DATA INJECTION (REQUIRED ONLY FOR TEXT FIELDS) - Now in Right Col */}
+                      {analysis.questions.some(q => (q.type === 'SHORT_ANSWER' || q.type === 'PARAGRAPH') && q.required) && (
+                        <div className={`glass-panel p-6 rounded-xl space-y-4 border-l-2 relative overflow-hidden ${parsingError ? 'border-red-500 bg-red-500/5' : 'border-amber-500/50'}`}>
+                          {/* Ambient Glow */}
+                          <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
 
-                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
-                          <div className="flex items-center gap-2 text-sm font-bold text-white uppercase tracking-wider">
-                            <Sparkles className="w-4 h-4 text-amber-500" /> AI Data Injection
-                            <span className="text-[10px] text-red-400 bg-red-900/30 px-2 py-0.5 rounded ml-2 border border-red-500/20 shadow-sm">REQUIRED STEP 1</span>
-                          </div>
+                          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
+                            <div className="flex items-center gap-2 text-sm font-bold text-white uppercase tracking-wider">
+                              <Sparkles className="w-4 h-4 text-amber-500" /> AI Data Injection
+                              <span className="text-[10px] text-red-400 bg-red-900/30 px-2 py-0.5 rounded ml-2 border border-red-500/20 shadow-sm">REQUIRED STEP 1</span>
+                            </div>
 
-                          <button
-                            onClick={() => {
-                              const prompt = generateAIPrompt(analysis.title, analysis.description, analysis.questions, targetCount);
-                              navigator.clipboard.writeText(prompt);
-                              alert("Contextual prompt copied! Paste this into ChatGPT.");
-                            }}
-                            className="bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 text-[10px] font-mono px-4 py-2 rounded-lg border border-amber-500/20 transition-all hover:scale-105 active:scale-95 flex items-center gap-2 shadow-lg shadow-amber-500/10"
-                          >
-                            <Sparkles className="w-3 h-3" /> Copy Contextual Prompt
-                          </button>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
-                          <div className="space-y-3">
-                            <p className="text-xs text-slate-400 leading-relaxed bg-white/5 p-3 rounded-lg border border-white/5">
-                              <strong className="text-amber-500 block mb-1 uppercase tracking-tighter text-[10px]">Step 1: Get Data</strong>
-                              Copy the contextual prompt to get realistic, targeted data from ChatGPT.
-                            </p>
-                            <p className="text-xs text-slate-400 leading-relaxed bg-white/5 p-3 rounded-lg border border-white/5">
-                              <strong className="text-amber-500 block mb-1 uppercase tracking-tighter text-[10px]">Step 2: Inject</strong>
-                              Paste the JSON reply below and click "Inject to Fields" to auto-populate the form.
-                            </p>
                             <button
-                              onClick={handleAIInject}
-                              className="w-full py-3 rounded-xl bg-amber-500 text-black font-bold text-[10px] uppercase tracking-wider hover:bg-amber-400 transition-all shadow-lg flex items-center justify-center gap-2"
+                              onClick={() => {
+                                const prompt = generateAIPrompt(analysis.title, analysis.description, analysis.questions, targetCount);
+                                navigator.clipboard.writeText(prompt);
+                                alert("Contextual prompt copied! Paste this into ChatGPT.");
+                              }}
+                              className="bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 text-[10px] font-mono px-4 py-2 rounded-lg border border-amber-500/20 transition-all hover:scale-105 active:scale-95 flex items-center gap-2 shadow-lg shadow-amber-500/10"
                             >
-                              <Activity className="w-4 h-4" /> Inject Data to Fields
+                              <Sparkles className="w-3 h-3" /> Copy Contextual Prompt
                             </button>
                           </div>
-                          <div className="relative h-full">
-                            <textarea
-                              value={aiPromptData}
-                              onChange={(e) => {
-                                setAiPromptData(e.target.value);
-                                if (parsingError) setParsingError(null);
-                              }}
-                              placeholder='Paste JSON from ChatGPT here...'
-                              className={`w-full h-full min-h-[100px] bg-[#050505] border rounded-xl p-3 text-xs text-white font-mono focus:outline-none transition-colors resize-none ${parsingError ? 'border-red-500/50 focus:border-red-500' : 'border-white/10 focus:border-amber-500/50'}`}
-                            />
-                            {parsingError && (
-                              <div className="absolute bottom-2 right-2 text-[10px] text-red-400 font-bold bg-black/80 px-2 py-1 rounded backdrop-blur border border-red-500/30">
-                                {parsingError}
-                              </div>
-                            )}
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
+                            <div className="space-y-3">
+                              <p className="text-xs text-slate-400 leading-relaxed bg-white/5 p-3 rounded-lg border border-white/5">
+                                <strong className="text-amber-500 block mb-1 uppercase tracking-tighter text-[10px]">Step 1: Get Data</strong>
+                                Copy the contextual prompt to get realistic, targeted data from ChatGPT.
+                              </p>
+                              <p className="text-xs text-slate-400 leading-relaxed bg-white/5 p-3 rounded-lg border border-white/5">
+                                <strong className="text-amber-500 block mb-1 uppercase tracking-tighter text-[10px]">Step 2: Inject</strong>
+                                Paste the JSON reply below and click "Inject to Fields" to auto-populate the form.
+                              </p>
+                              <button
+                                onClick={handleAIInject}
+                                className="w-full py-3 rounded-xl bg-amber-500 text-black font-bold text-[10px] uppercase tracking-wider hover:bg-amber-400 transition-all shadow-lg flex items-center justify-center gap-2"
+                              >
+                                <Activity className="w-4 h-4" /> Inject Data to Fields
+                              </button>
+                            </div>
+                            <div className="relative h-full">
+                              <textarea
+                                value={aiPromptData}
+                                onChange={(e) => {
+                                  setAiPromptData(e.target.value);
+                                  if (parsingError) setParsingError(null);
+                                }}
+                                placeholder='Paste JSON from ChatGPT here...'
+                                className={`w-full h-full min-h-[100px] bg-[#050505] border rounded-xl p-3 text-xs text-white font-mono focus:outline-none transition-colors resize-none ${parsingError ? 'border-red-500/50 focus:border-red-500' : 'border-white/10 focus:border-amber-500/50'}`}
+                              />
+                              {parsingError && (
+                                <div className="absolute bottom-2 right-2 text-[10px] text-red-400 font-bold bg-black/80 px-2 py-1 rounded backdrop-blur border border-red-500/30">
+                                  {parsingError}
+                                </div>
+                              )}
+                            </div>
                           </div>
                         </div>
-                      </div>
+                      )}
 
 
 
@@ -1198,7 +1207,12 @@ function App() {
                         {/* Tip Banner */}
                         <div className="absolute top-0 inset-x-0 bg-blue-500/10 border-b border-blue-500/10 p-2 flex items-center justify-center gap-2 text-[10px] text-blue-300 font-mono z-20 backdrop-blur-sm">
                           <Activity className="w-3 h-3 text-blue-400" />
-                          <span>STEP 2: You can edit any question and fine-tune response behavior here.</span>
+                          <span>
+                            {analysis.questions.some(q => (q.type === 'SHORT_ANSWER' || q.type === 'PARAGRAPH') && q.required)
+                              ? "STEP 2"
+                              : "STEP 1"
+                            }: You can edit any question and fine-tune response behavior here.
+                          </span>
                         </div>
 
                         <div className="px-6 py-4 mt-8 border-b border-white/5 flex justify-between items-center bg-white/[0.02]">
@@ -1348,6 +1362,17 @@ function App() {
                             </p>
                             <div className="bg-black/40 rounded-lg p-3 border border-white/5">
                               <code className="text-[10px] text-emerald-400 font-mono break-all">{url || 'https://docs.google.com/forms/...'}</code>
+                            </div>
+                            <div className="mt-3">
+                              <a
+                                href={url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-white text-sm font-bold shadow-lg shadow-emerald-500/20 transition-all hover:scale-105"
+                              >
+                                <ExternalLink className="w-4 h-4" />
+                                Open Form in New Tab
+                              </a>
                             </div>
                           </div>
                         </div>
