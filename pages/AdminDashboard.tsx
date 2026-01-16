@@ -21,42 +21,38 @@ const AdminDashboard = ({ user, onBack }: { user: User; onBack: () => void }) =>
     const fetchData = async () => {
         setLoading(true);
 
-        // Fetch Recent Transactions (Limit 50)
         try {
-            const q = query(
-                collection(db, 'transactions'),
-                orderBy('createdAt', 'desc'),
-                limit(50)
-            );
+            // 1. Fetch ALL transactions (for accurate client-side calc)
+            // Note: In a massive app, we'd use aggregation queries, but for <10k txns, this is fine and more accurate for now.
+            const q = query(collection(db, 'transactions'), orderBy('createdAt', 'desc'));
             const snapshot = await getDocs(q);
-            const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as PaymentTransaction));
-            setTransactions(data);
+            const allTxns = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as PaymentTransaction));
+
+            setTransactions(allTxns.slice(0, 50)); // Show top 50 in list
+
+            // 2. Calculate Revenue & Stats
+            let totalRev = 0;
+            // let todayRev = 0; // Future use
+
+            allTxns.forEach(tx => {
+                // Accept both 'success' (legacy) and 'completed' (new secure backend)
+                // Also accept 'captured' if strictly needed, but 'completed' is the main one now.
+                if (tx.status === 'success' || tx.status === 'completed' || tx.status === 'captured') {
+                    totalRev += (tx.amount || 0);
+                }
+            });
+
+            setTotalRevenue(totalRev);
+
         } catch (e) {
-            console.error('Failed to fetch transactions:', e);
+            console.error('Failed to fetch data:', e);
         }
 
-        // Fetch total users count
+        // Fetch User Count
         try {
             const usersSnapshot = await getDocs(collection(db, 'users'));
             setTotalUsers(usersSnapshot.size);
-        } catch (e) {
-            console.error('Failed to fetch user count:', e);
-        }
-
-        // Fetch total revenue (Aggregate all success transactions)
-        try {
-            const revenueQuery = query(
-                collection(db, 'transactions'),
-                where('status', '==', 'success')
-            );
-            const revenueSnapshot = await getDocs(revenueQuery);
-            const revenue = revenueSnapshot.docs.reduce((sum, doc) => {
-                return sum + (doc.data().amount || 0);
-            }, 0);
-            setTotalRevenue(revenue);
-        } catch (e) {
-            console.error('Failed to fetch revenue:', e);
-        }
+        } catch (e) { console.error(e); }
 
         setLoading(false);
     };
