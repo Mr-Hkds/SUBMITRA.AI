@@ -437,19 +437,6 @@ function App() {
   const [rateLimitCooldown, setRateLimitCooldown] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [showVideoModal, setShowVideoModal] = useState(false);
-  const [notification, setNotification] = useState<{ message: string, type: 'error' | 'success' | 'info' } | null>(null);
-
-  // Notification Auto-dismiss
-  useEffect(() => {
-    if (notification) {
-      const timer = setTimeout(() => setNotification(null), 4000);
-      return () => clearTimeout(timer);
-    }
-  }, [notification]);
-
-  const showToast = (message: string, type: 'error' | 'success' | 'info' = 'info') => {
-    setNotification({ message, type });
-  };
 
 
 
@@ -508,12 +495,20 @@ function App() {
     setShowAdminDashboard(false);
   };
 
+  const checkBalanceAndRedirect = (val: number) => {
+    if (user && val > (user.tokens || 0)) {
+      setError("⚠️ Token Limit Exceeded: You don't have enough tokens. Redirecting to upgrades...");
+      setTimeout(() => {
+        setShowPricing(true);
+      }, 1500);
+      return true;
+    }
+    return false;
+  };
+
   const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = Number(e.target.value);
-    if (user && val > (user.tokens || 0)) {
-      showToast(`Insufficient Balance! You need ${val} tokens, but you have ${user.tokens}.`, 'error');
-      setTimeout(() => setShowPricing(true), 800);
-    }
+    checkBalanceAndRedirect(val);
     setTargetCount(val);
   };
 
@@ -844,30 +839,7 @@ function App() {
 
       <main className="flex-1 w-full max-w-6xl mx-auto px-6 py-12 flex flex-col relative z-10">
 
-        <TransitionOverlay isTransitioning={isTransitioning} />
-
-        {/* Floating Notifications */}
-        {notification && (
-          <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[200] animate-bounce-in">
-            <div className={`px-6 py-3 rounded-2xl border backdrop-blur-xl shadow-2xl flex items-center gap-3 min-w-[320px] ${notification.type === 'error' ? 'bg-red-500/10 border-red-500/20 text-red-200' :
-              notification.type === 'success' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-200' :
-                'bg-slate-900/80 border-white/5 text-white'
-              }`}>
-              {notification.type === 'error' ? <AlertCircle className="w-5 h-5 text-red-400" /> :
-                notification.type === 'success' ? <CheckCircle className="w-5 h-5 text-emerald-400" /> :
-                  <Bot className="w-5 h-5 text-slate-400" />
-              }
-              <div className="flex flex-col">
-                <span className="text-[10px] uppercase tracking-[0.2em] font-bold opacity-50">
-                  {notification.type === 'error' ? 'System Error' : notification.type === 'success' ? 'Task Complete' : 'Notification'}
-                </span>
-                <span className="text-xs font-medium">{notification.message}</span>
-              </div>
-              <button onClick={() => setNotification(null)} className="ml-auto text-white/20 hover:text-white transition">✕</button>
-            </div>
-          </div>
-        )}
-
+        {/* ADMIN DASHBOARD */}
         {showAdminDashboard && user?.isAdmin ? (
           <AdminDashboard user={user} onBack={() => setShowAdminDashboard(false)} />
         ) : (
@@ -1041,10 +1013,7 @@ function App() {
                                 value={targetCount}
                                 onChange={(e) => {
                                   const val = Math.min(Math.max(1, Number(e.target.value) || 1), 200);
-                                  if (user && val > (user.tokens || 0)) {
-                                    showToast(`Low Balance! ${val} tokens required.`, 'error');
-                                    setTimeout(() => setShowPricing(true), 800);
-                                  }
+                                  checkBalanceAndRedirect(val);
                                   setTargetCount(val);
                                 }}
                                 className="w-14 h-8 bg-slate-900 border border-slate-700 rounded-lg text-center text-amber-400 font-mono font-bold text-sm focus:outline-none focus:border-amber-500"
@@ -1052,10 +1021,7 @@ function App() {
                               <button
                                 onClick={() => {
                                   const newVal = Math.min(200, targetCount + 5);
-                                  if (user && newVal > (user.tokens || 0)) {
-                                    showToast(`Insufficient Tokens! Upgrade to generate ${newVal} responses.`, 'error');
-                                    setTimeout(() => setShowPricing(true), 800);
-                                  }
+                                  checkBalanceAndRedirect(newVal);
                                   setTargetCount(newVal);
                                 }}
                               >
@@ -1069,10 +1035,7 @@ function App() {
                                 <button
                                   key={preset}
                                   onClick={() => {
-                                    if (user && preset > (user.tokens || 0)) {
-                                      showToast(`Low Balance: ${preset} tokens needed for this action.`, 'error');
-                                      setTimeout(() => setShowPricing(true), 800);
-                                    }
+                                    checkBalanceAndRedirect(preset);
                                     setTargetCount(preset);
                                   }}
                                   className={`px-2 py-1 rounded text-[10px] font-mono font-bold transition-all active:scale-95 ${targetCount === preset
