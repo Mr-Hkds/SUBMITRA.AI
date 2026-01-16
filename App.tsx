@@ -837,6 +837,25 @@ function App() {
         onDashboardClick={() => setShowAdminDashboard(true)}
       />
 
+      {/* Error Banner - Below Header */}
+      {error && (
+        <div className="fixed top-16 left-0 right-0 z-40 px-4 py-3 bg-red-900/95 border-b border-red-500/30 backdrop-blur-md animate-fade-in-down">
+          <div className="max-w-6xl mx-auto flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <AlertCircle className="w-4 h-4 text-red-300 shrink-0" />
+              <span className="text-sm text-red-100 font-medium">{error}</span>
+            </div>
+            <button
+              onClick={() => setError(null)}
+              className="text-red-300 hover:text-white transition-colors shrink-0"
+              aria-label="Close error"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
+
       <main className="flex-1 w-full max-w-6xl mx-auto px-6 py-12 flex flex-col relative z-10">
 
         {/* ADMIN DASHBOARD */}
