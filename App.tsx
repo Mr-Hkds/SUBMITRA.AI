@@ -135,16 +135,16 @@ const Header = ({ reset, step, user, loading, onLogout, onShowPricing, onSignInC
   <header className="fixed top-0 w-full z-50 border-b border-white/5 bg-[#020617]/80 backdrop-blur-xl">
     <div className="max-w-6xl mx-auto px-3 sm:px-6 h-14 sm:h-16 flex items-center justify-between">
       <div
-        className="flex items-center gap-2 sm:gap-3 cursor-pointer opacity-80 hover:opacity-100 transition-opacity"
+        className="flex items-center gap-0 cursor-pointer opacity-80 hover:opacity-100 transition-opacity"
         onClick={reset}
       >
         <img
           src="/logo.png"
           alt="AutoForm Logo"
-          className="w-16 h-16 sm:w-24 sm:h-24 object-contain hover:scale-110 transition-transform duration-300 mix-blend-screen rounded-full"
+          className="w-16 h-16 sm:w-24 sm:h-24 object-contain hover:scale-110 transition-transform duration-300 mix-blend-screen rounded-full -mr-3 sm:-mr-4"
         />
         <div className="flex flex-col justify-center gap-0.5">
-          <span className="font-serif font-semibold text-sm sm:text-base text-white tracking-tight leading-none">AutoForm</span>
+          <span className="font-serif font-bold text-lg sm:text-xl tracking-tight leading-none bg-gradient-to-r from-[#BF953F] via-[#FCF6BA] to-[#B38728] bg-clip-text text-transparent drop-shadow-[0_2px_10px_rgba(245,158,11,0.2)] animate-text-shimmer bg-[length:200%_auto]">AutoForm</span>
           <span className="text-[7px] sm:text-[8px] text-slate-400 font-sans tracking-[0.25em] uppercase opacity-70 hidden sm:block">A NaagRaaz Production</span>
         </div>
       </div>
