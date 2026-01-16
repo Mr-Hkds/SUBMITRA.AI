@@ -138,11 +138,21 @@ const Header = ({ reset, step, user, loading, onLogout, onShowPricing, onSignInC
         className="flex items-center gap-0 cursor-pointer opacity-80 hover:opacity-100 transition-opacity"
         onClick={reset}
       >
-        <img
-          src="/logo.png"
-          alt="AutoForm Logo"
-          className="w-10 h-10 sm:w-12 sm:h-12 object-contain hover:scale-105 transition-transform duration-300 mix-blend-screen rounded-full mr-2"
-        />
+
+        {/* Premium Vector Logo */}
+        <div className="relative w-10 h-10 sm:w-12 sm:h-12 mr-3 flex items-center justify-center group-hover:scale-105 transition-transform duration-500">
+          <div className="absolute inset-0 bg-gradient-to-tr from-amber-600 via-amber-400 to-yellow-200 rounded-xl rotate-3 opacity-20 blur-md group-hover:opacity-40 transition-opacity duration-500"></div>
+          <div className="relative w-full h-full bg-gradient-to-br from-slate-900 to-black border border-amber-500/30 rounded-xl flex items-center justify-center overflow-hidden shadow-[0_0_15px_rgba(245,158,11,0.15)]">
+            {/* Abstract Neural Mark */}
+            <svg viewBox="0 0 24 24" fill="none" className="w-6 h-6 sm:w-7 sm:h-7 text-amber-400" stroke="currentColor" strokeWidth="1.5">
+              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" strokeLinecap="round" strokeLinejoin="round" />
+              <circle cx="12" cy="12" r="3" className="fill-amber-500/20 stroke-amber-300" />
+              <circle cx="12" cy="12" r="1" className="fill-amber-100 border-none" />
+            </svg>
+            {/* Sheen effect */}
+            <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent opacity-0 group-hover:opacity-100 animate-shimmer-flow pointer-events-none"></div>
+          </div>
+        </div>
         <div className="flex flex-col justify-center gap-0.5">
           <span className="font-serif font-bold text-lg sm:text-xl tracking-tight leading-none bg-gradient-to-r from-[#BF953F] via-[#FCF6BA] to-[#B38728] bg-clip-text text-transparent drop-shadow-[0_2px_10px_rgba(245,158,11,0.2)] animate-text-shimmer bg-[length:200%_auto]">AutoForm</span>
           <span className="text-[7px] sm:text-[8px] text-slate-400 font-sans tracking-[0.25em] uppercase opacity-70 hidden sm:block">A NaagRaaz Production</span>
