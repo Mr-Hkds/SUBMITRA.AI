@@ -141,7 +141,7 @@ const Header = ({ reset, step, user, loading, onLogout, onShowPricing, onSignInC
         <img
           src="/logo.png"
           alt="AutoForm Logo"
-          className="w-16 h-16 sm:w-24 sm:h-24 object-contain hover:scale-110 transition-transform duration-300 mix-blend-screen rounded-full -mr-3 sm:-mr-4"
+          className="w-10 h-10 sm:w-12 sm:h-12 object-contain hover:scale-105 transition-transform duration-300 mix-blend-screen rounded-full mr-2"
         />
         <div className="flex flex-col justify-center gap-0.5">
           <span className="font-serif font-bold text-lg sm:text-xl tracking-tight leading-none bg-gradient-to-r from-[#BF953F] via-[#FCF6BA] to-[#B38728] bg-clip-text text-transparent drop-shadow-[0_2px_10px_rgba(245,158,11,0.2)] animate-text-shimmer bg-[length:200%_auto]">AutoForm</span>
@@ -836,25 +836,6 @@ function App() {
         onSignInClick={() => setShowLogin(true)}
         onDashboardClick={() => setShowAdminDashboard(true)}
       />
-
-      {/* Error Banner - Below Header */}
-      {error && (
-        <div className="fixed top-16 left-0 right-0 z-40 px-4 py-3 bg-red-900/95 border-b border-red-500/30 backdrop-blur-md animate-fade-in-down">
-          <div className="max-w-6xl mx-auto flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <AlertCircle className="w-4 h-4 text-red-300 shrink-0" />
-              <span className="text-sm text-red-100 font-medium">{error}</span>
-            </div>
-            <button
-              onClick={() => setError(null)}
-              className="text-red-300 hover:text-white transition-colors shrink-0"
-              aria-label="Close error"
-            >
-              ✕
-            </button>
-          </div>
-        </div>
-      )}
 
       <main className="flex-1 w-full max-w-6xl mx-auto px-6 py-12 flex flex-col relative z-10">
 
