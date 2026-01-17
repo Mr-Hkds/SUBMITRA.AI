@@ -19,17 +19,11 @@ import TransitionOverlay from './components/TransitionOverlay';
 import HeroSection from './components/HeroSection';
 import VideoModal from './components/VideoModal';
 import MissionControl from './components/MissionControl';
+import Header from './components/Header';
+import PremiumBackground from './components/PremiumBackground';
 
 // --- VISUAL COMPONENTS ---
 
-const Background = () => (
-  <>
-    <div className="bg-mesh-gradient" />
-    <div className="bg-grid-pattern opacity-40" />
-    <div className="bg-vignette" />
-    <div className="fixed top-0 left-0 w-full h-full bg-gradient-to-br from-black/20 via-transparent to-black/40 pointer-events-none z-0" />
-  </>
-);
 
 const Badge = ({ children, color = "obsidian" }: { children?: React.ReactNode, color?: "obsidian" | "gold" | "premium" }) => {
   const styles = {
@@ -177,176 +171,77 @@ const LaptopRequirementModal = ({ onClose }: { onClose: () => void }) => (
 
 // --- APP COMPONENTS ---
 
-const Header = ({ reset, step, user, loading, onLogout, onShowPricing, onSignInClick, onDashboardClick }: { reset: () => void, step: number, user: User | null, loading: boolean, onLogout: () => void, onShowPricing: () => void, onSignInClick: () => void, onDashboardClick: () => void }) => (
-  <header className="fixed top-0 w-full z-50 border-b border-white/5 bg-[#020617]/80 backdrop-blur-xl">
-    <div className="max-w-6xl mx-auto px-3 sm:px-6 h-14 sm:h-16 flex items-center justify-between">
-      <div
-        className="flex items-center gap-0 cursor-pointer opacity-80 hover:opacity-100 transition-opacity"
-        onClick={reset}
-      >
-
-        {/* Premium Vector Logo */}
-        <div className="relative w-10 h-10 sm:w-12 sm:h-12 mr-3 flex items-center justify-center group-hover:scale-105 transition-transform duration-500">
-          <div className="absolute inset-0 bg-gradient-to-tr from-amber-600 via-amber-400 to-yellow-200 rounded-xl rotate-3 opacity-20 blur-md group-hover:opacity-40 transition-opacity duration-500"></div>
-          <div className="relative w-full h-full bg-gradient-to-br from-slate-900 to-black border border-amber-500/30 rounded-xl flex items-center justify-center overflow-hidden shadow-[0_0_15px_rgba(245,158,11,0.15)]">
-            {/* Abstract Neural Mark */}
-            <svg viewBox="0 0 24 24" fill="none" className="w-6 h-6 sm:w-7 sm:h-7 text-amber-400" stroke="currentColor" strokeWidth="1.5">
-              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" strokeLinecap="round" strokeLinejoin="round" />
-              <circle cx="12" cy="12" r="3" className="fill-amber-500/20 stroke-amber-300" />
-              <circle cx="12" cy="12" r="1" className="fill-amber-100 border-none" />
-            </svg>
-            {/* Sheen effect */}
-            <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent opacity-0 group-hover:opacity-100 animate-shimmer-flow pointer-events-none"></div>
-          </div>
-        </div>
-        <div className="flex flex-col justify-center gap-0.5">
-          <span className="font-serif font-bold text-lg sm:text-xl tracking-tight leading-none bg-gradient-to-r from-[#BF953F] via-[#FCF6BA] to-[#B38728] bg-clip-text text-transparent drop-shadow-[0_2px_10px_rgba(245,158,11,0.2)] animate-text-shimmer bg-[length:200%_auto]">AutoForm</span>
-          <span className="text-[7px] sm:text-[8px] text-slate-400 font-sans tracking-[0.25em] uppercase opacity-70 hidden sm:block">A NaagRaaz Production</span>
-        </div>
-      </div>
-
-      <div className="flex items-center gap-3 sm:gap-6">
-        {/* User Profile / Login Button */}
-        <div className="flex items-center gap-3 pl-6 border-l border-white/5">
-          {loading ? (
-            <div className="flex items-center gap-3">
-              <div className="h-8 w-24 bg-white/5 rounded animate-pulse" />
-              <div className="h-8 w-8 rounded-full bg-white/5 animate-pulse" />
-            </div>
-          ) : user ? (
-            <>
-              {user.isAdmin && (
-                <>
-                  {/* Mobile: Icon Button */}
-                  <button
-                    onClick={onDashboardClick}
-                    className="sm:hidden p-2 rounded-lg bg-slate-800 text-white hover:bg-slate-700 transition-colors"
-                    title="Admin Dashboard"
-                  >
-                    <Settings className="w-4 h-4" />
-                  </button>
-                  {/* Desktop: Full Button */}
-                  <button
-                    onClick={onDashboardClick}
-                    className="hidden sm:block mr-3 px-3 py-1.5 rounded-lg bg-slate-800 text-[10px] text-white font-medium hover:bg-slate-700 transition"
-                  >
-                    Admin Dashboard
-                  </button>
-                </>
-              )}
-              <div className="flex flex-col items-end">
-                {/* Mobile: Shortened Name */}
-                <span className="sm:hidden text-xs font-medium text-white truncate max-w-[80px]" title={user.displayName || user.email}>
-                  {(() => {
-                    const name = user.displayName || user.email || '';
-                    // Show first name only, or first 10 chars
-                    const firstName = name.split(' ')[0];
-                    return firstName.length > 10 ? firstName.substring(0, 10) + '...' : firstName;
-                  })()}
-                </span>
-                {/* Desktop: Full Name */}
-                <span className="hidden sm:block text-xs font-medium text-white">{user.displayName || user.email}</span>
-
-                <button onClick={onShowPricing} className="text-[10px] font-mono uppercase tracking-wide flex items-center gap-1 transition-colors hover:scale-105 active:scale-95">
-                  <span className={`${(user.tokens || 0) < 10 ? 'text-red-400 animate-pulse font-bold' : 'text-amber-400'}`}>
-                    {user.tokens || 0} TOKENS
-                  </span>
-                  <span className="bg-amber-500/20 text-amber-500 px-1 rounded flex items-center justify-center">+</span>
-                </button>
-              </div>
-              <div className="relative group cursor-pointer" onClick={onShowPricing}>
-                {/* Token Usage Ring */}
-                {/* Visualizing token count: < 10 red, < 50 amber, > 50 emerald */}
-                {(() => {
-                  const tokens = user.tokens || 0;
-                  const isLow = tokens < 10;
-                  const isMedium = tokens >= 10 && tokens < 50;
-
-                  const ringColor = isLow ? 'from-red-500 via-red-400 to-red-600' :
-                    isMedium ? 'from-amber-400 via-amber-200 to-amber-500' :
-                      'from-emerald-400 via-emerald-200 to-emerald-500';
-
-                  return (
-                    <>
-                      <div className={`absolute -inset-[3px] bg-gradient-to-r ${ringColor} rounded-full blur-[2px] opacity-70`}></div>
-                      {isLow && <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-black animate-bounce z-20" />}
-                    </>
-                  );
-                })()}
-
-                {/* Avatar Container */}
-                <div className={`relative w-9 h-9 rounded-full overflow-hidden border-2 border-slate-800 bg-slate-700 shadow-lg relative z-10`}>
-                  <img
-                    src={user.photoURL || `https://api.dicebear.com/7.x/initials/svg?seed=${user.email}`}
-                    alt="User"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              </div>
-              <button onClick={onLogout} className="text-slate-500 hover:text-white transition-colors">
-                <LogOut className="w-4 h-4" />
-              </button>
-            </>
-          ) : (
-            <button
-              onClick={onSignInClick}
-              className="text-xs font-bold text-white bg-white/10 hover:bg-white/20 px-4 py-2 rounded-lg transition-colors border border-white/5"
-            >
-              Sign In
-            </button>
-          )}
-        </div>
-      </div>
-    </div>
-  </header>
-);
 
 const Footer = () => (
-  <footer className="w-full py-8 mt-auto border-t border-white/5 relative z-10 bg-[#020617] overflow-hidden">
-    <div className="max-w-6xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
+  <footer className="w-full py-12 mt-auto border-t border-white/5 relative z-10 bg-black overflow-hidden mb-20 md:mb-0">
+    <div className="max-w-6xl mx-auto px-6 flex flex-col items-center justify-center relative z-10">
 
-      {/* Left: Branding */}
-      <div className="flex flex-col items-start gap-1 opacity-60 hover:opacity-100 transition-opacity">
-        <div className="flex items-center gap-2">
-          <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
-          <span className="text-[10px] text-slate-300 font-sans tracking-[0.2em]  font-bold">
-            AutoForm
-          </span>
+      {/* Main Branding - Centered & Prestigious */}
+      <div className="flex flex-col items-center gap-4 mb-8 group cursor-default">
+        <div className="relative">
+          <div className="absolute -inset-4 bg-amber-500/5 blur-2xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+          <div className="flex items-center gap-3 relative z-10">
+            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.8)] animate-pulse" />
+            <span className="text-xs text-slate-300 font-sans tracking-[0.3em] font-bold uppercase transition-colors group-hover:text-white">
+              AutoForm . AI
+            </span>
+            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.8)] animate-pulse" />
+          </div>
         </div>
-        <span className="text-[9px] text-amber-500/80 font-serif italic tracking-wider pl-4">
-          A NaagRaaz Production
+
+        <div className="h-px w-12 bg-gradient-to-r from-transparent via-white/10 to-transparent group-hover:via-amber-500/50 transition-all duration-700" />
+
+        <span className="text-[10px] md:text-xs text-amber-500/90 font-serif italic tracking-widest hover:text-amber-400 transition-colors">
+          A Naagraaz Production
         </span>
       </div>
 
-      {/* Right: Links */}
-      <div className="flex items-center gap-6 text-[10px] text-slate-500 font-medium tracking-wider uppercase">
-        <span className="hover:text-amber-500 transition-colors cursor-pointer">Privacy</span>
-        <span className="hover:text-amber-500 transition-colors cursor-pointer">Terms</span>
-        <a href="mailto:NAAGRAAZPRODUCTION@GMAIL.COM" className="hover:text-amber-500 transition-colors cursor-pointer">Support</a>
-        <span className="hover:text-amber-500 transition-colors cursor-pointer">Contact</span>
+      {/* Links - Minimalist */}
+      <div className="flex items-center gap-8 text-[9px] text-slate-600 font-medium tracking-widest uppercase mb-8">
+        <span className="hover:text-white transition-colors cursor-pointer hover:underline underline-offset-4 decoration-amber-500/50">Privacy</span>
+        <span className="hover:text-white transition-colors cursor-pointer hover:underline underline-offset-4 decoration-amber-500/50">Terms</span>
+        <a href="mailto:NAAGRAAZPRODUCTION@GMAIL.COM" className="hover:text-white transition-colors cursor-pointer hover:underline underline-offset-4 decoration-amber-500/50">Support</a>
       </div>
-    </div>
 
-    {/* Disclaimer */}
-    <div className="max-w-4xl mx-auto border-t border-white/5 mt-8 pt-6 px-4 md:px-6 text-center">
-      <p className="text-[10px] md:text-xs text-slate-600 leading-relaxed font-mono mb-3">
-        <span className="text-amber-600/70 font-bold">⚠️ LEGAL DISCLAIMER:</span> This tool is provided strictly for <span className="text-slate-500 font-semibold">Educational & Research Purposes</span> only.
-      </p>
-      <p className="text-[9px] md:text-[10px] text-slate-700 leading-relaxed max-w-2xl mx-auto">
-        By using this software, you acknowledge that you are solely responsible for compliance with all applicable laws, regulations, and terms of service.
-        The developers assume no liability for misuse, unauthorized access, or violations of third-party policies.
-        <span className="block mt-2 text-slate-600">Use responsibly and ethically. Always obtain proper authorization before automating form submissions.</span>
-      </p>
-      <div className="flex justify-center mb-6 opacity-80 mix-blend-screen pointer-events-none select-none">
-        <img
-          src="/footer-stamp-hq.jpg"
-          alt="NaaGraaz Productions"
-          className="w-24 h-24 md:w-32 md:h-32 object-contain"
-        />
+      {/* Disclaimer Section - System Alert Style */}
+      <div className="max-w-4xl mx-auto px-4 mt-8 mb-12">
+        <div className="border border-white/10 bg-white/5 rounded-sm p-4 backdrop-blur-sm">
+          <div className="flex items-start gap-3">
+            <div className="mt-1 text-amber-500 animate-pulse">⚠️</div>
+            <div className="text-[10px] md:text-xs text-slate-400 font-mono leading-relaxed text-left">
+              <strong className="text-amber-500 block mb-1 tracking-widest uppercase">System Notice // Use Policy</strong>
+              This automation suite is engineered strictly for <span className="text-white">educational research and analysis</span>.
+              The user bears full responsibility for ensuring compliance with all applicable Terms of Service and legal regulations.
+              The developers assume no liability for operational misuse.
+            </div>
+          </div>
+        </div>
       </div>
-      <p className="text-[10px] text-slate-500 tracking-[0.2em] font-medium uppercase font-sans">
-        Designed and Developed by <span className="font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#ef4444] via-[#ffe4e6] to-[#ef4444] bg-[length:200%_auto] animate-text-shimmer drop-shadow-[0_0_15px_rgba(239,68,68,0.6)]">Mr. Harkamal</span>
-      </p>
+
+      {/* Signature Section - The "Showpiece" */}
+      <div className="mt-12 pt-8 border-t border-white/5 w-full flex flex-col items-center">
+        {/* Naagraaz Stamp (Centered & Upright) */}
+        <div className="mb-4 pointer-events-none select-none opacity-90 mix-blend-screen">
+          <img
+            src="/naagraaz-stamp.png"
+            alt="Naagraaz Seal"
+            className="w-20 h-20 md:w-24 md:h-24 object-contain"
+            style={{ filter: 'brightness(0) invert(1)' }}
+          />
+        </div>
+        <p className="text-[9px] text-slate-600 tracking-[0.2em] font-medium uppercase font-sans mb-3">
+          Designed & Engineered by
+        </p>
+        <div className="group relative cursor-pointer">
+          <div className="absolute -inset-8 bg-gradient-to-r from-transparent via-emerald-500/10 to-transparent blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+          <span className="relative z-10 text-xl md:text-2xl font-bold text-white font-mono tracking-widest glitch group-hover:text-emerald-400 transition-colors duration-300" data-text="MR. HARKAMAL">
+            MR. HARKAMAL
+          </span>
+        </div>
+      </div>
+
+
+
     </div>
   </footer>
 );
@@ -1035,7 +930,7 @@ function App() {
 
   return (
     <div className="min-h-screen flex flex-col pt-16 relative overflow-hidden">
-      <Background />
+      <PremiumBackground />
       {showLaptopNotice && <LaptopRequirementModal onClose={() => setShowLaptopNotice(false)} />}
       {showLogin && <LoginModal onClose={() => setShowLogin(false)} onLogin={handleLogin} />}
       {showPricing && user && <PaymentModal onClose={() => setShowPricing(false)} user={user} />}
@@ -1051,21 +946,26 @@ function App() {
         />
       )}
 
-      {/* LOADING OVERRIDE: Hide Header/Footer when analyzing */}
-      {!loading && (
-        <Header
-          reset={reset}
-          step={step}
-          user={user}
-          loading={authLoading}
-          onLogout={handleLogout}
-          onShowPricing={() => setShowPricing(true)}
-          onSignInClick={() => setShowLogin(true)}
-          onDashboardClick={() => setShowAdminDashboard(true)}
-        />
-      )}
+      <PremiumBackground />
 
-      <main className={`flex-1 w-full max-w-6xl mx-auto px-6 py-12 flex flex-col relative z-10 ${loading ? 'justify-center items-center' : ''}`}>
+      {/* Floating Header */}
+      <Header
+        reset={() => {
+          setStep(1);
+          setAnalysis(null);
+          setUrl('');
+          setParsingError(null);
+        }}
+        step={step}
+        user={user}
+        loading={authLoading}
+        onLogout={handleLogout}
+        onShowPricing={() => setShowPricing(true)}
+        onSignInClick={() => setShowLogin(true)}
+        onDashboardClick={() => setShowAdminDashboard(true)}
+      />
+
+      <main className="relative z-10 flex flex-col items-center justify-center min-h-screen pt-20 pb-12 px-2 sm:px-6">
         {loading ? (
           <LoadingScreen
             progress={aiProgress || loadingMessages[Math.min(Math.floor(progress / 20), loadingMessages.length - 1)]}
