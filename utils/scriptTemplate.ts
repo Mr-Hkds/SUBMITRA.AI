@@ -218,6 +218,11 @@ export const generateAutomationScript = (
     const logEl = document.getElementById('af-log');
     const statusEl = document.getElementById('af-status');
     
+    // Mission Control Relay
+    if (typeof reportToMissionControl === 'function') {
+        reportToMissionControl({ count, msg, status, timestamp: Date.now() });
+    }
+    
     if (countEl) countEl.innerText = \`\${count} / \${CONFIG.targetCount}\`;
     if (barEl) barEl.style.width = \`\${(count / CONFIG.targetCount) * 100}%\`;
     if (logEl && msg) logEl.innerText = msg;

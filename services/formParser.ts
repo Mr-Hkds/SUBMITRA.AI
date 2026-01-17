@@ -186,10 +186,13 @@ const parseGoogleJson = (data: any): { title: string; questions: FormQuestion[] 
       }
     }
 
-    console.log(`Parsed Question: "${title}" [${type}] Options: ${options.length}`);
+    const entryId = q[4] && q[4][0] && q[4][0][0] ? q[4][0][0].toString() : q[0].toString();
+
+    console.log(`Parsed Question: "${title}" [${type}] entryId: ${entryId} Options: ${options.length}`);
 
     questions.push({
       id: q[0].toString(),
+      entryId,
       title,
       type,
       options,

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 
 // Log Version for Vercel Verification
-console.log('🚀 AutoForm AI v0.1.0 Loaded [Razorpay Fixes Included]');
+console.log('[SYSTEM] AutoForm AI v0.1.0 Loaded [Razorpay Fixes Included]');
 import { Bot, Copy, CheckCircle, AlertCircle, BarChart3, ArrowRight, ArrowLeft, RotateCcw, Sparkles, Code2, Terminal, Zap, Command, Activity, Cpu, Crown, LogOut, Settings, Lock, Laptop, Monitor, Target, ShieldCheck, ExternalLink } from 'lucide-react';
 import { fetchAndParseForm } from './services/formParser';
 import { analyzeForm as analyzeFormWithStatistics, generateResponseSuggestions } from './services/analysisService';
@@ -18,6 +18,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import TransitionOverlay from './components/TransitionOverlay';
 import HeroSection from './components/HeroSection';
 import VideoModal from './components/VideoModal';
+import MissionControl from './components/MissionControl';
 
 // --- VISUAL COMPONENTS ---
 
@@ -103,6 +104,51 @@ const LoginModal = ({ onClose, onLogin }: { onClose: () => void, onLogin: () => 
     </div>
   );
 };
+
+const RecommendationModal = ({ onClose, onSelect }: { onClose: () => void, onSelect: (val: number) => void }) => (
+  <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 animate-fade-in">
+    <div className="absolute inset-0 bg-black/90 backdrop-blur-md" onClick={onClose} />
+    <div className="max-w-md w-full glass-panel p-8 rounded-2xl border border-amber-500/20 shadow-[0_0_50px_rgba(245,158,11,0.1)] relative z-10">
+      <div className="flex flex-col items-center text-center space-y-6">
+        <div className="w-16 h-16 rounded-full bg-amber-500/10 flex items-center justify-center border border-amber-500/20">
+          <ShieldCheck className="w-8 h-8 text-amber-500" />
+        </div>
+        <div>
+          <h3 className="text-xl font-serif font-bold text-white mb-2">Academic Safety Guide</h3>
+          <p className="text-xs text-slate-400 leading-relaxed font-mono">
+            To avoid suspicion, use realistic response volumes. Teachers often track "round numbers" and "impossible growth" patterns.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 gap-3 w-full">
+          {[
+            { label: 'High School / Small Project', range: '35 - 45', val: 42, color: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' },
+            { label: 'Undergraduate / College', range: '115 - 135', val: 127, color: 'bg-amber-500/10 border-amber-500/20 text-amber-500' },
+            { label: 'Post-Grad / Professional', range: '175 - 195', val: 184, color: 'bg-blue-500/10 border-blue-500/20 text-blue-400' },
+          ].map((item) => (
+            <button
+              key={item.label}
+              onClick={() => { onSelect(item.val); onClose(); }}
+              className={`flex items-center justify-between p-4 rounded-xl border transition-all hover:scale-[1.02] active:scale-95 ${item.color}`}
+            >
+              <div className="text-left">
+                <div className="text-[10px] font-bold uppercase tracking-wider">{item.label}</div>
+                <div className="text-[10px] opacity-70">Recommended: {item.range}</div>
+              </div>
+              <div className="text-lg font-bold font-mono">Set {item.val}</div>
+            </button>
+          ))}
+        </div>
+
+        <div className="text-[9px] text-slate-500 italic">
+          Tip: Round numbers (50, 100) are easily detectable as fakes. Our algorithm adds "jitter" to the data, but the total count should also seem organic.
+        </div>
+
+        <button onClick={onClose} className="text-xs font-bold text-slate-500 hover:text-white uppercase tracking-widest mt-2">Close Guide</button>
+      </div>
+    </div>
+  </div>
+);
 
 const LaptopRequirementModal = ({ onClose }: { onClose: () => void }) => (
   <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 animate-fade-in-up">
@@ -305,97 +351,7 @@ const Footer = () => (
   </footer>
 );
 
-const LoadingState = ({ messages, progress }: { messages: string[], progress: number }) => {
-  const [idx, setIdx] = useState(0);
-
-  useEffect(() => {
-    // Cycle messages every 2000ms (2 seconds) for readability
-    const t = setInterval(() => {
-      setIdx(prev => (prev + 1) % messages.length);
-    }, 2000);
-    return () => clearInterval(t);
-  }, [messages]);
-
-  // Use the real progress passed via props
-
-
-  // Use the real progress passed via props
-
-
-  return (
-    <div className="flex flex-col items-center justify-center min-h-[400px] w-full animate-fade-in-up relative z-20">
-      <div className="w-full max-w-lg p-0.5 rounded-2xl bg-gradient-to-b from-white/10 to-transparent relative overflow-hidden group">
-        <div className="w-full bg-[#030303]/90 backdrop-blur-2xl rounded-[15px] p-8 md:p-10 flex flex-col items-center relative overflow-hidden">
-
-          {/* Tech Grid Background */}
-          <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:20px_20px] opacity-20" />
-          {/* Ambient Glow */}
-          <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-amber-500/50 to-transparent" />
-          <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-white/5 to-transparent" />
-
-          {/* Center Icon Construction */}
-          <div className="relative mb-12 mt-2">
-            <div className="relative z-10 w-24 h-24 flex items-center justify-center">
-              <div className="absolute inset-0 bg-amber-500/5 rounded-full blur-xl animate-pulse" />
-              <Cpu className="w-12 h-12 text-amber-500 relative z-10 drop-shadow-[0_0_10px_rgba(245,158,11,0.5)]" />
-
-              {/* Spinning Rings */}
-              <div className="absolute inset-0 border border-amber-500/30 rounded-full animate-[spin_3s_linear_infinite]" />
-              <div className="absolute inset-3 border border-dashed border-amber-500/30 rounded-full animate-[spin_8s_linear_infinite_reverse]" />
-            </div>
-
-            {/* Horizontal Scan Line */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[140%] h-[1px] bg-gradient-to-r from-transparent via-amber-500/20 to-transparent" />
-          </div>
-
-          {/* Text Status */}
-          <div className="w-full space-y-6 mb-2 text-center relative z-10">
-            {/* Flexible height container for text */}
-            <div className="min-h-[2rem] flex flex-col items-center justify-center">
-              <div key={idx} className="font-mono text-xs md:text-sm text-amber-50 tracking-[0.15em] uppercase animate-fade-in-up flex items-center justify-center gap-3 text-center whitespace-normal leading-relaxed max-w-full">
-                <span className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-ping shrink-0" />
-                {messages[idx]}
-              </div>
-            </div>
-
-            {/* Progress Section */}
-            <div className="space-y-2 pt-2">
-              <div className="flex justify-between items-end px-1">
-                <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest">System Status</span>
-                <span className="text-[10px] font-mono text-amber-500 font-bold tracking-widest">{progress}%</span>
-              </div>
-
-              {/* Progress Bar Container */}
-              <div className="w-full h-0.5 bg-white/10 relative overflow-visible">
-                <div
-                  className="absolute left-0 top-0 h-full bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.8)] transition-all duration-1000 ease-out"
-                  style={{ width: `${progress}%` }}
-                >
-                  <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-amber-200 rounded-full shadow-[0_0_10px_rgba(255,255,255,1)] translate-x-1/2" />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Tech Corners */}
-          <div className="absolute top-4 left-4 w-2 h-2 border-l border-t border-white/20" />
-          <div className="absolute top-4 right-4 w-2 h-2 border-r border-t border-white/20" />
-          <div className="absolute bottom-4 left-4 w-2 h-2 border-l border-b border-white/20" />
-          <div className="absolute bottom-4 right-4 w-2 h-2 border-r border-b border-white/20" />
-
-          {/* Side Details */}
-          <div className="absolute top-1/2 left-4 text-[8px] font-mono text-white/10 -rotate-90 origin-center tracking-widest hidden md:block">
-            SEQ-8X92
-          </div>
-          <div className="absolute top-1/2 right-4 text-[8px] font-mono text-white/10 rotate-90 origin-center tracking-widest hidden md:block">
-            v4.0.0
-          </div>
-
-        </div>
-      </div>
-    </div>
-  );
-};
+// DELETED: LoadingState replaced by LoadingScreen component
 
 function App() {
   // User State
@@ -405,6 +361,9 @@ function App() {
   const [showPricing, setShowPricing] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
   const [showLaptopNotice, setShowLaptopNotice] = useState(false);
+  // REMOVED EXTENSION DETECTION - NOW USING SYSTEM NATIVE ENGINE
+  const isExtensionInstalled = false; // Forced false to bypass logic
+  const [stopAutomation, setStopAutomation] = useState(false);
 
   useEffect(() => {
     // Check if user is on mobile and hasn't seen the notice before
@@ -424,6 +383,7 @@ function App() {
   }, []);
 
   const [showAdminDashboard, setShowAdminDashboard] = useState(false);
+  const [showRecommendationModal, setShowRecommendationModal] = useState(false);
 
   // App State
   const [url, setUrl] = useState('');
@@ -447,15 +407,48 @@ function App() {
   const [rateLimitCooldown, setRateLimitCooldown] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [showVideoModal, setShowVideoModal] = useState(false);
+  const [questionSearch, setQuestionSearch] = useState('');
+
+  // AUTOMATION STATE
+  const [isAutoRunning, setIsAutoRunning] = useState(false);
+  const [automationLogs, setAutomationLogs] = useState<any[]>([]);
+
+  useEffect(() => {
+    const handleMissionUpdate = (event: MessageEvent) => {
+      if (event.data?.type === 'AF_MISSION_CONTROL_UPDATE') {
+        const data = event.data.payload;
+
+        setAutomationLogs(prev => {
+          // Check if this log already exists (to prevent duplicates)
+          const isDuplicate = prev.some(l => l.timestamp === data.timestamp && l.msg === data.msg);
+          if (isDuplicate) return prev;
+          return [...prev, data];
+        });
+
+        // If the script signals DONE, we can handle it here if needed
+        if (data.status === 'DONE') {
+          // handle completion
+        }
+      }
+    };
+
+    window.addEventListener('message', handleMissionUpdate);
+    return () => window.removeEventListener('message', handleMissionUpdate);
+  }, []);
+
+  const handleAbort = () => {
+    (window as any).__AF_STOP_SIGNAL = true;
+    setAutomationLogs(prev => [...prev, { msg: '🛑 MISSION ABORTED BY USER. THREADS TERMINATING...', status: 'ERROR', timestamp: Date.now(), count: prev.length > 0 ? prev[prev.length - 1].count : 0 }]);
+  };
 
 
 
   const loadingMessages = [
-    "Initializing neural parser...",
-    "Connecting to Statistical Engine...",
-    "Analyzing semantic structure...",
-    "Calculating demographic weights...",
-    "Generating automation vector..."
+    "Establishing Secure Handshake...",
+    "Syncing with Neural Core...",
+    "Calibrating System Optics...",
+    "Finalizing Protocol Links...",
+    "Accessing Mission Terminal..."
   ];
 
   const handleLogin = async () => {
@@ -715,6 +708,213 @@ function App() {
     return false;
   };
 
+  const executeNativeSubmission = async (url: string, data: Record<string, string | string[]>) => {
+    return new Promise((resolve) => {
+      const iframeName = `af_bridge_${Math.random().toString(36).substring(7)}`;
+      const iframe = document.createElement('iframe');
+      iframe.name = iframeName;
+      iframe.id = iframeName;
+      iframe.style.display = 'none';
+      document.body.appendChild(iframe);
+
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = url.split('?')[0].replace(/\/viewform$/, '/formResponse'); // Action URL
+      form.target = iframeName;
+
+      Object.entries(data).forEach(([key, value]) => {
+        if (Array.isArray(value)) {
+          value.forEach(v => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = `entry.${key}`;
+            input.value = v;
+            form.appendChild(input);
+          });
+        } else {
+          const input = document.createElement('input');
+          input.type = 'hidden';
+          input.name = `entry.${key}`;
+          input.value = value as string;
+          form.appendChild(input);
+        }
+      });
+
+      // Add page history to ensure submission works for multi-page forms
+      const hist = document.createElement('input');
+      hist.type = 'hidden';
+      hist.name = 'pageHistory';
+      hist.value = '0';
+      form.appendChild(hist);
+
+      document.body.appendChild(form);
+
+      try {
+        form.submit();
+      } catch (e) {
+        console.error("Native Submission Error:", e);
+      }
+
+      // Cleanup
+      setTimeout(() => {
+        if (document.body.contains(form)) document.body.removeChild(form);
+        if (document.body.contains(iframe)) document.body.removeChild(iframe);
+        resolve(true);
+      }, 2000);
+    });
+  };
+
+  const handleAutoRun = async (overrides?: Record<string, string>) => {
+    if (!analysis || !user) return;
+
+    // basic validations
+    const rateCheck = await checkRateLimit(user.uid);
+    if (!rateCheck.allowed) {
+      setError(`Rate limit: Wait ${rateCheck.cooldownRemaining}s`);
+      return;
+    }
+
+    if ((user.tokens || 0) < targetCount) {
+      setShowPricing(true);
+      return;
+    }
+
+    setIsAutoRunning(true);
+    setStopAutomation(false);
+    setAutomationLogs([]);
+
+    const logs: any[] = [];
+    let successCount = 0;
+    const pushLog = (msg: string, status: string = 'RUNNING', countOverride?: number) => {
+      const newLog = {
+        msg,
+        status,
+        timestamp: Date.now(),
+        count: countOverride !== undefined ? countOverride : successCount
+      };
+      logs.push(newLog);
+      setAutomationLogs([...logs]);
+    };
+
+    pushLog('🚀 SYSTEM ENGINE: Initializing Neural Bridge...', 'INIT');
+
+    try {
+      // Setup payload generation logic
+      let namesToUse: string[] = [];
+      if (nameSource === 'auto') {
+        if (generatedNames.length > 0) namesToUse = generatedNames;
+        else {
+          namesToUse = await generateResponseSuggestions("local-mode", targetCount, 'NAMES');
+          setGeneratedNames(namesToUse);
+        }
+      } else if (nameSource === 'indian') {
+        namesToUse = generateIndianNames(targetCount);
+      } else if (nameSource === 'custom') {
+        namesToUse = customNamesRaw.split(',').map(n => n.trim()).filter(n => n.length > 0);
+      }
+
+      const sourceResponses = overrides || customResponses;
+      const processedCustomResponses: Record<string, string[]> = {};
+      Object.entries(sourceResponses).forEach(([qId, val]) => {
+        if (val && (val as string).trim().length > 0) {
+          processedCustomResponses[qId] = (val as string).split(',').map(v => v.trim()).filter(v => v.length > 0);
+        }
+      });
+
+      pushLog(`🛰 Handshake verified. Establishing secure neural link...`);
+      await new Promise(r => setTimeout(r, 2000)); // Immersion delay
+
+      for (let i = 0; i < targetCount; i++) {
+        // Check for Abort
+        if ((window as any).__AF_STOP_SIGNAL) break;
+
+        pushLog(`🧠 Response #${i + 1}: Simulating human reasoning...`);
+        await new Promise(r => setTimeout(r, 1500 + Math.random() * 2000)); // Thinking delay
+
+        pushLog(`⚡ Response #${i + 1}: Generating optimized payload...`);
+
+        // Generate values for this specific submission
+        const submissionData: Record<string, string | string[]> = {};
+
+        analysis.questions.forEach(q => {
+          let value: string | string[] = "";
+
+          // 1. Custom/AI overrides
+          if (processedCustomResponses[q.id]) {
+            const arr = processedCustomResponses[q.id];
+            value = arr[i % arr.length];
+          }
+          // 2. Names
+          else if (q.title.toLowerCase().includes('name')) {
+            value = namesToUse.length > 0 ? namesToUse[i % namesToUse.length] : "Auto User";
+          }
+          // 3. Random fallback for options
+          else if (q.options.length > 0) {
+            const picker = (options: any[]) => {
+              const total = options.reduce((acc, opt) => acc + (opt.weight || 0), 0);
+              if (total === 0) return options[Math.floor(Math.random() * options.length)].value;
+              let r = Math.random() * total;
+              for (const opt of options) {
+                if (r < (opt.weight || 0)) return opt.value;
+                r -= (opt.weight || 0);
+              }
+              return options[0].value;
+            };
+
+            if (q.type === 'CHECKBOXES') {
+              value = [picker(q.options)];
+            } else {
+              value = picker(q.options);
+            }
+          }
+
+          if (value) submissionData[q.entryId] = value;
+        });
+
+        pushLog(`📡 Response #${i + 1}: Relaying to secure endpoint...`);
+        await executeNativeSubmission(url, submissionData);
+
+        successCount++;
+
+        // --- ADAPTIVE COOLDOWN (Safety Fix) ---
+        // Every 15 submissions, add a "System Cooldown" to bypass IP-based rate limiting
+        if (successCount % 15 === 0 && successCount < targetCount) {
+          const cooldownSecs = 30 + Math.floor(Math.random() * 30);
+          pushLog(`🛡️ IP SAFETY: Automatic cooldown triggered. Waiting ${cooldownSecs}s to prevent blocking...`, 'COOLDOWN');
+          await new Promise(r => setTimeout(r, cooldownSecs * 1000));
+        } else {
+          // Natural Human-scale Jitter/Delay
+          const jitter = Math.floor(Math.random() * 4000) + 2000;
+          await new Promise(r => setTimeout(r, jitter));
+        }
+
+        pushLog(`✅ Response #${i + 1}: Submission recorded.`, i + 1 === targetCount ? 'DONE' : 'RUNNING', successCount);
+      }
+
+      if (!(window as any).__AF_STOP_SIGNAL) {
+        pushLog('🎊 SEQUENCER COMPLETE. All background jobs finished.', 'DONE', targetCount);
+      } else {
+        pushLog('🛑 MISSION PARTIALLY COMPLETED. Intercepted by user.', 'ABORTED', successCount);
+      }
+
+      // ACCURATE TOKEN DEDUCTION: Only deduct what was actually sent
+      if (successCount > 0) {
+        incrementUsageCount(user.uid, successCount);
+      }
+
+      (window as any).__AF_STOP_SIGNAL = false;
+      return true;
+
+    } catch (err) {
+      console.error(err);
+      pushLog('❌ ENGINE ERROR: Neural link severed.', 'ERROR');
+      setError("Auto-Run failed");
+      return false;
+    } finally {
+      // setLoading(false);
+    }
+  };
+
 
   const handleCompile = async () => {
     if (!user) return;
@@ -726,27 +926,35 @@ function App() {
     }
 
     // 1. VALIDATION: Parse AI Data BEFORE anything else
-    // 1. VALIDATION: Parse AI Data BEFORE anything else
     let aiParsedResponses: Record<string, string[]> = {};
 
-    // Check if we even need AI Data (only if we have required text fields)
-    const hasRequiredTextFields = analysis?.questions.some(q =>
-      (q.type === 'SHORT_ANSWER' || q.type === 'PARAGRAPH') && q.required
+    // Filter used text fields (excluding names)
+    const requiredTextFields = analysis?.questions.filter(q =>
+      (q.type === 'SHORT_ANSWER' || q.type === 'PARAGRAPH') &&
+      !q.title.toLowerCase().includes('name') &&
+      q.required
     );
 
-    if (hasRequiredTextFields && !aiPromptData.trim()) {
-      setParsingError("⚠️ AI Data is REQUIRED for this form. Please copy the prompt, get data from ChatGPT, and paste it here.");
+    // BLOCKER: Verify AI Data is present if required
+    if (requiredTextFields && requiredTextFields.length > 0 && !aiPromptData.trim()) {
+      setError("⚠️ Missing Required Data: Please complete Stage 1 (AI Injection) before launching.");
+      setParsingError("REQUIRED: You must inject data for mandatory text fields.");
       return;
     }
 
-    try {
-      if (analysis && hasRequiredTextFields) {
+    // Parse if data exists
+    if (analysis && aiPromptData.trim()) {
+      try {
         aiParsedResponses = parseAIResponse(aiPromptData, analysis.questions);
         setParsingError(null);
+      } catch (e: any) {
+        setParsingError(`⚠️ ${e.message}`);
+        // If it was required, we must stop
+        if (requiredTextFields && requiredTextFields.length > 0) {
+          setError("⚠️ Critical JSON Error: Fix AI data before proceeding.");
+          return;
+        }
       }
-    } catch (e: any) {
-      setParsingError(`⚠️ ${e.message}`);
-      return;
     }
 
     // 2. MERGE: AI Data into Custom Responses (AI overrides existing if keys match, or we can merge)
@@ -763,24 +971,15 @@ function App() {
     setIsTransitioning(true);
 
     setTimeout(async () => {
-      try {
-        const success = await handleCopy(mergedResponses);
+      setStep(3);
+      setIsTransitioning(false);
 
-        if (success) {
-          setTimeout(() => {
-            setStep(3);
-            setTimeout(() => {
-              setIsTransitioning(false);
-            }, 300);
-          }, 800);
-        } else {
-          setIsTransitioning(false);
-        }
+      try {
+        await handleAutoRun(mergedResponses);
       } catch (err) {
-        setIsTransitioning(false);
-        console.error("Compilation failed during transition", err);
+        console.error("Auto-Run failed", err);
       }
-    }, 300);
+    }, 1200);
   };
 
   const handleAIInject = () => {
@@ -842,735 +1041,489 @@ function App() {
       {showPricing && user && <PaymentModal onClose={() => setShowPricing(false)} user={user} />}
       {isTransitioning && <TransitionOverlay />}
       <VideoModal isOpen={showVideoModal} onClose={() => setShowVideoModal(false)} />
+      {showRecommendationModal && (
+        <RecommendationModal
+          onClose={() => setShowRecommendationModal(false)}
+          onSelect={(val) => {
+            checkBalanceAndRedirect(val);
+            setTargetCount(val);
+          }}
+        />
+      )}
 
-      <Header
-        reset={reset}
-        step={step}
-        user={user}
-        loading={authLoading}
-        onLogout={handleLogout}
-        onShowPricing={() => setShowPricing(true)}
-        onSignInClick={() => setShowLogin(true)}
-        onDashboardClick={() => setShowAdminDashboard(true)}
-      />
+      {/* LOADING OVERRIDE: Hide Header/Footer when analyzing */}
+      {!loading && (
+        <Header
+          reset={reset}
+          step={step}
+          user={user}
+          loading={authLoading}
+          onLogout={handleLogout}
+          onShowPricing={() => setShowPricing(true)}
+          onSignInClick={() => setShowLogin(true)}
+          onDashboardClick={() => setShowAdminDashboard(true)}
+        />
+      )}
 
-      <main className="flex-1 w-full max-w-6xl mx-auto px-6 py-12 flex flex-col relative z-10">
-
-        {/* ADMIN DASHBOARD */}
-        {showAdminDashboard && user?.isAdmin ? (
-          <AdminDashboard user={user} onBack={() => setShowAdminDashboard(false)} />
+      <main className={`flex-1 w-full max-w-6xl mx-auto px-6 py-12 flex flex-col relative z-10 ${loading ? 'justify-center items-center' : ''}`}>
+        {loading ? (
+          <LoadingScreen
+            progress={aiProgress || loadingMessages[Math.min(Math.floor(progress / 20), loadingMessages.length - 1)]}
+            percentage={progress}
+          />
         ) : (
           <>
-            {/* STEP 1: INPUT */}
-            {step === 1 && !loading && (
-              <HeroSection
-                url={url}
-                setUrl={setUrl}
-                onAnalyze={handleAnalyze}
-                onWatchDemo={() => setShowVideoModal(true)}
-                loading={loading}
-              />
-            )}
+            {showAdminDashboard && user?.isAdmin ? (
+              <AdminDashboard user={user} onBack={() => setShowAdminDashboard(false)} />
+            ) : (
+              <>
+                {/* STEP 1: INPUT */}
+                {step === 1 && (
+                  <HeroSection
+                    url={url}
+                    setUrl={setUrl}
+                    onAnalyze={handleAnalyze}
+                    onWatchDemo={() => setShowVideoModal(true)}
+                    loading={loading}
+                  />
+                )}
 
-
-            {loading && <LoadingState messages={loadingMessages} progress={progress} />}
-
-            {/* STEP 2: DASHBOARD */}
-            {
-              step === 2 && analysis && (
-                <section className="w-full animate-fade-in-up">
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8 border-b border-white/5 pb-8">
-                    <div>
-                      <h2 className="text-3xl font-serif font-bold text-white mb-2 tracking-tight">{analysis.title}</h2>
-                      <div className="flex gap-3">
-                        <Badge color="obsidian">{analysis.questions.length} Fields</Badge>
-                        <Badge color="gold">Algorithm Optimized</Badge>
+                {/* STEP 2: DASHBOARD */}
+                {step === 2 && analysis && (
+                  <section className="w-full animate-fade-in-up">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8 border-b border-white/5 pb-8">
+                      <div>
+                        <h2 className="text-3xl font-serif font-bold text-white mb-2 tracking-tight">{analysis.title}</h2>
+                        <div className="flex gap-3">
+                          <Badge color="obsidian">{analysis.questions.length} Fields</Badge>
+                          <Badge color="gold">Algorithm Optimized</Badge>
+                        </div>
+                      </div>
+                      <div className="flex flex-col items-end gap-2">
+                        <div className="flex gap-3">
+                          <button onClick={reset} className="glass-panel px-6 py-3 rounded-lg text-slate-400 text-sm hover:text-white transition">
+                            Cancel
+                          </button>
+                          <button
+                            onClick={handleCompile}
+                            className="relative overflow-hidden gold-button px-8 py-3 rounded-lg text-sm shadow-[0_0_25px_rgba(251,191,36,0.15)] animate-sheen"
+                          >
+                            <span className="relative z-10 flex items-center gap-2">
+                              <Zap className="w-4 h-4" />
+                              Launch Mission Control
+                            </span>
+                          </button>
+                        </div>
+                        <span className="text-[10px] text-amber-500 font-bold uppercase tracking-widest opacity-70">
+                          Finalize configuration then launch process
+                        </span>
                       </div>
                     </div>
-                    <div className="flex gap-3">
-                      <button onClick={reset} className="glass-panel px-6 py-3 rounded-lg text-slate-400 text-sm hover:text-white transition">
-                        Cancel
-                      </button>
-                      <button onClick={handleCompile} className="relative overflow-hidden gold-button px-8 py-3 rounded-lg text-sm shadow-[0_0_25px_rgba(251,191,36,0.15)] animate-sheen">
-                        <span className="relative z-10">Compile Script</span>
-                      </button>
-                    </div>
-                  </div>
 
-                  {/* Error Banner */}
-                  {error && (
-                    <div className="mb-6 flex items-center gap-3 text-red-200 bg-red-950/80 border border-red-500/30 px-6 py-4 rounded-xl text-sm font-medium backdrop-blur-xl shadow-xl animate-fade-in-up">
-                      <AlertCircle className="w-5 h-5 flex-shrink-0" />
-                      <span className="flex-1">{error}</span>
-                    </div>
-                  )}
+                    {error && (
+                      <div className="mb-6 flex items-center gap-3 text-red-200 bg-red-950/80 border border-red-500/30 px-6 py-4 rounded-xl text-sm font-medium backdrop-blur-xl shadow-xl animate-fade-in-up">
+                        <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                        <span className="flex-1">{error}</span>
+                      </div>
+                    )}
 
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Left Col: Config */}
-                    <div className="space-y-6">
-                      <div className="glass-panel p-6 rounded-xl space-y-8">
-                        <div className="flex items-center gap-2 text-sm font-bold text-white uppercase tracking-wider">
-                          <Settings className="w-4 h-4 text-amber-500" /> Runtime Config
-                        </div>
-
-                        <div className="space-y-4 relative">
-                          <div className="flex justify-between text-xs font-medium text-slate-400">
-                            <span>Response Volume</span>
-                            <div className="flex items-center gap-2">
-                              {/* Inline Recommendation Hint */}
-                              {(() => {
-                                const qCount = analysis.questions.length;
-                                let min = 30, max = 50;
-                                if (qCount > 10) { min = 50; max = 80; }
-                                if (qCount > 25) { min = 80; max = 120; }
-                                return (
-                                  <span className="text-[10px] text-emerald-500/60 font-mono hidden sm:inline-block">
-                                    (Rec: {min}-{max})
-                                  </span>
-                                );
-                              })()}
-
-                              <span className="text-amber-400 font-mono flex items-center gap-1">
-                                <span className="text-lg font-bold">{targetCount}</span>
-                                <span className="text-[10px] text-amber-500/70 uppercase">Responses</span>
-                                {!user.isPremium && <Lock className="w-3 h-3 text-slate-500" />}
-                              </span>
-                            </div>
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                      {/* Left Col: Config */}
+                      <div className="space-y-6">
+                        <div className="glass-panel p-6 rounded-xl space-y-8">
+                          <div className="flex items-center gap-2 text-sm font-bold text-white uppercase tracking-wider">
+                            <Settings className="w-4 h-4 text-amber-500" /> Runtime Config
                           </div>
-                          {(() => {
-                            const qCount = analysis.questions.length;
-                            let min = 30, max = 50;
-                            if (qCount > 10) { min = 50; max = 80; }
-                            if (qCount > 25) { min = 80; max = 120; }
 
-                            return (
-                              <div className="mt-4 mb-6 p-4 rounded-xl bg-gradient-to-br from-emerald-500/10 to-teal-500/10 border border-emerald-500/20 relative overflow-hidden group shadow-lg">
-                                <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+                          <div className="mt-4 mb-4">
+                            <label className="block text-sm font-bold text-white uppercase tracking-widest mb-4 flex items-center justify-between gap-2">
+                              <span className="flex items-center gap-2">
+                                <Target className="w-4 h-4 text-emerald-500" />
+                                Number of Responses to Generate
+                              </span>
+                              <button
+                                onClick={() => setShowRecommendationModal(true)}
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-500 hover:bg-amber-500/20 transition-all active:scale-95"
+                              >
+                                <ShieldCheck className="w-3 h-3" />
+                                <span className="text-[9px] font-bold uppercase tracking-wider">Academic Guide</span>
+                              </button>
+                            </label>
 
-                                <div className="mb-3 flex items-center gap-2 relative z-10">
-                                  <div className="p-1.5 rounded-lg bg-emerald-500/20 border border-emerald-500/30">
-                                    <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                                  </div>
-                                  <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">Recommended Strategy</span>
-                                </div>
-
-                                <p className="text-[10px] text-slate-300 leading-relaxed max-w-[95%] relative z-10 font-medium">
-                                  To ensure your project data looks <strong className="text-emerald-300">organic and authentic</strong>, our algorithm suggests:
-                                </p>
-
-                                <div className="mt-3 flex items-baseline gap-2 relative z-10">
-                                  <span className="text-3xl font-bold text-white tracking-tight drop-shadow-[0_0_10px_rgba(16,185,129,0.3)]">{min}-{max}</span>
-                                  <span className="text-[10px] text-emerald-500/80 font-mono uppercase tracking-wider">Total Responses</span>
-                                </div>
+                            <div className="flex flex-col gap-6">
+                              <div className="flex items-center gap-4">
+                                <button
+                                  onClick={() => setTargetCount(Math.max(1, targetCount - 10))}
+                                  className="w-14 h-14 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center font-bold text-2xl transition-all active:scale-90 border border-slate-700"
+                                >
+                                  −
+                                </button>
+                                <input
+                                  type="number"
+                                  min={1}
+                                  max={200}
+                                  value={targetCount}
+                                  onChange={(e) => {
+                                    const val = Math.min(Math.max(1, Number(e.target.value) || 1), 200);
+                                    checkBalanceAndRedirect(val);
+                                    setTargetCount(val);
+                                  }}
+                                  className="flex-1 h-14 bg-slate-900/50 border-2 border-slate-700 rounded-2xl text-center text-amber-400 font-mono font-bold text-2xl focus:outline-none focus:border-amber-500 transition-colors shadow-inner"
+                                />
+                                <button
+                                  onClick={() => {
+                                    const newVal = Math.min(200, targetCount + 10);
+                                    checkBalanceAndRedirect(newVal);
+                                    setTargetCount(newVal);
+                                  }}
+                                  className="w-14 h-14 rounded-2xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 hover:text-amber-400 flex items-center justify-center font-bold text-2xl transition-all active:scale-90 border border-amber-500/30"
+                                >
+                                  +
+                                </button>
                               </div>
-                            );
-                          })()}
-                          <div className="relative w-full group py-2">
-                            <style>
-                              {`
-                                input[type=range]::-webkit-slider-thumb {
-                                  -webkit-appearance: none;
-                                  height: 20px;
-                                  width: 20px;
-                                  border-radius: 50%;
-                                  background: #f59e0b;
-                                  cursor: pointer;
-                                  box-shadow: 0 0 10px rgba(245, 158, 11, 0.5);
-                                  margin-top: -8px;
-                                }
-                                input[type=range]::-webkit-slider-thumb:hover {
-                                  transform: scale(1.2);
-                                  box-shadow: 0 0 15px rgba(245, 158, 11, 0.8);
-                                }
-                                input[type=range]::-moz-range-thumb {
-                                  height: 20px;
-                                  width: 20px;
-                                  border: none;
-                                  border-radius: 50%;
-                                  background: #f59e0b;
-                                  cursor: pointer;
-                                  box-shadow: 0 0 10px rgba(245, 158, 11, 0.5);
-                                }
-                              `}
-                            </style>
-                            <input
-                              type="range" min="1" max="200"
-                              value={targetCount}
-                              onChange={handleSliderChange}
-                              className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer"
-                            />
-                            <div className="flex justify-between text-[9px] text-slate-500 font-mono mt-3 uppercase tracking-wider items-center">
-                              <span>1</span>
-                              <span className="text-amber-500/50 animate-pulse font-bold tracking-[0.2em] text-[8px]">DRAG TO ADJUST</span>
-                              <span>200</span>
+
+                              <div className="grid grid-cols-5 gap-2">
+                                {[10, 25, 50, 100, 200].map((preset) => (
+                                  <button
+                                    key={preset}
+                                    onClick={() => {
+                                      checkBalanceAndRedirect(preset);
+                                      setTargetCount(preset);
+                                    }}
+                                    className={`py-3 rounded-xl text-xs font-mono font-bold transition-all active:scale-95 border ${targetCount === preset
+                                      ? 'bg-amber-500 text-black border-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.3)]'
+                                      : 'bg-slate-800/50 text-slate-400 hover:bg-slate-700 hover:text-white border-slate-700'
+                                      }`}
+                                  >
+                                    {preset}
+                                  </button>
+                                ))}
+                              </div>
                             </div>
 
-                            {/* Token Warning Overlay */}
                             {user && targetCount > (user.tokens || 0) && (
-                              <div className="absolute -bottom-8 right-0 bg-red-900/90 text-red-200 text-[10px] px-2 py-1 rounded border border-red-500/30 animate-fade-in z-20 whitespace-nowrap">
-                                Not enough tokens (Max: {user.tokens}) <span className="underline cursor-pointer hover:text-white" onClick={() => setShowPricing(true)}>Get More</span>
+                              <div className="mt-4 bg-red-900/40 text-red-200 text-xs px-4 py-3 rounded-xl border border-red-500/30 animate-fade-in flex items-center justify-between">
+                                <span className="flex items-center gap-2">
+                                  <AlertCircle className="w-4 h-4" />
+                                  Insufficient Tokens (Current: {user.tokens})
+                                </span>
+                                <button
+                                  onClick={() => setShowPricing(true)}
+                                  className="bg-red-500 text-white px-3 py-1 rounded-lg font-bold text-[10px] uppercase tracking-wider hover:bg-red-400 transition-colors"
+                                >
+                                  Upgrade
+                                </button>
                               </div>
                             )}
                           </div>
 
-                          {/* Quick Controls: +/- Buttons and Presets */}
-                          <div className="flex items-center justify-between mt-4 gap-3">
-                            {/* Minus / Plus Buttons */}
-                            <div className="flex items-center gap-1">
-                              <button
-                                onClick={() => setTargetCount(Math.max(1, targetCount - 5))}
-                                className="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center font-bold text-lg transition-all active:scale-95 border border-slate-700"
-                              >
-                                −
-                              </button>
-                              <input
-                                type="number"
-                                min={1}
-                                max={200}
-                                value={targetCount}
-                                onChange={(e) => {
-                                  const val = Math.min(Math.max(1, Number(e.target.value) || 1), 200);
-                                  checkBalanceAndRedirect(val);
-                                  setTargetCount(val);
-                                }}
-                                className="w-14 h-8 bg-slate-900 border border-slate-700 rounded-lg text-center text-amber-400 font-mono font-bold text-sm focus:outline-none focus:border-amber-500"
-                              />
-                              <button
-                                onClick={() => {
-                                  const newVal = Math.min(200, targetCount + 5);
-                                  checkBalanceAndRedirect(newVal);
-                                  setTargetCount(newVal);
-                                }}
-                              >
-                                +
-                              </button>
-                            </div>
-
-                            {/* Quick Presets */}
-                            <div className="flex gap-1">
-                              {[10, 25, 50, 100, 200].map((preset) => (
-                                <button
-                                  key={preset}
-                                  onClick={() => {
-                                    checkBalanceAndRedirect(preset);
-                                    setTargetCount(preset);
-                                  }}
-                                  className={`px-2 py-1 rounded text-[10px] font-mono font-bold transition-all active:scale-95 ${targetCount === preset
-                                    ? 'bg-amber-500 text-black'
-                                    : 'bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white border border-slate-700'
-                                    }`}
-                                >
-                                  {preset}
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-
-                          {(!user.isPremium && (user.responsesUsed >= 50 || targetCount === (50 - user.responsesUsed))) && (
-                            <div className="text-[10px] text-amber-500/80 mt-1 flex items-center justify-end gap-1 cursor-pointer hover:text-amber-400" onClick={() => setShowPricing(true)}>
-                              Free Trial Limit Reached. <span className="underline">Upgrade</span>
-                            </div>
-                          )}
-
-                          <div className="mt-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-[10px] text-red-200/80 leading-relaxed font-mono">
-                            <span className="text-red-400 font-bold block mb-1 flex items-center gap-1.5"><AlertCircle className="w-3 h-3" /> GOOGLE POLICY WARNING</span>
-                            To avoid account suspension, <span className="text-white font-bold">PRO users</span> should not exceed 100 responses/hour per IP.
-                            <br />
-                            Automated behavior monitoring is active.
+                          <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-[10px] text-red-200/80 leading-relaxed font-mono">
+                            <span className="text-red-400 font-bold block mb-1 flex items-center gap-1.5">
+                              <ShieldCheck className="w-3 h-3" />
+                              SYSTEM SECURITY PROTOCOL
+                            </span>
+                            To maintain account integrity, avoid exceeding 100 responses per hour per IP address.
                           </div>
                         </div>
 
-                        <div className="space-y-4">
-                          <div className="flex justify-between text-xs font-medium text-slate-400">
+                        <div className="glass-panel p-6 rounded-xl space-y-4">
+                          <div className="flex justify-between text-xs font-bold text-white uppercase tracking-widest">
                             <span>Interaction Delay</span>
                             <span className="text-amber-400 font-mono">{delayMin}ms</span>
                           </div>
                           <input
                             type="range" min="100" max="2000"
-                            value={delayMin} onChange={(e) => setDelayMin(Number(e.target.value))}
-                            className="w-full"
+                            value={delayMin}
+                            onChange={(e) => setDelayMin(Number(e.target.value))}
+                            className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-amber-500"
                           />
                         </div>
                       </div>
 
-                      <div className="glass-panel p-6 rounded-xl border-l-2 border-l-amber-500/50">
-                        <div className="flex items-center gap-2 text-sm font-bold text-white mb-4 uppercase tracking-wider">
-                          <Bot className="w-4 h-4 text-amber-500" /> AI Insight
-                        </div>
-                        <p className="text-xs text-slate-400 leading-relaxed font-mono">
-                          "{analysis.aiReasoning}"
-                        </p>
-                      </div>
-
-                      {/* Name Source Selection - Only if 'name' field exists */}
-                      {analysis.questions.some(q => q.title.toLowerCase().includes('name')) && (
-                        <div className="glass-panel p-6 rounded-xl space-y-4">
-                          <div className="flex items-center gap-2 text-sm font-bold text-white uppercase tracking-wider mb-2">
-                            <Command className="w-4 h-4 text-amber-500" /> Name Source
-                          </div>
-                          <div className="grid grid-cols-3 gap-2">
-                            {['auto', 'indian', 'custom'].map((opt) => (
-                              <button
-                                key={opt}
-                                onClick={() => setNameSource(opt as any)}
-                                className={`text-[10px] font-mono uppercase py-2 rounded border transition-all ${nameSource === opt
-                                  ? 'bg-amber-500/20 border-amber-500text-white'
-                                  : 'bg-white/5 border-white/5 text-slate-500 hover:bg-white/10'
-                                  } ${nameSource === opt ? 'border-amber-500 text-amber-400' : ''}`}
-                              >
-                                {opt}
-                              </button>
-                            ))}
-                          </div>
-                          {nameSource === 'custom' && (
-                            <textarea
-                              value={customNamesRaw}
-                              onChange={(e) => setCustomNamesRaw(e.target.value)}
-                              placeholder="Enter names separated by commas (e.g. John Doe, Jane Smith)"
-                              className="w-full bg-[#050505] border border-white/10 rounded-lg p-3 text-xs text-white font-mono h-24 focus:border-amber-500/50 outline-none"
-                            />
-                          )}
-                          {nameSource === 'auto' && <p className="text-[10px] text-slate-500">AI will auto-generate diverse names based on context.</p>}
-                          {nameSource === 'indian' && <p className="text-[10px] text-slate-500">Uses a database of authentic Indian first and last names.</p>}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Right Col: Data Preview */}
-                    <div className="lg:col-span-2 flex flex-col gap-6">
-
-                      {/* AI DATA INJECTION (REQUIRED ONLY FOR TEXT FIELDS) - Now in Right Col */}
-                      {analysis.questions.some(q => (q.type === 'SHORT_ANSWER' || q.type === 'PARAGRAPH') && q.required) && (
-                        <div className={`glass-panel p-6 rounded-xl space-y-4 border-l-2 relative overflow-hidden ${parsingError ? 'border-red-500 bg-red-500/5' : 'border-amber-500/50'}`}>
-                          {/* Ambient Glow */}
-                          <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
-
-                          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
-                            <div className="flex items-center gap-2 text-sm font-bold text-white uppercase tracking-wider">
-                              <Sparkles className="w-4 h-4 text-amber-500" /> AI Data Injection
-                              <span className="text-[10px] text-red-400 bg-red-900/30 px-2 py-0.5 rounded ml-2 border border-red-500/20 shadow-sm">REQUIRED STEP 1</span>
+                      {/* Right Col: Operations */}
+                      <div className="lg:col-span-2 flex flex-col gap-6">
+                        {/* Name Source Selection */}
+                        {analysis.questions.some(q => q.title.toLowerCase().includes('name')) && (
+                          <div className="glass-panel p-6 rounded-xl space-y-4 border-l-2 border-l-amber-500/50 bg-amber-500/[0.02]">
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="flex items-center gap-2 text-sm font-bold text-white uppercase tracking-wider">
+                                <Command className="w-4 h-4 text-amber-500" /> Identity Generator Configuration
+                              </div>
+                              <span className="text-[9px] text-amber-500 font-bold bg-amber-500/10 px-2 py-1 rounded">REQUIRED CONFIGURATION</span>
                             </div>
 
-                            <button
-                              onClick={() => {
-                                const prompt = generateAIPrompt(analysis.title, analysis.description, analysis.questions, targetCount);
-                                navigator.clipboard.writeText(prompt);
-                                alert("Contextual prompt copied! Paste this into ChatGPT.");
-                              }}
-                              className="bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 text-[10px] font-mono px-4 py-2 rounded-lg border border-amber-500/20 transition-all hover:scale-105 active:scale-95 flex items-center gap-2 shadow-lg shadow-amber-500/10"
-                            >
-                              <Sparkles className="w-3 h-3" /> Copy Contextual Prompt
-                            </button>
-                          </div>
-
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
-                            <div className="space-y-3">
-                              <p className="text-xs text-slate-400 leading-relaxed bg-white/5 p-3 rounded-lg border border-white/5">
-                                <strong className="text-amber-500 block mb-1 uppercase tracking-tighter text-[10px]">Step 1: Get Data</strong>
-                                Copy the contextual prompt to get realistic, targeted data from ChatGPT.
-                              </p>
-                              <p className="text-xs text-slate-400 leading-relaxed bg-white/5 p-3 rounded-lg border border-white/5">
-                                <strong className="text-amber-500 block mb-1 uppercase tracking-tighter text-[10px]">Step 2: Inject</strong>
-                                Paste the JSON reply below and click "Inject to Fields" to auto-populate the form.
-                              </p>
-                              <button
-                                onClick={handleAIInject}
-                                className="w-full py-3 rounded-xl bg-amber-500 text-black font-bold text-[10px] uppercase tracking-wider hover:bg-amber-400 transition-all shadow-lg flex items-center justify-center gap-2"
-                              >
-                                <Activity className="w-4 h-4" /> Inject Data to Fields
-                              </button>
+                            <div className="grid grid-cols-3 gap-3">
+                              {[
+                                { id: 'auto', label: 'AI Auto', desc: 'Contextual selection' },
+                                { id: 'indian', label: 'Indian DB', desc: 'Regional names' },
+                                { id: 'custom', label: 'Manual List', desc: 'User specified' }
+                              ].map((opt) => (
+                                <button
+                                  key={opt.id}
+                                  onClick={() => setNameSource(opt.id as any)}
+                                  className={`text-[10px] font-mono group relative overflow-hidden flex flex-col items-center py-4 rounded-xl border transition-all ${nameSource === opt.id
+                                    ? 'bg-amber-500/20 border-amber-500 text-white shadow-[0_0_20px_rgba(245,158,11,0.15)]'
+                                    : 'bg-white/5 border-white/5 text-slate-500 hover:bg-white/10 hover:border-white/10'
+                                    }`}
+                                >
+                                  {nameSource === opt.id && <div className="absolute inset-x-0 bottom-0 h-1 bg-amber-500" />}
+                                  <span className="font-bold tracking-widest uppercase mb-1">{opt.label}</span>
+                                  <span className="opacity-50 text-[8px] tracking-tight">{opt.desc}</span>
+                                </button>
+                              ))}
                             </div>
-                            <div className="relative h-full">
+
+                            {nameSource === 'custom' && (
                               <textarea
-                                value={aiPromptData}
-                                onChange={(e) => {
-                                  setAiPromptData(e.target.value);
-                                  if (parsingError) setParsingError(null);
-                                }}
-                                placeholder='Paste JSON from ChatGPT here...'
-                                className={`w-full h-full min-h-[100px] bg-[#050505] border rounded-xl p-3 text-xs text-white font-mono focus:outline-none transition-colors resize-none ${parsingError ? 'border-red-500/50 focus:border-red-500' : 'border-white/10 focus:border-amber-500/50'}`}
+                                value={customNamesRaw}
+                                onChange={(e) => setCustomNamesRaw(e.target.value)}
+                                placeholder="Enter names separated by commas..."
+                                className="w-full bg-[#050505] border border-white/10 rounded-xl p-4 text-xs text-white font-mono h-24 focus:border-amber-500/50 outline-none shadow-inner"
                               />
-                              {parsingError && (
-                                <div className="absolute bottom-2 right-2 text-[10px] text-red-400 font-bold bg-black/80 px-2 py-1 rounded backdrop-blur border border-red-500/30">
-                                  {parsingError}
-                                </div>
-                              )}
-                            </div>
+                            )}
                           </div>
-                        </div>
-                      )}
+                        )}
 
+                        {/* AI DATA INJECTION */}
+                        {(() => {
+                          const relevantTextFields = analysis.questions.filter(q =>
+                            (q.type === 'SHORT_ANSWER' || q.type === 'PARAGRAPH') &&
+                            !q.title.toLowerCase().includes('name')
+                          );
 
+                          if (relevantTextFields.length === 0) return null;
 
-                      {/* DATA PREVIEW / DEMOGRAPHICS */}
-                      <div className="glass-panel p-1 rounded-xl flex flex-col h-[500px] border-t border-t-white/10 relative">
-                        {/* Tip Banner */}
-                        <div className="absolute top-0 inset-x-0 bg-blue-500/10 border-b border-blue-500/10 p-2 flex items-center justify-center gap-2 text-[10px] text-blue-300 font-mono z-20 backdrop-blur-sm">
-                          <Activity className="w-3 h-3 text-blue-400" />
-                          <span>
-                            {analysis.questions.some(q => (q.type === 'SHORT_ANSWER' || q.type === 'PARAGRAPH') && q.required)
-                              ? "STEP 2"
-                              : "STEP 1"
-                            }: You can edit any question and fine-tune response behavior here.
-                          </span>
-                        </div>
+                          const isRequired = relevantTextFields.some(q => q.required);
 
-                        <div className="px-6 py-4 mt-8 border-b border-white/5 flex justify-between items-center bg-white/[0.02]">
-                          <span className="text-xs font-bold text-slate-300 uppercase tracking-widest">Demographic Distribution</span>
-                          <BarChart3 className="w-4 h-4 text-slate-600" />
-                        </div>
-                        <div className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
-                          {analysis.questions.map((q, qIdx) => (
-                            <div key={q.id} className="p-5 rounded-xl bg-white/[0.02] border border-white/5 hover:border-white/10 transition-colors group">
-                              <div className="flex justify-between items-start mb-4">
-                                <span className="text-sm text-slate-200 font-medium max-w-[80%] group-hover:text-white transition-colors">{q.title}</span>
-                                <span className="text-[10px] bg-white/5 px-2 py-1 rounded text-slate-500 font-mono">{q.type}</span>
+                          return (
+                            <div className={`glass-panel p-6 rounded-xl space-y-4 border-l-2 relative overflow-hidden ${parsingError ? 'border-red-500 bg-red-500/5' : isRequired ? 'border-amber-500/50' : 'border-emerald-500/50'}`}>
+                              <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+                              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
+                                <div className="flex items-center gap-2 text-sm font-bold text-white uppercase tracking-wider">
+                                  <Sparkles className="w-4 h-4 text-emerald-500" /> AI Data Injection
+                                  {isRequired ? (
+                                    <span className="text-[10px] text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded ml-2 border border-amber-500/20 shadow-sm animate-pulse">REQUIRED CONFIGURATION</span>
+                                  ) : (
+                                    <span className="text-[10px] text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded ml-2 border border-emerald-500/20 shadow-sm opacity-80">OPTIONAL CONFIGURATION</span>
+                                  )}
+                                </div>
+                                <button
+                                  onClick={() => {
+                                    const prompt = generateAIPrompt(analysis.title, analysis.description, analysis.questions, targetCount);
+                                    navigator.clipboard.writeText(prompt);
+                                    window.open('https://chatgpt.com', '_blank');
+                                    alert("System: Prompt copied to clipboard. Redirecting to ChatGPT for data synthesis.");
+                                  }}
+                                  className="gold-button px-6 py-3 rounded-xl text-xs font-bold uppercase tracking-widest flex items-center gap-2 shadow-lg shadow-amber-500/20 active:scale-95 transition-all"
+                                >
+                                  <ExternalLink className="w-4 h-4" /> Synchronize with ChatGPT
+                                </button>
                               </div>
-
-                              {/* Weight Editor */}
-                              <div className="space-y-3">
-                                {q.options.slice(0, 10).map((opt, oIdx) => (
-                                  <div key={oIdx} className="flex items-center gap-3 text-xs">
-                                    <div className="w-12 shrink-0">
-                                      <input
-                                        type="number"
-                                        min="0" max="100"
-                                        value={opt.weight || 0}
-                                        onChange={(e) => {
-                                          const val = parseInt(e.target.value) || 0;
-                                          const newAnalysis = { ...analysis };
-                                          newAnalysis.questions[qIdx].options[oIdx].weight = val;
-                                          setAnalysis(newAnalysis);
-                                        }}
-                                        className="w-full bg-[#020617] border border-white/10 rounded px-1 py-1 text-center font-mono text-amber-500 focus:border-amber-500/50 outline-none"
-                                      />
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
+                                <div className="space-y-4">
+                                  <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-3">
+                                    <div className="flex items-center gap-2 text-[10px] font-bold text-emerald-400 uppercase tracking-widest">
+                                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                      Protocol Instructions
                                     </div>
-                                    <div className="flex-1 h-1.5 bg-white/5 rounded-full overflow-hidden">
-                                      <div className="h-full bg-gradient-to-r from-amber-700 to-amber-500 transition-all duration-300" style={{ width: `${opt.weight}%` }} />
-                                    </div>
-                                    <div className="w-32 truncate text-slate-500" title={opt.value}>{opt.value}</div>
+                                    <p className="text-[11px] text-slate-400 leading-relaxed font-medium">
+                                      Execute the synchronized prompt in ChatGPT. Return with the generated JSON and paste it into the secure terminal interface.
+                                    </p>
                                   </div>
-                                ))}
-
-                                {(q.type === 'MULTIPLE_CHOICE' || q.type === 'CHECKBOXES' || q.type === 'DROPDOWN') && (
-                                  <div className="flex justify-end pt-2 border-t border-white/5 mt-2">
-                                    <span className={`text-[10px] font-mono font-bold ${q.options.reduce((a, b) => a + (b.weight || 0), 0) === 100
-                                      ? 'text-emerald-500'
-                                      : 'text-red-400'
-                                      }`}>
-                                      TOTAL: {q.options.reduce((a, b) => a + (b.weight || 0), 0)}%
-                                    </span>
-                                  </div>
-                                )}
-                              </div>
-
-                              {/* Custom Response Input for Text Fields (Non-Name) */}
-                              {(q.type === 'SHORT_ANSWER' || q.type === 'PARAGRAPH') && !q.title.toLowerCase().includes('name') && (
-                                <div className="mt-4 pt-3 border-t border-white/5 animate-fade-in">
-                                  <label className="text-[10px] text-amber-500 font-bold uppercase tracking-wider mb-2 block flex items-center gap-2">
-                                    <Command className="w-3 h-3" /> Custom Responses (Optional)
-                                  </label>
+                                  <button
+                                    onClick={handleAIInject}
+                                    className="w-full py-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs uppercase tracking-widest transition-all shadow-lg active:scale-95 flex items-center justify-center gap-2 border border-emerald-400/20"
+                                  >
+                                    <Activity className="w-4 h-4" /> Inject Synthesized Data
+                                  </button>
+                                </div>
+                                <div className="relative">
                                   <textarea
-                                    className="w-full bg-[#050505] border border-white/10 rounded-lg p-2 text-xs text-white font-mono h-20 focus:border-amber-500/50 outline-none placeholder-slate-600"
-                                    placeholder="Enter answers separated by commas (e.g. Yes, No, Maybe, Detailed feedback...)"
-                                    value={customResponses[q.id] || ""}
-                                    onChange={(e) => setCustomResponses(prev => ({ ...prev, [q.id]: e.target.value }))}
+                                    value={aiPromptData}
+                                    onChange={(e) => {
+                                      setAiPromptData(e.target.value);
+                                      if (parsingError) setParsingError(null);
+                                    }}
+                                    placeholder='Paste JSON response here...'
+                                    className={`w-full h-full min-h-[150px] bg-[#020617] border-2 rounded-2xl p-4 text-xs text-white font-mono focus:outline-none transition-all resize-none shadow-inner ${parsingError ? 'border-red-500/50 focus:border-red-500' : 'border-white/5 focus:border-emerald-500/50'}`}
                                   />
-                                  <p className="text-[9px] text-slate-500 mt-1">If provided, these answers will be cycled/randomized for each response.</p>
+                                  {parsingError && (
+                                    <div className="absolute bottom-4 right-4 text-[10px] text-red-400 font-bold bg-black/90 px-3 py-1.5 rounded-lg backdrop-blur border border-red-500/30 shadow-xl">
+                                      {parsingError}
+                                    </div>
+                                  )}
                                 </div>
-                              )}
+                              </div>
+
+                              {/* LIVE DATA MAPPING VISUALIZATION */}
+                              <div className="mt-4 pt-4 border-t border-white/5">
+                                <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">
+                                  <Activity className="w-3 h-3" /> Data Mapping Preview
+                                </div>
+                                <div className="grid grid-cols-1 gap-2 max-h-[200px] overflow-y-auto custom-scrollbar p-1">
+                                  {relevantTextFields.map((field) => {
+                                    let mappedValue: string | null = null;
+                                    try {
+                                      if (aiPromptData.trim()) {
+                                        const parsed = JSON.parse(aiPromptData);
+                                        // Try exact ID match first, then Title match
+                                        if (parsed[field.id]) mappedValue = Array.isArray(parsed[field.id]) ? parsed[field.id][0] : parsed[field.id];
+                                        else if (parsed[field.title]) mappedValue = Array.isArray(parsed[field.title]) ? parsed[field.title][0] : parsed[field.title];
+                                        // If array of objects? (Not standard for this simple logic but safe fallback)
+                                      }
+                                    } catch (e) { /* ignore parse errors for preview */ }
+
+                                    const isMapped = !!mappedValue;
+
+                                    return (
+                                      <div key={field.id} className={`flex items-center justify-between p-3 rounded-lg border ${isMapped ? 'bg-emerald-500/5 border-emerald-500/20' : 'bg-white/5 border-white/5'}`}>
+                                        <div className="flex items-center gap-3 overflow-hidden">
+                                          <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${isMapped ? 'bg-emerald-500 shadow-[0_0_5px_#10b981]' : 'bg-amber-500/50'}`} />
+                                          <span className="text-[11px] font-medium text-slate-300 truncate max-w-[150px]" title={field.title}>
+                                            {field.title}
+                                            {field.required && <span className="ml-2 text-[9px] text-amber-500 bg-amber-500/10 px-1 rounded opacity-70">*</span>}
+                                          </span>
+                                        </div>
+                                        <div className="flex items-center gap-2 max-w-[50%]">
+                                          <ArrowRight className={`w-3 h-3 ${isMapped ? 'text-emerald-500' : 'text-slate-600'}`} />
+                                          <span className={`text-[10px] font-mono truncate ${isMapped ? 'text-emerald-100' : 'text-slate-600 italic'}`}>
+                                            {isMapped ? (mappedValue as string).substring(0, 30) + ((mappedValue as string).length > 30 ? '...' : '') : 'Pending data...'}
+                                          </span>
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
                             </div>
-                          ))}
+                          );
+                        })()}
+
+                        {/* DATA PREVIEW / DEMOGRAPHICS */}
+                        <div className="glass-panel p-1 rounded-xl flex flex-col h-[600px] border-t border-t-white/10 relative">
+                          <div className="absolute top-0 inset-x-0 bg-amber-500/10 border-b border-amber-500/10 p-2 flex items-center justify-center gap-2 text-[10px] text-amber-300 font-mono z-20 backdrop-blur-sm">
+                            <Activity className="w-3 h-3 text-amber-400" />
+                            <span>Data Synthesis & Distribution Control</span>
+                          </div>
+
+                          <div className="px-6 py-4 mt-12 border-b border-white/5 flex flex-col gap-4 bg-white/[0.02]">
+                            <div className="flex justify-between items-center">
+                              <span className="text-xs font-bold text-slate-300 uppercase tracking-widest">Field Distributions</span>
+                              <div className="relative group">
+                                <Settings className="w-4 h-4 text-slate-600 group-hover:text-amber-500 transition-colors" />
+                              </div>
+                            </div>
+
+                            <div className="flex flex-col gap-3">
+                              <div className="relative">
+                                <Command className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500" />
+                                <input
+                                  type="text"
+                                  placeholder="Search fields (e.g. 'Age', 'Experience')..."
+                                  value={questionSearch}
+                                  onChange={(e) => setQuestionSearch(e.target.value)}
+                                  className="w-full bg-[#050505] border border-white/10 rounded-lg pl-9 pr-4 py-2 text-[10px] text-white font-mono focus:border-amber-500/50 outline-none transition-all"
+                                />
+                              </div>
+
+                              <div className="p-3 rounded-lg bg-amber-500/5 border border-amber-500/20 flex items-start gap-3">
+                                <Settings className="w-4 h-4 text-amber-500 mt-0.5" />
+                                <p className="text-[10px] text-amber-200/70 leading-relaxed font-sans">
+                                  <strong>System Guidance:</strong> You may adjust the weightage percentages below to maintain a realistic distribution. Ensure the total for each field equals 100% for optimal consistency.
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
+                            {analysis.questions
+                              .filter(q => {
+                                if (!questionSearch) return true;
+                                return q.title.toLowerCase().includes(questionSearch.toLowerCase());
+                              })
+                              .map((q, qIdx) => {
+                                // Find original index for state updates
+                                const originalIdx = analysis.questions.findIndex(origQ => origQ.id === q.id);
+
+                                return (
+                                  <div key={q.id} className="p-5 rounded-xl bg-white/[0.02] border border-white/5 hover:border-white/10 transition-colors group">
+                                    <div className="flex justify-between items-start mb-4">
+                                      <span className="text-sm text-slate-200 font-medium max-w-[80%] group-hover:text-white transition-colors capitalize">{q.title}</span>
+                                      <span className="text-[9px] bg-white/5 px-2 py-1 rounded text-slate-500 font-mono uppercase tracking-tighter opacity-60">{q.type}</span>
+                                    </div>
+
+                                    <div className="space-y-3">
+                                      {q.options.slice(0, 10).map((opt, oIdx) => (
+                                        <div key={oIdx} className="flex items-center gap-3 text-[11px]">
+                                          <div className="w-12 shrink-0">
+                                            <input
+                                              type="number"
+                                              min="0" max="100"
+                                              value={opt.weight || 0}
+                                              onChange={(e) => {
+                                                const val = parseInt(e.target.value) || 0;
+                                                const newAnalysis = { ...analysis };
+                                                newAnalysis.questions[originalIdx].options[oIdx].weight = val;
+                                                setAnalysis(newAnalysis);
+                                              }}
+                                              className="w-full bg-[#020617] border border-white/10 rounded px-1 py-1 text-center font-mono text-amber-500 focus:border-amber-500/50 outline-none h-7"
+                                            />
+                                          </div>
+                                          <div className="flex-1 h-1 bg-white/5 rounded-full overflow-hidden">
+                                            <div className="h-full bg-gradient-to-r from-amber-700 to-amber-500 transition-all duration-500" style={{ width: `${opt.weight}%` }} />
+                                          </div>
+                                          <div className="w-32 truncate text-slate-500 text-[10px]" title={opt.value}>{opt.value}</div>
+                                        </div>
+                                      ))}
+
+                                      {(q.type === 'MULTIPLE_CHOICE' || q.type === 'CHECKBOXES' || q.type === 'DROPDOWN') && (
+                                        <div className="flex justify-end pt-2 border-t border-white/5 mt-2">
+                                          <span className={`text-[10px] font-mono font-bold ${q.options.reduce((a, b) => a + (b.weight || 0), 0) === 100 ? 'text-emerald-500' : 'text-red-400'}`}>
+                                            FIELD TOTAL: {q.options.reduce((a, b) => a + (b.weight || 0), 0)}%
+                                          </span>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                </section>
-              )
-            }
+                  </section>
+                )}
 
-            {/* STEP 3: OUTPUT */}
-            {
-              step === 3 && analysis && (
-                <section className="max-w-4xl mx-auto w-full animate-fade-in-up">
-                  {/* AUTO-COPY SUCCESS BANNER */}
-                  <div className="w-full bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4 mb-8 flex items-center justify-center gap-3 animate-fade-in-up shadow-[0_0_20px_rgba(16,185,129,0.1)]">
-                    <div className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-500/30">
-                      <CheckCircle className="w-4 h-4 text-white" />
-                    </div>
-                    <div>
-                      <p className="text-emerald-400 font-bold text-sm tracking-wide uppercase">Payload Automatically Copied</p>
-                      <p className="text-[10px] text-emerald-500/70 font-mono">Ready for console injection</p>
-                    </div>
-                  </div>
-                  {/* UNLOCKED CODE UI */}
-                  <>
-                    {/* Back Button */}
-                    <div className="w-full mb-6 animate-fade-in-up">
+                {/* STEP 3: MISSION CONTROL */}
+                {step === 3 && analysis && (
+                  <section className="w-full flex-1 flex flex-col items-center justify-center py-10">
+                    <MissionControl
+                      logs={automationLogs}
+                      targetCount={targetCount}
+                      formTitle={analysis?.title || 'Form Analysis Result'}
+                      onAbort={handleAbort}
+                      onBackToConfig={() => setStep(2)}
+                      onNewMission={reset}
+                    />
+                    <div className="mt-12 opacity-50 hover:opacity-100 transition-opacity">
                       <button
-                        onClick={() => setStep(2)}
-                        className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-amber-500/50 text-slate-400 hover:text-white transition-all group"
+                        onClick={reset}
+                        className="text-[10px] text-slate-500 hover:text-white transition-colors flex items-center gap-2 mx-auto uppercase tracking-widest font-bold group"
                       >
-                        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-                        <span className="text-sm font-medium">Back to Configuration</span>
+                        <RotateCcw className="w-3 h-3 group-hover:-rotate-180 transition-transform duration-500" />
+                        Initialize New Sequence
                       </button>
                     </div>
-
-                    <div className="text-center mb-10 animate-fade-in-up">
-                      <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-tr from-amber-500/10 to-transparent border border-amber-500/20 mb-6 shadow-2xl relative overflow-hidden">
-                        <div className="absolute inset-0 bg-amber-500/10 blur-xl"></div>
-                        <Terminal className="w-8 h-8 text-amber-500 relative z-10" />
-                      </div>
-                      <h2 className="text-4xl font-serif font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-emerald-200 mb-3 drop-shadow-[0_0_15px_rgba(16,185,129,0.3)]">Script Generated & Copied</h2>
-                      <p className="text-slate-400 max-w-md mx-auto">The automation payload has been copied to your clipboard. Follow the instructions below to execute.</p>
-
-                      {/* Security Status Badge */}
-                      {currentToken && (
-                        <div className="mt-6 inline-flex items-center gap-3 px-5 py-2.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
-                          <Lock className="w-4 h-4 text-emerald-400" />
-                          <div className="text-xs">
-                            <span className="text-emerald-400 font-bold">Secured & Authenticated</span>
-                            <span className="text-slate-500 mx-2">•</span>
-                            <span className="text-slate-400">Expires in {getTokenExpirationHours(currentToken.expiresAt)}h</span>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Detailed Instructions */}
-                    <div className="space-y-4 animate-fade-in-up mb-8">
-                      {/* Section Divider */}
-                      <div className="flex items-center gap-4 mb-8">
-                        <div className="h-px flex-1 bg-gradient-to-r from-transparent via-amber-500/50 to-transparent"></div>
-                        <div className="flex items-center gap-2 px-4 py-2 bg-amber-500/10 rounded-full border border-amber-500/20">
-                          <Terminal className="w-4 h-4 text-amber-500" />
-                          <span className="text-xs font-bold text-amber-400 uppercase tracking-widest">How to Execute</span>
-                        </div>
-                        <div className="h-px flex-1 bg-gradient-to-r from-transparent via-amber-500/50 to-transparent"></div>
-                      </div>
-
-                      {/* Step 1 */}
-                      <div className="glass-panel p-4 md:p-6 rounded-xl border-l-2 border-l-amber-500/50 hover:border-l-amber-500 transition-all">
-                        <div className="flex items-start gap-3 md:gap-4">
-                          <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center shrink-0 border border-amber-500/20">
-                            <span className="text-amber-500 font-bold text-sm">1</span>
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <h4 className="text-sm font-bold text-white mb-2 uppercase tracking-wide">Navigate to Target Form</h4>
-                            <p className="text-xs text-slate-400 leading-relaxed mb-3">
-                              Open the Google Form URL in your browser. Ensure you're on the form's main page where questions are visible.
-                            </p>
-                            <div className="bg-black/40 rounded-lg p-3 border border-white/5">
-                              <code className="text-[10px] text-emerald-400 font-mono break-all">{url || 'https://docs.google.com/forms/...'}</code>
-                            </div>
-                            <div className="mt-3">
-                              <a
-                                href={url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-white text-sm font-bold shadow-lg shadow-emerald-500/20 transition-all hover:scale-105"
-                              >
-                                <ExternalLink className="w-4 h-4" />
-                                Open Form in New Tab
-                              </a>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Step 2 */}
-                      <div className="glass-panel p-4 md:p-6 rounded-xl border-l-2 border-l-amber-500/50 hover:border-l-amber-500 transition-all">
-                        <div className="flex items-start gap-3 md:gap-4">
-                          <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center shrink-0 border border-amber-500/20">
-                            <span className="text-amber-500 font-bold text-sm">2</span>
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <h4 className="text-sm font-bold text-white mb-2 uppercase tracking-wide">Open Browser Console</h4>
-                            <p className="text-xs text-slate-400 leading-relaxed mb-3">
-                              Access the Developer Console using one of these methods:
-                            </p>
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                              <div className="bg-white/5 rounded-lg p-3 border border-white/5">
-                                <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Windows/Linux</div>
-                                <div className="text-xs text-white font-mono">F12 or Ctrl+Shift+J</div>
-                              </div>
-                              <div className="bg-white/5 rounded-lg p-3 border border-white/5">
-                                <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">macOS</div>
-                                <div className="text-xs text-white font-mono">Cmd+Option+J</div>
-                              </div>
-                              <div className="bg-white/5 rounded-lg p-3 border border-white/5">
-                                <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Menu</div>
-                                <div className="text-xs text-white font-mono">⋮ → More Tools → Console</div>
-                              </div>
-                            </div>
-                            <p className="text-[10px] text-amber-500/80 mt-3 flex items-center gap-1">
-                              <AlertCircle className="w-3 h-3" />
-                              Make sure you're on the "Console" tab, not Elements or Network
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Step 3 */}
-                      <div className="glass-panel p-4 md:p-6 rounded-xl border-l-4 border-l-emerald-500 bg-emerald-500/5 shadow-[0_0_20px_rgba(16,185,129,0.05)] transition-all relative overflow-hidden">
-                        <div className="absolute top-0 right-0 p-2 opacity-10 pointer-events-none"><Copy className="w-24 h-24 text-emerald-500" /></div>
-                        <div className="flex items-start gap-3 md:gap-4 relative z-10">
-                          <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center shrink-0 border border-emerald-500/30 shadow-[0_0_10px_rgba(16,185,129,0.2)]">
-                            <span className="text-emerald-400 font-bold text-sm">3</span>
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <h4 className="text-sm font-bold text-white mb-2 uppercase tracking-wide">Paste Payload</h4>
-                            <p className="text-xs text-slate-400 leading-relaxed mb-3">
-                              The script is already in your clipboard. Just paste it into the console.
-                            </p>
-                            <div className="space-y-2">
-                              <div className="flex items-center gap-2 text-xs text-slate-400">
-                                <Terminal className="w-3 h-3 text-amber-500 shrink-0" />
-                                <span>Paste using <code className="text-white bg-white/10 px-1 rounded">Ctrl+V</code> (Windows) or <code className="text-white bg-white/10 px-1 rounded">Cmd+V</code> (Mac)</span>
-                              </div>
-                              <div className="flex items-center gap-2 text-xs text-slate-400">
-                                <AlertCircle className="w-3 h-3 text-amber-500 shrink-0" />
-                                <span><strong className="text-amber-400">First time?</strong> Chrome/Edge will ask you to type <code className="text-white bg-white/10 px-1 rounded">allow pasting</code> to enable paste</span>
-                              </div>
-                              <div className="flex items-center gap-2 text-xs text-slate-400">
-                                <Zap className="w-3 h-3 text-amber-500 shrink-0" />
-                                <span>Press <code className="text-white bg-white/10 px-1 rounded">Enter</code> to execute</span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Step 4 */}
-                      <div className="glass-panel p-4 md:p-6 rounded-xl border-l-2 border-l-emerald-500/50 hover:border-l-emerald-500 transition-all">
-                        <div className="flex items-start gap-3 md:gap-4">
-                          <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center shrink-0 border border-emerald-500/20">
-                            <span className="text-emerald-500 font-bold text-sm">4</span>
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <h4 className="text-sm font-bold text-white mb-2 uppercase tracking-wide">Monitor Execution</h4>
-                            <p className="text-xs text-slate-400 leading-relaxed mb-3">
-                              The script will automatically fill and submit the form {targetCount} time{targetCount !== 1 ? 's' : ''}. Watch the console for real-time progress.
-                            </p>
-                            <div className="bg-black/40 rounded-lg p-4 border border-emerald-500/20 overflow-x-auto">
-                              <div className="space-y-2 text-[10px] font-mono whitespace-nowrap">
-                                <div className="text-emerald-400">✓ Script initialized successfully</div>
-                                <div className="text-blue-400">→ Filling response 1/{targetCount}...</div>
-                                <div className="text-amber-400">⟳ Submitting form...</div>
-                                <div className="text-emerald-400">✓ Response 1 submitted</div>
-                                <div className="text-slate-500">...</div>
-                              </div>
-                            </div>
-                            <p className="text-[10px] text-slate-500 mt-3">
-                              Do not close the tab or navigate away until all responses are submitted.
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Warning Box */}
-                      <div className="glass-panel p-5 rounded-xl bg-red-500/5 border border-red-500/20">
-                        <div className="flex items-start gap-3">
-                          <AlertCircle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
-                          <div>
-                            <h4 className="text-sm font-bold text-red-400 mb-2 uppercase tracking-wide">Important Notes</h4>
-                            <ul className="text-xs text-slate-400 space-y-1.5 leading-relaxed">
-                              <li className="flex items-start gap-2">
-                                <span className="text-red-500 shrink-0">•</span>
-                                <span className="font-bold text-amber-500">CRITICAL: KEEP THIS WINDOW OPEN & ACTIVE</span>
-                              </li>
-                              <li className="flex items-start gap-2">
-                                <span className="text-red-500 shrink-0">•</span>
-                                <span>Do not minimize the browser or switch tabs, or the script may pause</span>
-                              </li>
-                              <li className="flex items-start gap-2">
-                                <span className="text-red-500 shrink-0">•</span>
-                                <span>Do not interact with the form manually while the script is running</span>
-                              </li>
-                              <li className="flex items-start gap-2">
-                                <span className="text-red-500 shrink-0">•</span>
-                                <span>If errors occur, check the console for detailed error messages</span>
-                              </li>
-                            </ul>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="glass-panel rounded-xl overflow-hidden shadow-[0_0_40px_rgba(16,185,129,0.1)] mb-8 border border-emerald-500/30 animate-fade-in-up bg-[#020617]/50 relative ring-1 ring-emerald-500/20">
-                      {/* Decorative Background Elements */}
-                      <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
-                      <div className="absolute bottom-0 left-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2 pointer-events-none" />
-
-                      <div className="flex flex-col items-center justify-center py-16 px-6 text-center relative z-10">
-
-                        {/* Success Icon Animation */}
-                        <div className="relative mb-8 group cursor-pointer" onClick={handleCopy}>
-                          <div className="absolute inset-0 bg-emerald-500/20 rounded-full blur-xl animate-pulse" />
-                          <div className="w-20 h-20 rounded-full bg-gradient-to-br from-emerald-500/10 to-transparent border border-emerald-500/20 flex items-center justify-center relative z-10 shadow-[0_0_30px_rgba(16,185,129,0.2)] group-hover:scale-105 transition-transform duration-500">
-                            <CheckCircle className="w-10 h-10 text-emerald-400 drop-shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
-                          </div>
-
-                          {/* Orbiting particles */}
-                          <div className="absolute inset-0 border border-emerald-500/10 rounded-full animate-[spin_4s_linear_infinite]" />
-                          <div className="absolute inset-[-10px] border border-dashed border-emerald-500/10 rounded-full animate-[spin_10s_linear_infinite_reverse]" />
-                        </div>
-
-                        <h3 className="text-2xl font-serif font-bold text-white mb-2">Payload Ready & Copied</h3>
-                        <p className="text-sm text-slate-400 max-w-sm mx-auto mb-8 font-mono">
-                          The secure script has been automatically copied to your clipboard.
-                          <br />
-                          <span className="text-emerald-500/80 text-xs">Ready for injection</span>
-                        </p>
-
-                        {/* Primary Action Button */}
-                        <button
-                          onClick={handleCopy}
-                          className={`group relative overflow-hidden px-10 py-4 rounded-xl font-bold uppercase tracking-widest text-sm transition-all duration-300 transform hover:scale-[1.02] active:scale-95 shadow-xl ${copied
-                            ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 shadow-[0_0_20px_rgba(16,185,129,0.1)]'
-                            : 'bg-gradient-to-br from-amber-400 to-amber-600 text-black border border-amber-400/50 shadow-[0_0_25px_rgba(251,191,36,0.2)]'
-                            }`}
-                        >
-                          <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
-                          <span className="relative z-10 flex items-center gap-3">
-                            {copied ? <CheckCircle className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
-                            {copied ? 'Copied Successfully' : 'Copy Payload Again'}
-                          </span>
-                        </button>
-
-                        <div className="mt-8 flex items-center gap-4 text-[10px] text-slate-500 font-mono uppercase tracking-widest">
-                          <span className="flex items-center gap-1.5">
-                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                            Memory Safe
-                          </span>
-                          <span className="w-1 h-1 rounded-full bg-slate-700" />
-                          <span className="flex items-center gap-1.5">
-                            <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-                            <span className="text-amber-500/60">Obfuscated</span>
-                          </span>
-                        </div>
-
-                      </div>
-                    </div>
-
-
-                    <div className="text-center mt-12 animate-fade-in-up">
-                      <button onClick={reset} className="text-xs text-slate-500 hover:text-white transition-colors flex items-center gap-2 mx-auto uppercase tracking-widest font-bold group">
-                        <RotateCcw className="w-3 h-3 group-hover:-rotate-180 transition-transform duration-500" /> Initialize New Sequence
-                      </button>
-                    </div>
-                  </>
-
-                </section>
-              )
-            }
+                  </section>
+                )}
+              </>
+            )}
           </>
-        )
-        }
-      </main >
+        )}
+      </main>
 
-      <Footer />
-    </div >
+      {!loading && <Footer />}
+    </div>
   );
 }
 

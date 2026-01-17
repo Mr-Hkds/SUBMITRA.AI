@@ -1,179 +1,148 @@
 import React from 'react';
-import { Sparkles, Zap, Activity, CheckCircle, Loader2, TrendingUp } from 'lucide-react';
+import { Sparkles, Zap, Activity, Loader2, Target, Cpu, ShieldCheck } from 'lucide-react';
 
 interface LoadingScreenProps {
     progress: string;
+    percentage?: number;
 }
 
-const LoadingScreen: React.FC<LoadingScreenProps> = ({ progress }) => {
+const LoadingScreen: React.FC<LoadingScreenProps> = ({ progress, percentage }) => {
     const tips = [
-        { icon: "📊", text: "Applying Bell Curve distributions for realistic demographics" },
-        { icon: "🎯", text: "Ensuring logical consistency across Age, Income & Occupation" },
-        { icon: "🔬", text: "Cross-referencing patterns from 100+ demographic surveys" },
-        { icon: "⚡", text: "Optimizing weight distributions for maximum accuracy" },
-        { icon: "🧠", text: "Statistical algorithms working in perfect harmony" },
-        { icon: "✨", text: "Crafting premium-grade demographic intelligence" }
+        { icon: <Activity className="w-4 h-4" />, text: "PROCESSED: DATA_NORMALIZATION_SEQUENCE" },
+        { icon: <Target className="w-4 h-4" />, text: "ACTIVE: BELL_CURVE_CALIBRATION" },
+        { icon: <Cpu className="w-4 h-4" />, text: "EXECUTING: DEMOGRAPHIC_CROSS_FILTERING" },
+        { icon: <Zap className="w-4 h-4" />, text: "OPTIMIZING: WEIGHT_DISTRIBUTION_ARRAYS" }
     ];
 
     const [currentTip, setCurrentTip] = React.useState(0);
-    const [particles, setParticles] = React.useState<Array<{ id: number; x: number; y: number; delay: number }>>([]);
+    const [scanlineOffset, setScanlineOffset] = React.useState(0);
 
     React.useEffect(() => {
-        // Generate floating particles
-        const newParticles = Array.from({ length: 20 }, (_, i) => ({
-            id: i,
-            x: Math.random() * 100,
-            y: Math.random() * 100,
-            delay: Math.random() * 5
-        }));
-        setParticles(newParticles);
-
-        // Rotate tips
         const interval = setInterval(() => {
             setCurrentTip(prev => (prev + 1) % tips.length);
-        }, 6000);
-        return () => clearInterval(interval);
+        }, 4000);
+
+        const scanline = setInterval(() => {
+            setScanlineOffset(prev => (prev + 1) % 100);
+        }, 50);
+
+        return () => {
+            clearInterval(interval);
+            clearInterval(scanline);
+        };
     }, []);
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden bg-gradient-to-br from-slate-950 via-purple-950/20 to-slate-950">
-            {/* Animated Background Gradient Orbs */}
-            <div className="absolute inset-0 overflow-hidden">
-                <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl animate-float-slow" />
-                <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-cyan-500/20 rounded-full blur-3xl animate-float-slower" />
-                <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl animate-pulse-slow" />
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#000000] font-mono select-none overflow-hidden">
+            {/* Minimal Background Elements */}
+            <div className="absolute inset-0 opacity-20 pointer-events-none">
+                <div className="absolute top-0 left-0 w-full h-[1px] bg-amber-500/30 shadow-[0_0_10px_rgba(245,158,11,0.5)]" style={{ transform: `translateY(${scanlineOffset}vh)` }} />
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_#000000_80%)]" />
             </div>
 
-            {/* Floating Particles */}
-            {particles.map(particle => (
-                <div
-                    key={particle.id}
-                    className="absolute w-1 h-1 bg-purple-400/30 rounded-full animate-float-particle"
-                    style={{
-                        left: `${particle.x}%`,
-                        top: `${particle.y}%`,
-                        animationDelay: `${particle.delay}s`
-                    }}
-                />
-            ))}
+            <div className="relative w-full max-w-lg px-6 flex flex-col items-center">
+                {/* Advanced Tech Logo - Orbital Ring System */}
+                <div className="relative mb-16 group h-32 w-32">
+                    {/* Background Tech Glow */}
+                    <div className="absolute inset-0 bg-amber-500/5 rounded-full blur-3xl group-hover:bg-amber-500/10 transition-colors duration-1000" />
 
-            {/* Main Content */}
-            <div className="relative max-w-3xl w-full px-8">
-                {/* Premium Header with Glassmorphism */}
-                <div className="text-center mb-10">
-                    {/* Icon Container with Multiple Rings */}
-                    <div className="relative inline-flex items-center justify-center mb-8">
-                        {/* Outer rotating ring */}
-                        <div className="absolute w-32 h-32 rounded-full border border-purple-500/20 animate-spin-slow" />
-                        <div className="absolute w-28 h-28 rounded-full border-2 border-cyan-500/30 animate-spin-reverse" />
+                    {/* Rotating Rings */}
+                    <div className="absolute inset-0 border-[1px] border-amber-500/10 rounded-full animate-spin-slow" />
+                    <div className="absolute inset-2 border-[1px] border-amber-500/20 rounded-full animate-spin-reverse opacity-50" />
+                    <div className="absolute inset-4 border-t-[2px] border-amber-500/40 rounded-full animate-spin-slow" />
 
-                        {/* Center orb */}
-                        <div className="relative w-24 h-24 rounded-full bg-gradient-to-br from-purple-500/20 via-cyan-500/20 to-amber-500/20 backdrop-blur-xl border border-white/10 shadow-2xl flex items-center justify-center">
-                            <div className="absolute inset-0 rounded-full bg-gradient-to-br from-purple-500/40 to-cyan-500/40 animate-pulse-glow" />
-                            <Sparkles className="relative w-12 h-12 text-amber-300 animate-pulse-slow" />
+                    {/* Hex-Grid Mask Center */}
+                    <div className="absolute inset-8 rounded-xl bg-[#0a0a0a] border border-amber-500/20 shadow-[0_0_30px_rgba(245,158,11,0.1)] flex items-center justify-center overflow-hidden">
+                        {/* Hex Grid Background */}
+                        <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, #f59e0b 1px, transparent 0)', backgroundSize: '8px 8px' }} />
+
+                        <div className="relative z-10 flex flex-col items-center">
+                            <Zap className="w-8 h-8 text-amber-500 animate-pulse" />
+                            <div className="absolute inset-0 bg-amber-500/20 blur-xl animate-pulse" />
                         </div>
+
+                        {/* Scanning Bar Inner */}
+                        <div className="absolute inset-x-0 h-[100%] w-[1px] bg-amber-500/20 left-1/2 -translate-x-1/2 animate-shimmer-slow" />
                     </div>
 
-                    {/* Title with Gradient */}
-                    <h2 className="text-4xl font-bold mb-4 bg-gradient-to-r from-purple-200 via-cyan-200 to-amber-200 bg-clip-text text-transparent tracking-tight">
-                        Statistical Analysis Engine
-                    </h2>
-                    <p className="text-slate-400 text-lg font-light tracking-wide">
-                        Crafting Premium Demographic Intelligence
-                    </p>
+                    {/* Corner Brackets */}
+                    <div className="absolute -top-2 -left-2 w-4 h-4 border-t-2 border-l-2 border-amber-500/40 rounded-tl" />
+                    <div className="absolute -bottom-2 -right-2 w-4 h-4 border-b-2 border-r-2 border-amber-500/40 rounded-br" />
                 </div>
 
-                {/* Glassmorphic Progress Container */}
-                <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-8 mb-6 shadow-2xl">
-                    {/* Progress Header */}
-                    <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-3">
-                            <Activity className="w-5 h-5 text-cyan-400 animate-pulse" />
-                            <span className="text-sm font-semibold text-slate-200 tracking-wide">
-                                {progress || 'Initializing Systems...'}
+                {/* Minimal Status Label */}
+                <div className="flex flex-col items-center mb-10 text-center">
+                    <h2 className="text-[10px] font-bold text-amber-500 tracking-[0.5em] uppercase mb-1 drop-shadow-[0_0_8px_rgba(245,158,11,0.3)]">
+                        Deep-Layer Initialization
+                    </h2>
+                    <div className="h-[1px] w-24 bg-gradient-to-r from-transparent via-amber-500/30 to-transparent" />
+                    <span className="mt-2 text-[7px] text-slate-600 tracking-[0.4em] uppercase font-mono">
+                        Protocol: MISSION_CONTROL_v0.1.2
+                    </span>
+                </div>
+
+                {/* Status Command Line */}
+                <div className="w-full bg-slate-900/5 border border-white/5 rounded-lg p-6 backdrop-blur-xl shadow-2xl space-y-6 relative overflow-hidden group">
+                    <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-amber-500/40 to-transparent" />
+
+                    <div className="flex items-center justify-between text-[10px] text-slate-400">
+                        <div className="flex items-center gap-2">
+                            <div className="w-1.5 h-1.5 rounded-sm bg-amber-500/80 animate-pulse rotate-45" />
+                            <span className="uppercase tracking-[0.2em] font-bold text-slate-300">
+                                {progress || 'Loading Neural Bridge...'}
                             </span>
                         </div>
-                        <Loader2 className="w-5 h-5 text-purple-400 animate-spin" />
-                    </div>
-
-                    {/* Premium Progress Bar */}
-                    <div className="relative h-3 bg-slate-900/50 rounded-full overflow-hidden border border-white/5">
-                        <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 via-cyan-500/20 to-amber-500/20 animate-shimmer" />
-                        <div className="relative h-full bg-gradient-to-r from-purple-500 via-cyan-500 to-amber-500 rounded-full animate-progress-flow shadow-lg shadow-purple-500/50"
-                            style={{ width: '100%' }} />
-                    </div>
-                </div>
-
-                {/* Animated Insight Card */}
-                <div className="bg-gradient-to-r from-purple-500/10 via-cyan-500/10 to-amber-500/10 backdrop-blur-xl rounded-2xl border border-white/10 p-6 mb-6 shadow-xl overflow-hidden relative">
-                    {/* Shimmer effect */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-shimmer-slow" />
-
-                    <div className="relative flex items-start gap-4">
-                        <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500/20 to-amber-500/5 flex items-center justify-center border border-amber-500/20">
-                            <span className="text-2xl animate-bounce-subtle">{tips[currentTip].icon}</span>
+                        <div className="flex items-center gap-3">
+                            <div className="flex gap-1">
+                                <div className={`w-1 h-3 rounded-full ${percentage && percentage > 20 ? 'bg-amber-500' : 'bg-slate-800'}`} />
+                                <div className={`w-1 h-3 rounded-full ${percentage && percentage > 50 ? 'bg-amber-500' : 'bg-slate-800'}`} />
+                                <div className={`w-1 h-3 rounded-full ${percentage && percentage > 80 ? 'bg-amber-500' : 'bg-slate-800'}`} />
+                            </div>
+                            <span className="text-amber-500 font-mono font-bold text-sm tracking-tighter w-10 text-right">
+                                {percentage || 0}%
+                            </span>
                         </div>
-                        <div className="flex-1 pt-1">
-                            <p className="text-white text-base font-medium leading-relaxed animate-fade-slide-in">
+                    </div>
+
+                    {/* Minimal Progress Bar */}
+                    <div className="relative h-1.5 bg-white/5 rounded-full overflow-hidden">
+                        <div
+                            className="h-full bg-gradient-to-r from-amber-700 via-amber-400 to-amber-700 shadow-[0_0_20px_rgba(245,158,11,0.4)] transition-all duration-700 ease-in-out"
+                            style={{ width: `${percentage || 0}%` }}
+                        />
+                        {/* Shimmer Overlay */}
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-shimmer w-[200%]" />
+                    </div>
+
+                    {/* Consolidated Tip Terminal */}
+                    <div className="flex items-center gap-3 text-[9px] border-t border-white/5 pt-5">
+                        <div className="text-amber-500/30 flex flex-col font-mono">
+                            <span className="leading-none text-xs">»</span>
+                        </div>
+                        <div className="flex-1 text-slate-500 font-medium flex items-center gap-2">
+                            <span className="inline-block animate-fade-slide-in font-mono tracking-tight uppercase">
                                 {tips[currentTip].text}
-                            </p>
+                            </span>
+                            <span className="w-1.5 h-3 bg-amber-500/50 animate-[blink_1s_infinite] ml-1" />
                         </div>
-                        <Zap className="flex-shrink-0 w-5 h-5 text-amber-400 animate-pulse" />
+                        <Loader2 className="w-3.5 h-3.5 text-amber-500/20 animate-spin" />
                     </div>
                 </div>
 
-                {/* Status Grid with Glassmorphism */}
-                <div className="grid grid-cols-3 gap-4 mb-6">
-                    {/* Completed Stage */}
-                    <div className="group bg-emerald-500/10 backdrop-blur-xl rounded-xl p-5 text-center border border-emerald-500/20 shadow-lg hover:shadow-emerald-500/20 transition-all duration-300 hover:scale-105">
-                        <div className="relative inline-flex items-center justify-center mb-3">
-                            <CheckCircle className="w-8 h-8 text-emerald-400" />
-                            <div className="absolute inset-0 bg-emerald-400/20 rounded-full blur-lg animate-pulse" />
-                        </div>
-                        <p className="text-xs font-semibold text-emerald-300 tracking-wide">FORM PARSED</p>
-                        <div className="mt-2 h-1 bg-emerald-500/30 rounded-full overflow-hidden">
-                            <div className="h-full bg-emerald-500 w-full" />
-                        </div>
+                {/* Minimal Footer Footer */}
+                <div className="mt-8 flex items-center justify-center gap-8 opacity-30">
+                    <div className="flex items-center gap-2 text-[7px] tracking-[0.4em] text-slate-500">
+                        <Activity className="w-2.5 h-2.5" />
+                        <span>SENTRY_LINK_STABLE</span>
                     </div>
-
-                    {/* Active Stage */}
-                    <div className="group bg-cyan-500/10 backdrop-blur-xl rounded-xl p-5 text-center border border-cyan-500/30 shadow-lg shadow-cyan-500/20 animate-pulse-border">
-                        <div className="relative inline-flex items-center justify-center mb-3">
-                            <div className="w-8 h-8 border-3 border-cyan-400 border-t-transparent rounded-full animate-spin" />
-                            <div className="absolute inset-0 bg-cyan-400/20 rounded-full blur-lg animate-pulse" />
-                        </div>
-                        <p className="text-xs font-semibold text-cyan-300 tracking-wide">DEEP ANALYSIS</p>
-                        <div className="mt-2 h-1 bg-cyan-500/30 rounded-full overflow-hidden">
-                            <div className="h-full bg-gradient-to-r from-cyan-500 to-purple-500 w-2/3 animate-progress-flow" />
-                        </div>
-                    </div>
-
-                    {/* Pending Stage */}
-                    <div className="group bg-slate-500/5 backdrop-blur-xl rounded-xl p-5 text-center border border-slate-500/10 shadow-lg opacity-60 hover:opacity-80 transition-all duration-300">
-                        <div className="relative inline-flex items-center justify-center mb-3">
-                            <TrendingUp className="w-8 h-8 text-slate-500" />
-                        </div>
-                        <p className="text-xs font-semibold text-slate-400 tracking-wide">FINAL REVIEW</p>
-                        <div className="mt-2 h-1 bg-slate-500/20 rounded-full overflow-hidden">
-                            <div className="h-full bg-slate-500/50 w-0" />
-                        </div>
-                    </div>
-                </div>
-
-                {/* Premium Footer */}
-                <div className="text-center">
-                    <p className="text-slate-500 text-xs font-light tracking-widest uppercase">
-                        Estimated Time: 30-90 seconds for optimal results
-                    </p>
-                    <div className="mt-3 flex items-center justify-center gap-2">
-                        <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse" />
-                        <div className="w-2 h-2 bg-cyan-500 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }} />
-                        <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse" style={{ animationDelay: '0.4s' }} />
+                    <div className="flex items-center gap-2 text-[7px] tracking-[0.4em] text-slate-500">
+                        <ShieldCheck className="w-2.5 h-2.5" />
+                        <span>AES_256_ENCRYPTED</span>
                     </div>
                 </div>
             </div>
 
-            {/* Premium Animations */}
+            {/* Consolidated Animations */}
             <style>{`
                 @keyframes float-slow {
                     0%, 100% { transform: translate(0, 0) scale(1); }
@@ -227,8 +196,8 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({ progress }) => {
                     50% { transform: translateY(-4px); }
                 }
                 @keyframes pulse-border {
-                    0%, 100% { box-shadow: 0 0 20px rgba(34, 211, 238, 0.2); }
-                    50% { box-shadow: 0 0 40px rgba(34, 211, 238, 0.4); }
+                    0%, 100% { box-shadow: 0 0 20px rgba(245, 158, 11, 0.1); }
+                    50% { box-shadow: 0 0 40px rgba(245, 158, 11, 0.2); }
                 }
 
                 .animate-float-slow { animation: float-slow 8s ease-in-out infinite; }

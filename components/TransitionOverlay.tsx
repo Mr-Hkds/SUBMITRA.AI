@@ -40,11 +40,12 @@ const TransitionOverlay = () => {
                 </div>
             </div>
 
-            {/* Success text */}
+            {/* Mission Entry Tag */}
             <div className="absolute inset-0 flex items-center justify-center mt-32 animate-slide-up">
-                <div className="text-center">
-                    <p className="text-emerald-400 font-bold text-lg tracking-wide uppercase mb-1">Script Compiled</p>
-                    <p className="text-emerald-500/70 text-xs font-mono">Preparing payload...</p>
+                <div className="flex flex-col items-center gap-2">
+                    <div className="px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 backdrop-blur-md">
+                        <span className="text-[10px] text-emerald-400 font-bold tracking-[0.3em] uppercase">Entering Mission Control</span>
+                    </div>
                 </div>
             </div>
         </div>

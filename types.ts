@@ -18,6 +18,7 @@ export interface FormOption {
 
 export interface FormQuestion {
   id: string;
+  entryId: string;
   title: string;
   type: QuestionType;
   options: FormOption[];
