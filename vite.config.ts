@@ -141,6 +141,50 @@ export default defineConfig(({ mode }) => {
                   }
 
                   console.log('[Vite Proxy] Payment Captured Successfully:', data.id);
+
+                  // --- PERSISTENCE LOGIC (If Service Account Exists) ---
+                  if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+                    try {
+                      const admin = await import('firebase-admin');
+                      // Init Admin if needed (Reuse singleton check)
+                      if (admin.default.apps.length === 0) {
+                        const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+                        admin.default.initializeApp({
+                          credential: admin.default.credential.cert(serviceAccount)
+                        });
+                      }
+
+                      const db = admin.default.firestore();
+                      // Determine token amount (match api/verify-payment.js logic)
+                      let tokensToCredit = 0;
+                      if (amount >= 49 && amount < 60) tokensToCredit = 70;
+                      else if (amount >= 99 && amount < 120) tokensToCredit = 150;
+                      else if (amount >= 149 && amount < 170) tokensToCredit = 250;
+                      else if (amount >= 199) tokensToCredit = 400;
+
+                      if (tokensToCredit > 0) {
+                        await db.runTransaction(async (t) => {
+                          const userRef = db.collection('users').doc(body.includes('userId') ? JSON.parse(body).userId : 'unknown'); // userId is in the body? check parsing
+                          // Re-parse body securely since we streamed it
+                          const { userId } = JSON.parse(body);
+                          if (!userId) throw new Error("No userId found for credit");
+
+                          const uRef = db.collection('users').doc(userId);
+                          t.update(uRef, {
+                            tokens: admin.default.firestore.FieldValue.increment(tokensToCredit),
+                            isPremium: true,
+                            lastPayment: admin.default.firestore.FieldValue.serverTimestamp()
+                          });
+                        });
+                        console.log(`[Vite Proxy] ✅ PERSISTED credit of ${tokensToCredit} tokens for user`);
+                      }
+                    } catch (err) {
+                      console.error("[Vite Proxy] Failed to persist payment credit:", err);
+                    }
+                  } else {
+                    console.log('[Vite Proxy] ℹ️ Service Account missing. Payment is successful but TOKENS WILL NOT PERSIST locally.');
+                  }
+
                   res.statusCode = 200;
                   res.end(JSON.stringify({ success: true, payment: data }));
 

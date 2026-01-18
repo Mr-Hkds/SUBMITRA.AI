@@ -98,8 +98,30 @@ export const subscribeToUserProfile = (uid: string, callback: (user: User | null
 
 export const deductTokens = async (uid: string, amount: number): Promise<{ success: boolean; newTokens?: number }> => {
     try {
+        // DEV MODE: Direct Firestore Update (Efficiency & Local Persistence)
+        // Now allowed by relaxed Firestore Rules (safe decrement only)
+        if (import.meta.env.DEV) {
+            console.log("[AuthService] Dev Mode: Deducting tokens directly via Firestore...");
+            const userRef = doc(db, COLLECTION, uid);
+            const userSnap = await getDoc(userRef);
+
+            if (userSnap.exists()) {
+                const currentTokens = userSnap.data().tokens || 0;
+                if (currentTokens >= amount) {
+                    await updateDoc(userRef, {
+                        tokens: increment(-amount)
+                    });
+                    return { success: true, newTokens: currentTokens - amount };
+                } else {
+                    console.error("[AuthService] Insufficient tokens");
+                    return { success: false };
+                }
+            }
+            return { success: false };
+        }
+
+        // PROD MODE: Secure Server Call
         // SECURITY: Call server-side endpoint to prevent client-side manipulation
-        // In Local Dev, this is handled by Vite Proxy (now enhanced for persistence)
         const response = await fetch('/api/deduct-tokens', {
             method: 'POST',
             headers: {
@@ -207,9 +229,18 @@ export const trackAuthState = (callback: (user: User | null) => void) => {
                 } else {
                     // Self-heal: Create missing profile
                     await ensureUserProfile(firebaseUser);
-                    // Fetch again or just assume it worked? 
-                    // Let's just rely on the fallbackUser until the subscription (if any) picks up updates,
-                    // or just trigger callback again with the "new" profile if we want to be precise.
+
+                    // Fetch the newly created profile to ensure we have the correct tokens (15)
+                    const newUserSnap = await getDoc(userRef);
+                    if (newUserSnap.exists()) {
+                        callback({
+                            ...newUserSnap.data(),
+                            uid: firebaseUser.uid,
+                            email: firebaseUser.email || newUserSnap.data().email || "",
+                            displayName: firebaseUser.displayName || newUserSnap.data().displayName || "User",
+                            photoURL: firebaseUser.photoURL || newUserSnap.data().photoURL || ""
+                        } as User);
+                    }
                 }
             } catch (error) {
                 console.error("Error fetching user profile:", error);
