@@ -854,6 +854,11 @@ function App() {
         if (!user) return;
 
         // Strict Limit Check
+        if (targetCount <= 0) {
+            setError("Configuration Error: Please specify a response count greater than 0.");
+            return;
+        }
+
         if (!user.tokens || user.tokens < targetCount) {
             setShowPricing(true);
             return;

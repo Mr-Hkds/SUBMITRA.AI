@@ -13,7 +13,7 @@ const mapFirebaseUserToUser = (firebaseUser: any): User => ({
     photoURL: firebaseUser.photoURL || "",
     isPremium: false,
     responsesUsed: 0,
-    tokens: 0, // Default to 0, let Firestore or ensured profile provide real count
+    tokens: 15, // Default to 15 (Free Tier) to match creation logic and avoid 0-flash
     createdAt: new Date(),
     lastLogin: new Date()
 });
@@ -111,7 +111,8 @@ export const deductTokens = async (uid: string, amount: number): Promise<{ succe
                 console.log(`[AuthService] Current tokens: ${currentTokens}. Required: ${amount}`);
                 if (currentTokens >= amount) {
                     await updateDoc(userRef, {
-                        tokens: increment(-amount)
+                        tokens: increment(-amount),
+                        responsesUsed: increment(amount)
                     });
                     console.log(`[AuthService] ✅ Firestore update successful. New balance should be ${currentTokens - amount}`);
                     return { success: true, newTokens: currentTokens - amount };

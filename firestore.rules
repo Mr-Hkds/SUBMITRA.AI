@@ -31,17 +31,14 @@ service cloud.firestore {
                       // 1. Standard Profile Updates (no sensitivity)
                       (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['tokens', 'isPremium', 'responsesUsed', 'isAdmin']))
                       ||
-                      // 2. Safe Token Deduction (Tokens go DOWN, Usage goes UP)
+                      // 2. Safe Token Deduction (ROBUST MODE)
+                      // Allow ANY update as long as:
+                      // - Tokens strictly DECREASE
+                      // - Premium/Admin status helps CONSTANT (no privilege escalation)
                       (
-                        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['tokens', 'responsesUsed']) &&
                         request.resource.data.tokens < resource.data.tokens &&
-                        request.resource.data.responsesUsed > resource.data.responsesUsed
-                      )
-                      ||
-                      // 3. Just Token Deduction (if usage not tracked in same call)
-                      (
-                        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['tokens']) &&
-                        request.resource.data.tokens < resource.data.tokens
+                        request.resource.data.isAdmin == resource.data.isAdmin &&
+                        request.resource.data.isPremium == resource.data.isPremium
                       )
                     );
       
