@@ -956,7 +956,7 @@ function App() {
                         <div className="flex gap-3">
                           <Badge color="obsidian">{analysis.questions.length} Fields</Badge>
                           <Badge color="gold">Algorithm Optimized</Badge>
-                          {user && (user.tokens || 0) < 50 && (
+                          {user && (user.tokens || 0) < targetCount && (
                             <button
                               onClick={() => setShowPricing(true)}
                               className="text-[10px] text-amber-500 hover:text-amber-400 font-bold uppercase tracking-widest flex items-center gap-1.5 animate-pulse ml-1"
@@ -1399,7 +1399,7 @@ function App() {
       </main>
 
       {!loading && <Footer />}
-    </div>
+    </div >
   );
 }
 

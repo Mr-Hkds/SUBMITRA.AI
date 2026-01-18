@@ -98,14 +98,24 @@ export const subscribeToUserProfile = (uid: string, callback: (user: User | null
 
 export const deductTokens = async (uid: string, amount: number) => {
     try {
-        const userRef = doc(db, COLLECTION, uid);
-        await updateDoc(userRef, {
-            tokens: increment(-amount),
-            responsesUsed: increment(amount)
+        // SECURITY: Call server-side endpoint to prevent client-side manipulation
+        const response = await fetch('/api/deduct-tokens', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ uid, amount })
         });
+
+        if (!response.ok) {
+            const error = await response.json();
+            console.error("Server refused token deduction:", error);
+            return false;
+        }
+
         return true;
     } catch (e) {
-        console.error("Failed to deduct tokens:", e);
+        console.error("Failed to deduct tokens (Network):", e);
         return false;
     }
 };

@@ -1,0 +1,47 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+    }
+
+    // USERS COLLECTION
+    match /users/{userId} {
+      // Admins can do anything
+      allow read, write: if isAdmin();
+      
+      // Regular users
+      allow read: if isAuthenticated() && isOwner(userId);
+      
+      // Protect sensitive fields for non-admins
+      allow update: if isAuthenticated() && isOwner(userId) 
+                    && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['tokens', 'isPremium', 'responsesUsed', 'isAdmin']));
+      
+      allow create: if isAuthenticated() && isOwner(userId) && request.resource.data.tokens == 15;
+    }
+
+    // PAYMENT REQUESTS
+    match /payment_requests/{requestId} {
+      allow read, write: if isAdmin();
+      allow read: if isAuthenticated() && isOwner(resource.data.userId);
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+    }
+
+    // TRANSACTIONS
+    match /transactions/{transactionId} {
+      allow read, write: if isAdmin();
+      allow read: if isAuthenticated() && isOwner(resource.data.userId);
+    }
+  }
+}
