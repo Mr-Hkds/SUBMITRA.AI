@@ -168,7 +168,7 @@ const Footer = () => (
         <div className="h-px w-12 bg-gradient-to-r from-transparent via-white/10 to-transparent group-hover:via-amber-500/50 transition-all duration-700" />
 
         <span className="text-xs md:text-sm text-amber-500/90 font-serif italic tracking-widest hover:text-amber-400 transition-colors">
-          A Naagraaz Production | v4.1.2
+          A Naagraaz Production
         </span>
       </div>
 
@@ -213,7 +213,12 @@ const Footer = () => (
       </div>
 
 
-
+      {/* Version System Tag */}
+      <div className="absolute bottom-2 right-4 opacity-30 hover:opacity-100 transition-opacity">
+        <span className="text-[9px] text-slate-500 font-mono tracking-[0.2em] uppercase">
+          Build v4.1.2
+        </span>
+      </div>
 
     </div>
   </footer>
