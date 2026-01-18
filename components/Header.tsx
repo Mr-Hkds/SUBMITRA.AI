@@ -57,9 +57,10 @@ const Header: React.FC<HeaderProps> = ({ reset, step, user, loading, onLogout, o
                     ) : user ? (
                         <>
                             {/* Token Button with Trust Indicator */}
+                            {/* Token Button with Trust Indicator */}
                             <button
                                 onClick={onShowPricing}
-                                className="flex flex-col items-end group/token transition-all hover:scale-105 active:scale-95"
+                                className="flex flex-col items-end md:items-end group/token transition-transform hover:scale-105 active:scale-95"
                             >
                                 <div className="flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-1.5 rounded-full bg-gradient-to-r from-amber-500/10 to-amber-600/10 border border-amber-500/50 hover:bg-amber-500/20 transition-all shadow-[0_0_15px_rgba(245,158,11,0.1)] hover:shadow-[0_0_20px_rgba(245,158,11,0.2)]">
                                     <Crown className="w-3 h-3 md:w-3.5 md:h-3.5 text-amber-500 group-hover/token:rotate-12 transition-transform" />
@@ -67,9 +68,6 @@ const Header: React.FC<HeaderProps> = ({ reset, step, user, loading, onLogout, o
                                         Add Tokens <span className="text-amber-500 mx-1">|</span> {user.tokens ?? 0}
                                     </span>
                                 </div>
-                                <span className="text-[7px] md:text-[8px] text-slate-500 font-mono uppercase tracking-wider mt-0.5 mr-2 opacity-60 group-hover/token:opacity-100 transition-opacity whitespace-nowrap">
-                                    Secured by Razorpay
-                                </span>
                             </button>
 
                             {/* User Profile */}

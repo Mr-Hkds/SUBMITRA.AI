@@ -144,31 +144,6 @@ const RecommendationModal = ({ onClose, onSelect }: { onClose: () => void, onSel
   </div>
 );
 
-const LaptopRequirementModal = ({ onClose }: { onClose: () => void }) => (
-  <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 animate-fade-in-up">
-    <div className="absolute inset-0 bg-black/90 backdrop-blur-md" onClick={onClose} />
-    <div className="max-w-md w-full glass-panel p-8 rounded-2xl border border-amber-500/20 shadow-[0_0_100px_rgba(251,191,36,0.1)] relative z-10">
-      <div className="flex flex-col items-center text-center space-y-8">
-        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500/20 to-amber-600/10 flex items-center justify-center border border-amber-500/20 shadow-lg">
-          <Laptop className="w-8 h-8 text-amber-500" />
-        </div>
-        <div>
-          <h3 className="text-2xl font-serif font-bold text-white mb-3">Desktop or Laptop Required</h3>
-          <p className="text-sm text-slate-300 leading-relaxed font-sans max-w-xs mx-auto">
-            This professional automation suite is designed for computers. Please open this on your <strong>Laptop or PC</strong> for the full experience.
-          </p>
-        </div>
-        <button
-          onClick={onClose}
-          className="w-full gold-button py-3.5 rounded-xl text-xs uppercase tracking-widest shadow-lg"
-        >
-          I Understand
-        </button>
-      </div>
-    </div>
-  </div>
-);
-
 // --- APP COMPONENTS ---
 
 
@@ -228,7 +203,7 @@ const Footer = () => (
           <div className="absolute -inset-8 bg-gradient-to-r from-amber-500/0 via-amber-500/10 to-amber-500/0 blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
 
           {/* Signature Text */}
-          <span className="relative z-10 text-lg md:text-xl font-bold font-serif tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-amber-700 via-yellow-200 to-amber-700 bg-[length:200%_auto] animate-text-shimmer drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)] filter brightness-110 contrast-125">
+          <span className="relative z-10 text-lg md:text-xl font-bold font-serif tracking-widest animate-text-shimmer liquid-gold-text drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)]">
             MR. HARKAMAL
           </span>
         </div>
@@ -250,27 +225,10 @@ function App() {
   const [aiProgress, setAiProgress] = useState<string>('');
   const [showPricing, setShowPricing] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
-  const [showLaptopNotice, setShowLaptopNotice] = useState(false);
   // REMOVED EXTENSION DETECTION - NOW USING SYSTEM NATIVE ENGINE
   const isExtensionInstalled = false; // Forced false to bypass logic
   const [stopAutomation, setStopAutomation] = useState(false);
 
-  useEffect(() => {
-    // Check if user is on mobile and hasn't seen the notice before
-    const hasSeenNotice = localStorage.getItem('laptop_notice_seen');
-
-    const checkDevice = () => {
-      const isMobile = window.innerWidth < 1024; // Show on tablet/mobile
-      if (isMobile && !hasSeenNotice) {
-        setShowLaptopNotice(true);
-        localStorage.setItem('laptop_notice_seen', 'true');
-      }
-    };
-
-    checkDevice();
-    window.addEventListener('resize', checkDevice);
-    return () => window.removeEventListener('resize', checkDevice);
-  }, []);
 
   const [showAdminDashboard, setShowAdminDashboard] = useState(false);
   const [showRecommendationModal, setShowRecommendationModal] = useState(false);
@@ -925,8 +883,6 @@ function App() {
 
   return (
     <div className="min-h-screen flex flex-col pt-16 relative overflow-hidden">
-      <PremiumBackground />
-      {showLaptopNotice && <LaptopRequirementModal onClose={() => setShowLaptopNotice(false)} />}
       {showLogin && <LoginModal onClose={() => setShowLogin(false)} onLogin={handleLogin} />}
       {showPricing && user && <PaymentModal onClose={() => setShowPricing(false)} user={user} />}
       {isTransitioning && <TransitionOverlay />}

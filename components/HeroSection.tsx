@@ -156,10 +156,16 @@ const HeroSection: React.FC<HeroSectionProps> = ({ url, setUrl, onAnalyze, onWat
                     </div>
 
                     {/* Trust Indicator - Directly Below Input */}
-                    <div className="mt-3 flex justify-center opacity-0 fill-mode-forwards animate-fade-in" style={{ animationDelay: '650ms' }}>
-                        <div className="flex items-center gap-1.5 text-[9px] text-slate-500 font-mono uppercase tracking-widest opacity-80 hover:opacity-100 transition-opacity">
-                            <ShieldCheck className="w-3 h-3 text-emerald-500" />
-                            <span>Secured Payment via <span className="font-bold text-emerald-400">Razorpay</span></span>
+                    <div className="mt-4 flex justify-center opacity-0 fill-mode-forwards animate-fade-in" style={{ animationDelay: '650ms' }}>
+                        <div className="relative group flex items-center gap-2 px-4 py-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/[0.02] overflow-hidden">
+                            {/* Green Shimmer Overlay */}
+                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-emerald-500/10 to-transparent animate-shimmer-flow pointer-events-none" />
+
+                            {/* Content */}
+                            <ShieldCheck className="w-3 h-3 text-emerald-500 relative z-10" />
+                            <span className="text-[10px] text-emerald-100/80 font-mono uppercase tracking-widest relative z-10">
+                                Secured Payment via <span className="font-bold text-emerald-400">Razorpay</span>
+                            </span>
                         </div>
                     </div>
 
