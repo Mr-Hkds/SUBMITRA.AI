@@ -13,7 +13,7 @@ const mapFirebaseUserToUser = (firebaseUser: any): User => ({
     photoURL: firebaseUser.photoURL || "",
     isPremium: false,
     responsesUsed: 0,
-    tokens: 30, // Default starting tokens
+    tokens: 15, // Default starting tokens
     createdAt: new Date(), // These might be inaccurate for existing users without DB, but fine for fallback
     lastLogin: new Date()
 });
@@ -54,7 +54,7 @@ export const signInWithGoogle = async (): Promise<User> => {
                     photoURL: firebaseUser.photoURL || "",
                     isPremium: false,
                     responsesUsed: 0,
-                    tokens: 30, // Default starting tokens
+                    tokens: 15, // Default starting tokens
                     createdAt: serverTimestamp(),
                     lastLogin: serverTimestamp()
                 };
@@ -159,7 +159,7 @@ const ensureUserProfile = async (firebaseUser: any) => {
                 photoURL: firebaseUser.photoURL || "",
                 isPremium: false,
                 responsesUsed: 0,
-                tokens: 30,
+                tokens: 15,
                 createdAt: serverTimestamp(),
                 lastLogin: serverTimestamp()
             };

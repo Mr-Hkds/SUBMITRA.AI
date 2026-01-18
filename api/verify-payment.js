@@ -106,15 +106,15 @@ export default async function handler(req, res) {
                 console.log(`Crediting tokens to user: ${userId}`);
 
                 // Determine tokens based on amount (Server-Side Validation)
-                // ₹29 -> 80 tokens, ₹99 -> 400 tokens, ₹249 -> 1000 tokens
+                // ₹49 -> 70 tokens, ₹99 -> 150 tokens, ₹149 -> 250 tokens, ₹199 -> 400 tokens
                 // We use Math.floor/round to handle potential float issues, but amount is usually exact int
                 let tokensToCredit = 0;
 
                 // Flexible pricing check (allowing small margin for error or currency conversion if any)
-                if (amount >= 49 && amount < 60) tokensToCredit = 150; // Student Pack
-                else if (amount >= 99 && amount < 120) tokensToCredit = 400; // Professional
-                else if (amount >= 249) tokensToCredit = 1200; // Ultimate (Updated from 1000)
-                // else if (amount === 1) tokensToCredit = 10; // Test Pack Removed
+                if (amount >= 49 && amount < 60) tokensToCredit = 70;      // Starter
+                else if (amount >= 99 && amount < 120) tokensToCredit = 150; // Student
+                else if (amount >= 149 && amount < 170) tokensToCredit = 250; // Professional
+                else if (amount >= 199) tokensToCredit = 400;               // Ultimate
                 else {
                     // Fallback or custom amount logic
                     console.warn(`Amount ₹${amount} does not match standard packs. calculating pro-rata? No, skipping.`);

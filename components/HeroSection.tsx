@@ -58,7 +58,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ url, setUrl, onAnalyze, onWat
                                 <div className="inline-flex flex-wrap items-center justify-center gap-2 px-6 py-2 rounded-full bg-gradient-to-r from-amber-500/10 to-amber-600/10 border border-amber-500/20 shadow-[0_0_30px_rgba(245,158,11,0.2)] backdrop-blur-md animate-fade-in-down mx-auto cursor-default hover:bg-amber-500/20 transition-all hover:scale-105 active:scale-95 duration-500">
                                     <Gift className="w-4 h-4 text-amber-500 animate-bounce shrink-0" />
                                     <span className="text-xs font-mono font-bold text-amber-200 tracking-wide uppercase text-center">
-                                        First Time Gift: <span className="text-amber-400">30 Free Tokens</span> Included
+                                        First Time Gift: <span className="text-amber-400">15 Free Tokens</span> Included
                                     </span>
                                 </div>
                             ) : (

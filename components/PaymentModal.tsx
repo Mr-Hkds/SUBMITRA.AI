@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowRight, ArrowLeft, CheckCircle, Upload, AlertCircle, QrCode, Coins, Zap, Crown, CreditCard, Shield, Lock, ShieldCheck } from 'lucide-react';
 import { createPaymentOrder, initializeRazorpayCheckout, verifyAndCapturePayment } from '../services/razorpayService';
+import { addTokens } from '../services/authService';
 
 import { User } from '../types';
 
@@ -11,50 +12,62 @@ interface PaymentModalProps {
 
 const TOKEN_PACKS = [
     {
+        id: 'starter',
+        name: 'Starter',
+        tokens: 70,
+        price: 49,
+        icon: Zap,
+        color: 'from-blue-600 to-blue-900',
+        textColor: 'text-blue-200',
+        border: 'border-blue-500/50',
+        pricePerToken: 0.70
+    },
+    {
         id: 'student',
         name: 'Student',
         tokens: 150,
-        price: 49,
+        price: 99,
         popular: true,
         popularLabel: 'Most Popular',
-        icon: Zap,
+        icon: Crown,
         color: 'from-indigo-600 to-indigo-900',
         textColor: 'text-indigo-200',
         border: 'border-indigo-500/50',
-        pricePerToken: 0.33
+        pricePerToken: 0.66,
+        savings: '6% OFF'
     },
     {
-        id: 'pro',
+        id: 'professional',
         name: 'Professional',
-        tokens: 400,
-        price: 99,
-        icon: Crown,
+        tokens: 250,
+        price: 149,
+        icon: ShieldCheck,
         color: 'from-amber-600 to-amber-800',
         textColor: 'text-amber-200',
         border: 'border-amber-500/50',
-        pricePerToken: 0.25,
-        savings: '24% OFF'
+        pricePerToken: 0.60,
+        savings: '15% OFF'
     },
     {
         id: 'ultimate',
         name: 'Ultimate',
-        tokens: 1200,
-        price: 249,
+        tokens: 400,
+        price: 199,
         popular: true,
         popularLabel: 'Best Value',
         icon: ShieldCheck,
         color: 'from-emerald-600 to-emerald-900',
         textColor: 'text-emerald-200',
         border: 'border-emerald-500/50',
-        pricePerToken: 0.21,
-        savings: '37% OFF'
+        pricePerToken: 0.50,
+        savings: '30% OFF'
     }
 ];
 
 const PaymentModal: React.FC<PaymentModalProps> = ({ onClose, user }) => {
     // Step 1: Select Pack, Step 2: Razorpay Payment
     const [step, setStep] = useState<1 | 2>(1);
-    const [selectedPack, setSelectedPack] = useState(TOKEN_PACKS[1]); // Default to Pro (₹99) - Anchor Effect
+    const [selectedPack, setSelectedPack] = useState(TOKEN_PACKS[1]); // Default to Student (₹99) - Most Popular
 
     const [loading, setLoading] = useState(false);
     // checking state removed (manual payment deprecated)
@@ -131,7 +144,12 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ onClose, user }) => {
                 user.uid
             );
 
-            console.log('🎉 Payment Verified & Tokens Credited (Server-Side)!', verificationResult);
+            console.log('🎉 Payment Verified!', verificationResult);
+
+            // Manual Client-Side Credit (Reliability Fallback)
+            // Essential for local dev where Vite proxy doesn't handle DB updates
+            console.log(`💳 Crediting ${selectedPack.tokens} tokens to user...`);
+            await addTokens(user.uid, selectedPack.tokens);
 
             // Force a small delay to allow Firestore propagation if using real-time listeners
             await new Promise(resolve => setTimeout(resolve, 1000));
@@ -213,72 +231,97 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ onClose, user }) => {
                 <div className="p-4 md:p-8 max-h-[70vh] overflow-y-auto custom-scrollbar">
                     {step === 1 ? (
                         <div className="space-y-8 animate-fade-in-right">
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {/* Responsive Grid / Scroll Container */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 overflow-x-auto pb-6 pt-6 px-2 snap-x snap-mandatory hide-scrollbar">
                                 {TOKEN_PACKS.map((pack, index) => (
                                     <div
                                         key={pack.id}
                                         onClick={() => setSelectedPack(pack)}
                                         style={{ animationDelay: `${index * 50}ms` }}
-                                        className={`relative p-8 rounded-2xl border cursor-pointer transition-all duration-300 group h-full flex flex-col justify-between min-h-[280px]
+                                        className={`relative p-4 rounded-2xl border cursor-pointer transition-all duration-300 group h-full flex flex-col justify-between min-h-[260px] snap-center min-w-[240px] lg:min-w-0
                                             ${selectedPack.id === pack.id
-                                                ? `bg-gradient-to-br ${pack.color} border-transparent shadow-2xl shadow-amber-500/30 scale-105 ring-2 ring-amber-400/50`
-                                                : 'bg-slate-900/40 border-slate-700/50 hover:border-amber-500/50 hover:shadow-xl hover:shadow-amber-500/10 hover:scale-102'
+                                                ? `bg-slate-900/90 border-amber-500/50 shadow-[0_0_35px_rgba(245,158,11,0.25)] ring-1 ring-amber-500/50 scale-[1.03] z-10`
+                                                : 'bg-white/[0.03] border-white/5 hover:border-white/10 hover:bg-white/[0.05] hover:scale-[1.02] z-0'
                                             }
                                         `}
                                     >
-                                        {/* Single Top Badge - Only show one badge per card */}
-                                        {pack.popular && selectedPack.id !== pack.id && (
-                                            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-amber-500 to-amber-600 text-black text-[11px] font-extrabold px-5 py-1.5 rounded-full uppercase tracking-wide shadow-lg z-20">
-                                                {(pack as any).popularLabel}
+                                        {/* Glow Effect for Selected */}
+                                        {selectedPack.id === pack.id && (
+                                            <div className="absolute inset-0 rounded-2xl bg-gradient-to-b from-amber-500/10 to-transparent pointer-events-none" />
+                                        )}
+
+                                        {/* Selection Check Circle */}
+                                        <div className={`absolute top-3 right-3 z-20 w-5 h-5 rounded-full border flex items-center justify-center transition-all duration-300 ${selectedPack.id === pack.id
+                                            ? 'bg-amber-500 border-amber-500 text-black scale-100 opacity-100'
+                                            : 'border-white/20 bg-transparent text-transparent scale-90 opacity-0'
+                                            }`}>
+                                            <CheckCircle className="w-3 h-3" strokeWidth={3} />
+                                        </div>
+
+                                        {/* Popular Badge */}
+                                        {pack.popular && (
+                                            <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 z-30">
+                                                <div className="bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 text-black text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-wider shadow-[0_3px_12px_rgba(245,158,11,0.4)] whitespace-nowrap flex items-center gap-1">
+                                                    <Crown className="w-2.5 h-2.5 fill-black/20 text-black" />
+                                                    {(pack as any).popularLabel || "Best Value"}
+                                                </div>
                                             </div>
                                         )}
 
-                                        {/* Savings Corner Badge - Only for cards with savings */}
-                                        {(pack as any).savings && (
-                                            <div className="absolute top-4 right-4 bg-emerald-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-md uppercase tracking-wider shadow-lg">
-                                                {(pack as any).savings}
-                                            </div>
-                                        )}
+                                        {/* Content */}
+                                        <div className="flex flex-col items-center text-center space-y-3 pt-4 flex-1 relative z-10">
 
-                                        <div className="flex flex-col items-center text-center space-y-6 flex-1">
-                                            {/* Icon */}
-                                            <div className={`w-16 h-16 rounded-2xl flex items-center justify-center transition-all duration-300 ${selectedPack.id === pack.id
-                                                ? 'bg-white/20 shadow-lg'
-                                                : 'bg-slate-800/50 group-hover:bg-slate-700/50'
+                                            {/* Icon Circle */}
+                                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-500 ${selectedPack.id === pack.id
+                                                ? 'bg-gradient-to-br from-amber-500/20 to-amber-600/10 shadow-[0_0_15px_rgba(245,158,11,0.2)]'
+                                                : 'bg-white/5 group-hover:bg-white/10'
                                                 }`}>
-                                                <pack.icon className={`w-8 h-8 transition-colors ${selectedPack.id === pack.id ? 'text-white' : 'text-amber-400'
+                                                <pack.icon className={`w-6 h-6 transition-colors duration-300 ${selectedPack.id === pack.id ? 'text-amber-400 drop-shadow-[0_0_4px_rgba(251,191,36,0.5)]' : 'text-slate-500 group-hover:text-amber-200'
                                                     }`} />
                                             </div>
 
-                                            {/* Token Count */}
-                                            <div className="space-y-2">
-                                                <div className={`text-5xl font-black tracking-tight ${selectedPack.id === pack.id ? 'text-white' : 'text-white'
+                                            {/* Name */}
+                                            <h4 className={`text-base font-serif font-bold transition-colors tracking-wide ${selectedPack.id === pack.id ? 'text-white' : 'text-slate-400'}`}>
+                                                {pack.name}
+                                            </h4>
+
+                                            {/* Token Count (Hero) */}
+                                            <div className="space-y-0.5">
+                                                <div className={`text-4xl font-black tracking-tighter ${selectedPack.id === pack.id
+                                                    ? 'bg-gradient-to-b from-white via-white to-slate-300 bg-clip-text text-transparent drop-shadow-[0_0_12px_rgba(255,255,255,0.3)]'
+                                                    : 'text-white/80'
                                                     }`}>
                                                     {pack.tokens}
                                                 </div>
-                                                <div className={`text-xs uppercase tracking-widest font-bold ${selectedPack.id === pack.id ? 'text-white/70' : 'text-slate-400'
-                                                    }`}>
+                                                <div className="text-[9px] uppercase tracking-[0.3em] text-slate-500 font-bold">
                                                     Tokens
                                                 </div>
                                             </div>
 
-                                            {/* Price */}
-                                            <div className="space-y-1">
-                                                <div className={`text-3xl font-bold ${selectedPack.id === pack.id ? 'text-amber-300' : 'text-amber-400'
-                                                    }`}>
+                                            {/* Divider */}
+                                            <div className={`w-full h-px transition-colors ${selectedPack.id === pack.id ? 'bg-gradient-to-r from-transparent via-amber-500/30 to-transparent' : 'bg-gradient-to-r from-transparent via-white/10 to-transparent'}`} />
+
+                                            {/* Price & Savings */}
+                                            <div className="space-y-1.5 w-full relative">
+                                                <div className={`text-2xl font-mono font-bold ${selectedPack.id === pack.id ? 'text-amber-400' : 'text-slate-300'}`}>
                                                     ₹{pack.price}
                                                 </div>
-                                                <div className={`text-[10px] font-medium ${selectedPack.id === pack.id ? 'text-white/50' : 'text-slate-500'
-                                                    }`}>
-                                                    ₹{(pack as any).pricePerToken?.toFixed(2)} per token
+
+                                                <div className="flex flex-col items-center gap-1">
+                                                    <div className="text-[9px] font-medium text-slate-500">
+                                                        ₹{(pack as any).pricePerToken?.toFixed(2)} / token
+                                                    </div>
+                                                    {(pack as any).savings && (
+                                                        <div className={`text-[9px] font-bold px-2.5 py-0.5 rounded-full border inline-block transition-all ${selectedPack.id === pack.id
+                                                            ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30 shadow-[0_0_8px_rgba(16,185,129,0.2)]'
+                                                            : 'bg-emerald-500/10 text-emerald-500/80 border-emerald-500/10'
+                                                            }`}>
+                                                            SAVE {(pack as any).savings}
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
                                         </div>
-
-                                        {/* Selected Indicator */}
-                                        {selectedPack.id === pack.id && (
-                                            <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/10 via-transparent to-transparent pointer-events-none" />
-                                        )}
                                     </div>
                                 ))}
                             </div>

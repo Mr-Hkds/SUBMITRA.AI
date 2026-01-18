@@ -1,9 +1,8 @@
-
 import React, { useEffect, useState } from 'react';
 import { collection, getDocs, query, orderBy, limit, onSnapshot, doc, deleteDoc, updateDoc, Timestamp, where } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { PaymentTransaction, User } from '../types';
-import { CheckCircle, XCircle, Clock, ShieldCheck, ArrowLeft, ArrowRight, Users, DollarSign, RefreshCw, Trash2, Edit2, Activity, CreditCard, TrendingUp } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, ShieldCheck, ArrowLeft, ArrowRight, Users, DollarSign, RefreshCw, Trash2, Edit2, Activity, CreditCard, TrendingUp, Search, Filter, ChevronDown, Download } from 'lucide-react';
 
 const AdminDashboard = ({ user, onBack }: { user: User; onBack: () => void }) => {
     const [transactions, setTransactions] = useState<PaymentTransaction[]>([]);
@@ -21,6 +20,41 @@ const AdminDashboard = ({ user, onBack }: { user: User; onBack: () => void }) =>
     const [historyModalOpen, setHistoryModalOpen] = useState(false);
     const [viewingTransactionHistory, setViewingTransactionHistory] = useState<PaymentTransaction[]>([]);
     const [userMap, setUserMap] = useState<Record<string, string>>({}); // ID -> Email Map
+
+    // Search & Filter State
+    const [searchTerm, setSearchTerm] = useState('');
+    const [filterStatus, setFilterStatus] = useState<'all' | 'success' | 'pending' | 'failed'>('all');
+
+    const [userSearchTerm, setUserSearchTerm] = useState('');
+    const [userFilterType, setUserFilterType] = useState<'all' | 'premium' | 'free' | 'inactive'>('all');
+
+    // Derived State: Filtered Transactions
+    const filteredTransactions = transactions.filter(tx => {
+        const term = searchTerm.toLowerCase();
+        const email = (tx.userEmail || userMap[tx.userId] || '').toLowerCase();
+        const id = (tx.paymentId || tx.id).toLowerCase();
+        const matchesSearch = email.includes(term) || id.includes(term);
+
+        const matchesStatus = filterStatus === 'all' ? true :
+            filterStatus === 'success' ? (tx.status === 'captured' || tx.status === 'success' || tx.status === 'completed') :
+                filterStatus === 'pending' ? (tx.status === 'created' || tx.status === 'authorized') :
+                    (tx.status === 'failed');
+
+        return matchesSearch && matchesStatus;
+    });
+
+    // Derived State: Filtered Users
+    const filteredUsers = allUsers.filter(u => {
+        const term = userSearchTerm.toLowerCase();
+        const matchesSearch = (u.displayName || '').toLowerCase().includes(term) || (u.email || '').toLowerCase().includes(term);
+
+        const matchesFilter = userFilterType === 'all' ? true :
+            userFilterType === 'premium' ? u.isPremium :
+                userFilterType === 'free' ? !u.isPremium :
+                    userFilterType === 'inactive' ? (u.tokens === 0) : true;
+
+        return matchesSearch && matchesFilter;
+    });
 
     const fetchData = async () => {
         setLoading(true);
@@ -345,43 +379,69 @@ const AdminDashboard = ({ user, onBack }: { user: User; onBack: () => void }) =>
 
             {/* INBOX (Recent Unread Transactions) */}
             <div className="glass-panel rounded-xl overflow-hidden border border-white/10">
-                <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-white/5 bg-white/[0.02]">
-                    <div className="flex items-center justify-between">
-                        <h3 className="font-bold text-white text-xs sm:text-sm uppercase tracking-wider flex items-center gap-2">
+                <div className="px-4 sm:px-6 py-4 border-b border-white/5 bg-white/[0.02] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+
+                    <div className="flex items-center gap-4">
+                        <h3 className="font-bold text-white text-sm uppercase tracking-wider flex items-center gap-2">
                             <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                            New Transactions (Inbox)
+                            Inbox
                         </h3>
 
-                        <div className="flex items-center gap-3">
+                        {/* Status Filter */}
+                        <div className="flex items-center gap-1 bg-black/20 p-1 rounded-lg border border-white/5">
+                            {(['all', 'success', 'pending', 'failed'] as const).map((status) => (
+                                <button
+                                    key={status}
+                                    onClick={() => setFilterStatus(status)}
+                                    className={`px-3 py-1 text-[10px] font-bold uppercase tracking-wider rounded-md transition-all ${filterStatus === status
+                                            ? 'bg-amber-500 text-black shadow-lg shadow-amber-900/20'
+                                            : 'text-slate-500 hover:text-slate-300 hover:bg-white/5'
+                                        }`}
+                                >
+                                    {status}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-3 w-full sm:w-auto">
+                        {/* Search Bar */}
+                        <div className="relative flex-1 sm:flex-initial">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500" />
+                            <input
+                                type="text"
+                                placeholder="Search email or ID..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="w-full sm:w-64 bg-black/20 border border-white/10 rounded-lg pl-9 pr-3 py-1.5 text-xs text-slate-200 placeholder:text-slate-600 focus:outline-none focus:border-amber-500/50 transition-colors"
+                            />
+                        </div>
+
+                        <div className="flex items-center gap-2 flex-shrink-0">
                             {autoRefreshing && (
-                                <div className="flex items-center gap-2 text-xs text-emerald-400">
-                                    <RefreshCw className="w-3 h-3 animate-spin" />
-                                    <span className="hidden sm:inline">Updating...</span>
-                                </div>
+                                <RefreshCw className="w-3.5 h-3.5 text-emerald-500 animate-spin" />
                             )}
-                            <button onClick={fetchData} className="text-xs text-amber-500 hover:text-amber-400 flex items-center gap-1">
-                                <RefreshCw className="w-3 h-3" />
-                                <span className="hidden sm:inline">Refresh</span>
+                            <button onClick={fetchData} className="p-1.5 rounded-lg hover:bg-white/5 text-slate-500 hover:text-white transition-colors">
+                                <RefreshCw className="w-3.5 h-3.5" />
                             </button>
                         </div>
                     </div>
                 </div>
-
                 {loading ? (
                     <div className="p-12 text-center text-slate-500 text-sm">Loading inbox...</div>
-                ) : transactions.length === 0 ? (
-                    <div className="p-12 text-center text-slate-500 text-sm flex flex-col items-center gap-3">
-                        <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center">
-                            <CheckCircle className="w-6 h-6 text-slate-600" />
+                ) : filteredTransactions.length === 0 ? (
+                    <div className="p-16 text-center text-slate-500 text-sm flex flex-col items-center gap-4">
+                        <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center border border-white/5">
+                            <Search className="w-6 h-6 text-slate-600" />
                         </div>
-                        <span>All caught up! No new transactions.</span>
-                        <button onClick={() => setHistoryModalOpen(true)} className="text-amber-500 hover:underline text-xs">
-                            View Past History
-                        </button>
+                        <div className="space-y-1">
+                            <p className="text-slate-400 font-medium">No transactions found</p>
+                            <p className="text-xs text-slate-600">Try adjusting your filters or search terms</p>
+                        </div>
                     </div>
                 ) : (
                     <div className="divide-y divide-white/5">
-                        {transactions.map((tx) => (
+                        {filteredTransactions.map((tx) => (
                             <div key={tx.id} className="p-4 sm:p-6 hover:bg-white/[0.02] transition-colors group">
                                 <div className="flex items-start gap-3">
                                     {/* Status Icon */}
@@ -482,17 +542,52 @@ const AdminDashboard = ({ user, onBack }: { user: User; onBack: () => void }) =>
             {showUsersModal && (
                 <div className="fixed inset-0 z-[150] flex items-start justify-center pt-20 p-4 bg-black/90 backdrop-blur-md overflow-y-auto">
                     <div className="bg-[#0a0a0a] rounded-xl border border-white/10 w-full max-w-5xl flex flex-col shadow-2xl mb-20">
-                        <div className="p-6 border-b border-white/10 flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <Users className="w-6 h-6 text-blue-400" />
-                                <h2 className="text-xl font-bold text-white">All Users ({allUsers.length})</h2>
+                        <div className="p-6 border-b border-white/10 space-y-4">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 bg-blue-500/10 rounded-lg">
+                                        <Users className="w-6 h-6 text-blue-400" />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-xl font-bold text-white">User Management</h2>
+                                        <p className="text-xs text-slate-400">Total Database: {allUsers.length} Users</p>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => setShowUsersModal(false)}
+                                    className="p-2 hover:bg-white/5 rounded-full text-slate-400 hover:text-white transition-colors"
+                                >
+                                    <XCircle className="w-6 h-6" />
+                                </button>
                             </div>
-                            <button
-                                onClick={() => setShowUsersModal(false)}
-                                className="p-2 hover:bg-white/5 rounded-full text-slate-400 hover:text-white transition-colors"
-                            >
-                                <XCircle className="w-6 h-6" />
-                            </button>
+
+                            {/* User Search & Filter Bar */}
+                            <div className="flex flex-col sm:flex-row gap-3">
+                                <div className="relative flex-1">
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                                    <input
+                                        type="text"
+                                        placeholder="Search by name or email..."
+                                        value={userSearchTerm}
+                                        onChange={(e) => setUserSearchTerm(e.target.value)}
+                                        className="w-full bg-black/40 border border-white/10 rounded-lg pl-10 pr-4 py-2 text-sm text-slate-200 focus:border-blue-500/50 focus:outline-none placeholder:text-slate-600"
+                                    />
+                                </div>
+                                <div className="flex bg-black/40 rounded-lg border border-white/10 p-1">
+                                    {(['all', 'premium', 'free', 'inactive'] as const).map((type) => (
+                                        <button
+                                            key={type}
+                                            onClick={() => setUserFilterType(type)}
+                                            className={`px-4 py-1.5 text-xs font-bold uppercase tracking-wider rounded-md transition-all ${userFilterType === type
+                                                ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20'
+                                                : 'text-slate-500 hover:text-slate-300 hover:bg-white/5'
+                                                }`}
+                                        >
+                                            {type}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
                         </div>
 
                         <div className="flex-1 overflow-auto p-0">
@@ -508,7 +603,7 @@ const AdminDashboard = ({ user, onBack }: { user: User; onBack: () => void }) =>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-white/5 text-sm">
-                                    {allUsers.map(u => {
+                                    {filteredUsers.map(u => {
                                         // Format Date
                                         let lastLoginStr = "Never";
                                         if (u.lastLogin) {
