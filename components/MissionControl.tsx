@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Activity, Terminal, Shield, Zap, CheckCircle, Clock, Disc, Cpu, AlertCircle, Settings, Crown, ChevronRight, Globe } from 'lucide-react';
+import { Activity, Terminal, Shield, Zap, CheckCircle, Clock, Disc, Cpu, AlertCircle, Settings, Crown } from 'lucide-react';
 
 interface MissionLog {
     msg: string;
@@ -25,13 +25,10 @@ const MissionControl: React.FC<MissionControlProps> = ({ logs, targetCount, init
     const [tokenPhase, setTokenPhase] = useState<'IDLE' | 'REDUCING' | 'DONE'>('IDLE');
     const [displayedTokens, setDisplayedTokens] = useState(initialTokens);
     const [isTicking, setIsTicking] = useState(false);
-    const [isAborting, setIsAborting] = useState(false);
-
     const startTokensRef = useRef(initialTokens);
     const containerRef = useRef<HTMLDivElement>(null);
     const logContainerRef = useRef<HTMLDivElement>(null);
-    const completionRef = useRef<HTMLDivElement>(null);
-    const abortRef = useRef<HTMLDivElement>(null);
+    const logEndRef = useRef<HTMLDivElement>(null);
 
     const currentCount = logs.length > 0 ? logs[logs.length - 1].count : 0;
     const currentStatus = logs.length > 0 ? logs[logs.length - 1].status : 'INITIALIZING';
@@ -42,60 +39,64 @@ const MissionControl: React.FC<MissionControlProps> = ({ logs, targetCount, init
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }, []);
 
-    const handleAbortClick = () => {
-        setIsAborting(true);
-        onAbort();
-    };
-
-    // Timer logic
+    // Timer
     useEffect(() => {
         if (currentStatus === 'DONE' || currentStatus === 'ERROR' || currentStatus === 'ABORTED') return;
-        const start = Date.now() - (elapsedTime * 1000);
+
+        const start = Date.now() - (elapsedTime * 1000); // Resume from previous if needed
         const interval = setInterval(() => {
             setElapsedTime(Math.floor((Date.now() - start) / 1000));
         }, 1000);
         return () => clearInterval(interval);
     }, [currentStatus]);
 
-    // Auto-scroll logs
+    // Auto-scroll logs without jumping the whole page (direct container manipulation)
     useEffect(() => {
         if (logContainerRef.current) {
             logContainerRef.current.scrollTop = logContainerRef.current.scrollHeight;
         }
     }, [logs]);
 
-    // PRECISE FOCUS SHIFT: Handle smooth centering on completion or abort
+    // Center viewport on completion start/abort
     useEffect(() => {
-        const target = tokenPhase === 'DONE' ? completionRef.current : (currentStatus === 'ABORTED' ? abortRef.current : null);
-        if (target) {
+        if (tokenPhase === 'REDUCING' || currentStatus === 'ABORTED') {
             setTimeout(() => {
-                target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }, 300);
+                const element = containerRef.current;
+                if (element) {
+                    const rect = element.getBoundingClientRect();
+                    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+                    const finalTop = rect.top + scrollTop - (window.innerHeight / 2) + (rect.height / 2);
+                    window.scrollTo({ top: finalTop, behavior: 'smooth' });
+                }
+            }, 100);
         }
     }, [tokenPhase, currentStatus]);
 
-    // Trigger Reduction Phase
+    // 1. Trigger Reduction Phase
     useEffect(() => {
         if (currentStatus === 'DONE' && tokenPhase === 'IDLE') {
             setTokenPhase('REDUCING');
         }
     }, [currentStatus, tokenPhase]);
 
-    // Token Reduction Animation
+    // 2. Execute Animation Loop (Run ONLY when phase becomes REDUCING)
     useEffect(() => {
         if (tokenPhase === 'REDUCING') {
             const startDelay = setTimeout(() => {
                 const startValue = startTokensRef.current;
-                const endValue = startValue - currentCount;
-                const duration = 2000;
+                const endValue = startValue - targetCount;
+                const duration = 2500;
                 const startTime = Date.now();
+
                 let lastValue = startValue;
 
-                const animate = () => {
+                const animateTools = () => {
                     const now = Date.now();
                     const timeProgress = Math.min((now - startTime) / duration, 1);
-                    const easeOut = 1 - Math.pow(1 - timeProgress, 3); // Cubic ease out
-                    const current = Math.floor(startValue - (currentCount * easeOut));
+
+                    // Ease out expo
+                    const easeOut = timeProgress === 1 ? 1 : 1 - Math.pow(2, -10 * timeProgress);
+                    const current = Math.floor(startValue - (targetCount * easeOut));
 
                     if (current !== lastValue) {
                         setDisplayedTokens(current);
@@ -105,17 +106,19 @@ const MissionControl: React.FC<MissionControlProps> = ({ logs, targetCount, init
                         lastValue = current;
                     }
 
-                    if (timeProgress < 1) requestAnimationFrame(animate);
-                    else {
+                    if (timeProgress < 1) {
+                        requestAnimationFrame(animateTools);
+                    } else {
                         setDisplayedTokens(endValue);
-                        setTimeout(() => setTokenPhase('DONE'), 800);
+                        setTimeout(() => setTokenPhase('DONE'), 1000);
                     }
                 };
-                requestAnimationFrame(animate);
-            }, 1000);
+                requestAnimationFrame(animateTools);
+            }, 1500);
+
             return () => clearTimeout(startDelay);
         }
-    }, [tokenPhase, currentCount, onTokenUpdate]);
+    }, [tokenPhase, targetCount]);
 
     const formatTime = (s: number) => {
         const mins = Math.floor(s / 60);
@@ -124,267 +127,327 @@ const MissionControl: React.FC<MissionControlProps> = ({ logs, targetCount, init
     };
 
     return (
-        <div ref={containerRef} className="w-full max-w-6xl mx-auto space-y-10 animate-fade-in-up pb-20">
-            {/* --- HUD HEADER (THE COCKPIT) --- */}
-            <div className={`relative group p-[1px] rounded-[2rem] overflow-hidden transition-all duration-1000 ${currentStatus === 'ABORTED' ? 'opacity-40 grayscale' : 'shadow-[0_0_50px_rgba(245,158,11,0.05)]'}`}>
-                <div className="absolute inset-0 bg-gradient-to-r from-amber-500/20 via-slate-500/10 to-amber-500/20 animate-shimmer-flow" />
-                <div className="relative bg-[#020617]/90 backdrop-blur-3xl rounded-[2rem] p-8 md:p-10 flex flex-col md:flex-row items-center justify-between gap-10">
-                    <div className="flex items-center gap-8">
-                        {/* Status Orb & Progress */}
-                        <div className="relative h-28 w-28 flex items-center justify-center">
-                            <svg className="w-full h-full transform -rotate-90">
-                                <circle cx="56" cy="56" r="50" stroke="currentColor" strokeWidth="2" fill="transparent" className="text-white/5" />
-                                <circle
-                                    cx="56" cy="56" r="50" stroke="currentColor" strokeWidth="3" fill="transparent"
-                                    strokeDasharray={314} strokeDashoffset={314 - (314 * progress) / 100}
-                                    className={`${currentStatus === 'DONE' ? 'text-emerald-500' : currentStatus === 'ABORTED' ? 'text-red-500' : 'text-amber-500 shadow-[0_0_15px_#f59e0b]'} transition-all duration-1000 ease-out`}
-                                    strokeLinecap="round"
-                                />
-                            </svg>
-                            <div className="absolute inset-0 flex flex-col items-center justify-center">
-                                <span className="text-2xl font-mono font-black text-white">{Math.round(progress)}%</span>
-                                <span className="text-[9px] text-slate-500 font-bold uppercase tracking-widest">Load</span>
+        <div
+            ref={containerRef}
+            className="w-full max-w-5xl mx-auto space-y-8 animate-fade-in-up relative scroll-mt-20"
+        >
+            {/* TOKEN REDUCTION OVERLAY */}
+            {tokenPhase === 'REDUCING' && (
+                <div className="absolute inset-0 z-[110] flex flex-col items-center justify-center bg-[#020617]/95 backdrop-blur-2xl animate-fade-in border border-amber-500/10 rounded-2xl">
+                    <div className="text-center space-y-8 max-w-md px-6">
+                        <div className="flex justify-center">
+                            <div className="relative">
+                                <div className="absolute inset-0 bg-amber-500/20 blur-2xl rounded-full animate-pulse" />
+                                <div className="relative bg-black border border-amber-500/20 p-8 rounded-full shadow-[0_0_30px_rgba(245,158,11,0.1)]">
+                                    <Crown className="w-12 h-12 text-amber-500 animate-bounce" />
+                                </div>
                             </div>
                         </div>
 
-                        <div className="space-y-3">
-                            <div className="flex items-center gap-3">
-                                <div className={`px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-[0.2em] flex items-center gap-1.5 border
-                                    ${currentStatus === 'DONE' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' :
-                                        currentStatus === 'ABORTED' ? 'bg-red-500/10 text-red-500 border-red-500/20' :
-                                            'bg-amber-500/10 text-amber-500 border-amber-500/20 animate-pulse'}`}>
-                                    <div className={`w-1.5 h-1.5 rounded-full ${currentStatus === 'DONE' ? 'bg-emerald-500' : currentStatus === 'ABORTED' ? 'bg-red-500' : 'bg-amber-500 shadow-[0_0_8px_#f59e0b]'}`} />
-                                    {currentStatus === 'DONE' ? 'Mission Secured' : currentStatus === 'ABORTED' ? 'Safety Terminated' : 'Thread Active'}
+                        <div>
+                            <p className="text-amber-500/60 font-mono text-[10px] uppercase tracking-[0.4em] mb-4">Neural Resource Deduction</p>
+                            <div className="flex flex-col items-center">
+                                <span className={`text-7xl font-mono font-bold text-white tracking-tighter tabular-nums drop-shadow-[0_0_20px_rgba(245,158,11,0.3)] transition-transform duration-75 ${isTicking ? 'scale-110 text-amber-400' : 'scale-100'}`}>
+                                    {displayedTokens}
+                                </span>
+                                <div className="flex items-center gap-2 mt-2">
+                                    <div className="h-[2px] w-8 bg-red-500/50 rounded-full" />
+                                    <span className="text-red-500 font-mono font-bold text-sm">-{targetCount} Units</span>
+                                    <div className="h-[2px] w-8 bg-red-500/50 rounded-full" />
                                 </div>
-                                <span className="text-[10px] text-slate-500 font-mono tracking-tighter opacity-50">KV4-OS.PRIME</span>
                             </div>
-                            <h2 className="text-3xl md:text-4xl font-serif font-black text-white tracking-tight leading-none group-hover:text-amber-100 transition-colors">{formTitle}</h2>
-                            <div className="flex items-center gap-4 text-slate-500 font-mono text-[10px]">
-                                <span className="flex items-center gap-1.5"><Globe className="w-3 h-3" /> Global Relay</span>
-                                <span className="w-1 h-1 bg-white/10 rounded-full" />
-                                <span className="flex items-center gap-1.5"><Shield className="w-3 h-3 text-emerald-500/50" /> End-to-End Encryption</span>
-                            </div>
+                        </div>
+
+                        <p className="text-slate-400 text-xs font-mono animate-pulse">
+                            Finalizing secure handshake & anchoring data...
+                        </p>
+                    </div>
+                </div>
+            )}
+
+            {/* SUCCESS OVERLAY */}
+            {tokenPhase === 'DONE' && (
+                <div className="absolute inset-0 z-[100] flex flex-col items-center justify-center bg-[#020617]/90 backdrop-blur-xl animate-fade-in border border-emerald-500/20 rounded-2xl shadow-[0_0_100px_rgba(16,185,129,0.1)]">
+                    <div className="mb-8 relative">
+                        <div className="absolute inset-0 bg-emerald-500/10 blur-3xl rounded-full pointer-events-none" />
+                        <div className="relative bg-emerald-500/20 p-6 rounded-full border border-emerald-500/30">
+                            <CheckCircle className="w-16 h-16 text-emerald-500" />
                         </div>
                     </div>
 
-                    <div className="flex flex-col items-end gap-6 border-l border-white/5 pl-10">
-                        <div className="text-right">
-                            <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest mb-1">Time on Wing</p>
-                            <div className="text-3xl font-mono font-black text-white tabular-nums flex items-center gap-3">
-                                <Clock className="w-6 h-6 text-amber-500/30" />
-                                {formatTime(elapsedTime)}
-                            </div>
+                    <h2 className="text-4xl font-serif font-bold text-white mb-4 tracking-tight text-center px-4">Task Completed Successfully</h2>
+                    <div className="flex flex-col items-center gap-2 mb-10 text-center px-12">
+                        <p className="text-emerald-400 font-mono text-xs uppercase tracking-[0.3em] font-bold">
+                            Total Duration: {logs.length > 1 ? Math.floor((logs[logs.length - 1].timestamp - logs[0].timestamp) / 1000) : elapsedTime} Seconds
+                        </p>
+                        <p className="text-slate-400 text-sm max-w-md leading-relaxed">
+                            The automation process has successfully submitted all {targetCount} form entries. The operation is now finished and all records have been anchored.
+                        </p>
+                        <div className="mt-4 flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 shadow-inner">
+                            <Crown className="w-4 h-4 text-emerald-500" />
+                            <span className="text-xs font-mono text-emerald-200">Final Balance: {startTokensRef.current - targetCount} Units</span>
                         </div>
+                    </div>
+                    <div className="flex gap-4">
+                        <button
+                            onClick={onNewMission}
+                            className="group relative px-8 py-4 bg-emerald-600 text-white font-bold uppercase text-xs tracking-[0.2em] rounded-xl hover:bg-emerald-500 transition-all shadow-lg active:scale-95"
+                        >
+                            Initialize New Sequence
+                        </button>
+                        <button
+                            onClick={onBackToConfig}
+                            className="px-8 py-4 bg-white/5 border border-white/10 text-slate-300 font-bold uppercase text-xs tracking-[0.2em] rounded-xl hover:bg-white/10 transition-all active:scale-95"
+                        >
+                            Return to Config
+                        </button>
+                    </div>
+                </div>
+            )}
 
-                        <div className="flex gap-4">
-                            {currentStatus === 'DONE' ? (
-                                <button onClick={onNewMission} className="px-8 py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white font-black uppercase text-[10px] tracking-widest rounded-2xl transition-all shadow-xl shadow-emerald-900/20 active:scale-95 flex items-center gap-2">
-                                    <Zap className="w-4 h-4 fill-current" /> New Sequence
-                                </button>
-                            ) : currentStatus === 'ABORTED' ? (
-                                <button onClick={onBackToConfig} className="px-8 py-3.5 bg-amber-600/10 border border-amber-500/20 text-amber-500 font-black uppercase text-[10px] tracking-widest rounded-2xl hover:bg-amber-500 hover:text-white transition-all active:scale-95">
-                                    Re-Configure
+            {/* ABORTED OVERLAY */}
+            {currentStatus === 'ABORTED' && (
+                <div className="absolute inset-0 z-[100] flex flex-col items-center justify-center bg-[#000000]/95 backdrop-blur-3xl animate-fade-in border border-red-500/20 rounded-2xl shadow-[0_0_100px_rgba(239,68,68,0.1)]">
+                    <h2 className="text-4xl font-serif font-bold text-white mb-4 tracking-tight text-center text-red-100">Mission Aborted</h2>
+                    <div className="flex flex-col items-center gap-2 mb-10 text-center px-12">
+                        <p className="text-red-400 font-mono text-xs uppercase tracking-[0.3em] font-bold">
+                            Safety Intercept Triggered
+                        </p>
+                        <p className="text-slate-400 text-sm max-w-md leading-relaxed">
+                            The operation was manually terminated. Only {currentCount} of {targetCount} payloads were deployed. No further data will be transmitted.
+                        </p>
+                    </div>
+                    <div className="flex gap-4">
+                        <button
+                            onClick={onBackToConfig}
+                            className="group relative px-8 py-4 bg-amber-600 text-white font-bold uppercase text-xs tracking-[0.2em] rounded-xl hover:bg-amber-500 transition-all shadow-lg active:scale-95"
+                        >
+                            Adjust Configuration
+                        </button>
+                        <button
+                            onClick={onNewMission}
+                            className="px-8 py-4 bg-white/5 border border-white/10 text-slate-300 font-bold uppercase text-xs tracking-[0.2em] rounded-xl hover:bg-white/10 transition-all active:scale-95"
+                        >
+                            New Mission
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* Header Cockpit */}
+            <div className={`flex flex-col md:flex-row items-center justify-between gap-6 glass-panel p-8 rounded-2xl relative overflow-hidden border-amber-500/20 shadow-[0_0_50px_rgba(245,158,11,0.05)] ${currentStatus === 'ABORTED' ? 'border-red-500/30 opacity-50 grayscale-[0.5]' : ''}`}>
+                <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+
+                <div className="flex items-center gap-6 relative z-10">
+                    <div className="relative">
+                        {/* Progress Circle Visual */}
+                        <svg className="w-24 h-24 transform -rotate-90">
+                            <circle
+                                cx="48" cy="48" r="40"
+                                stroke="currentColor"
+                                strokeWidth="4"
+                                fill="transparent"
+                                className="text-white/5"
+                            />
+                            <circle
+                                cx="48" cy="48" r="40"
+                                stroke="currentColor"
+                                strokeWidth="4"
+                                fill="transparent"
+                                strokeDasharray={251.2}
+                                strokeDashoffset={251.2 - (251.2 * progress) / 100}
+                                className={`${currentStatus === 'DONE' ? 'text-emerald-500' : currentStatus === 'ABORTED' ? 'text-red-500' : 'text-amber-500'} transition-all duration-1000 ease-out drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]`}
+                                strokeLinecap="round"
+                            />
+                        </svg>
+                        <div className="absolute inset-0 flex items-center justify-center">
+                            <span className="text-xl font-mono font-bold text-white">{Math.round(progress)}%</span>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div className="flex items-center gap-2 mb-1">
+                            <div className={`w-2 h-2 rounded-full animate-pulse 
+                                ${currentStatus === 'DONE' ? 'bg-emerald-500 shadow-[0_0_10px_#10b981]' :
+                                    currentStatus === 'ABORTED' ? 'bg-red-500 shadow-[0_0_10px_#ef4444]' :
+                                        'bg-amber-500 shadow-[0_0_10px_#f59e0b]'}`}
+                            />
+                            <span className={`text-[10px] font-mono uppercase tracking-[0.2em] font-bold 
+                                ${tokenPhase !== 'IDLE' ? 'text-emerald-500' :
+                                    currentStatus === 'ABORTED' ? 'text-red-500' :
+                                        'text-amber-500'}`}>
+                                {tokenPhase !== 'IDLE' ? 'Mission Complete' :
+                                    currentStatus === 'ABORTED' ? 'Mission Interrupted' :
+                                        'Mission Active'}
+                            </span>
+                        </div>
+                        <h2 className="text-2xl font-serif font-bold text-white tracking-tight">{formTitle}</h2>
+                        <p className="text-xs text-slate-400 font-mono">ID: {Math.random().toString(36).substr(2, 9).toUpperCase()}</p>
+                    </div>
+                </div>
+
+                <div className="flex items-center gap-4 relative z-10">
+                    <div className="text-right hidden sm:block">
+                        <span className="block text-[10px] text-slate-500 uppercase tracking-widest font-bold">Total Duration</span>
+                        <span className="text-xl font-mono text-white">{formatTime(elapsedTime)}</span>
+                    </div>
+                    {currentStatus === 'DONE' ? (
+                        <button
+                            onClick={onNewMission}
+                            className="group flex items-center gap-2 px-6 py-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-500 text-xs font-bold uppercase tracking-widest hover:bg-emerald-500 hover:text-white transition-all duration-300 shadow-[0_0_20px_rgba(16,185,129,0.1)]"
+                        >
+                            <CheckCircle className="w-4 h-4" />
+                            Initialize New Job
+                        </button>
+                    ) : currentStatus === 'ABORTED' ? (
+                        <button
+                            onClick={onBackToConfig}
+                            className="group flex items-center gap-2 px-6 py-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-500 text-xs font-bold uppercase tracking-widest hover:bg-amber-500 hover:text-white transition-all duration-300"
+                        >
+                            <Settings className="w-4 h-4" />
+                            Back to Config
+                        </button>
+                    ) : (
+                        <div className="flex flex-col items-end gap-2">
+                            {currentStatus === 'ERROR' ? (
+                                <button
+                                    disabled
+                                    className="group flex items-center gap-2 px-6 py-3 rounded-xl bg-red-500/20 border border-red-500/30 text-red-400 text-xs font-bold uppercase tracking-widest cursor-not-allowed opacity-80"
+                                >
+                                    <div className="w-3 h-3 border-2 border-red-500/50 border-t-red-500 rounded-full animate-spin" />
+                                    Stopping...
                                 </button>
                             ) : (
                                 <button
-                                    onClick={handleAbortClick} disabled={isAborting}
-                                    className={`px-8 py-3.5 font-black uppercase text-[10px] tracking-widest rounded-2xl transition-all shadow-xl active:scale-95 flex items-center gap-2 border
-                                        ${isAborting ? 'bg-red-500/20 border-red-500/20 text-red-500/50 cursor-not-allowed' : 'bg-red-500/10 border-red-500/30 text-red-500 hover:bg-red-600 hover:text-white shadow-red-900/20'}`}>
-                                    {isAborting ? <><Disc className="w-4 h-4 animate-spin" /> Killing Thread...</> : <><AlertCircle className="w-4 h-4" /> Abort Mission</>}
+                                    onClick={onAbort}
+                                    className="group flex items-center gap-2 px-8 py-3 rounded-xl bg-red-600 border border-red-500 text-white text-xs font-bold uppercase tracking-widest hover:bg-red-500 hover:shadow-[0_0_20px_rgba(239,68,68,0.4)] transition-all duration-300 shadow-lg shadow-red-900/50 active:scale-95 transform"
+                                >
+                                    <AlertCircle className="w-4 h-4 fill-white/10" />
+                                    Abort Mission
                                 </button>
                             )}
                         </div>
-                    </div>
+                    )}
                 </div>
             </div>
 
-            {/* --- TOKEN REDUCTION CINEMATIC OVERLAY --- */}
-            {tokenPhase === 'REDUCING' && (
-                <div className="fixed inset-0 z-[200] bg-[#020617]/95 backdrop-blur-3xl flex items-center justify-center animate-fade-in p-6">
-                    <div className="max-w-xl w-full text-center space-y-12">
-                        <div className="relative group">
-                            <div className="absolute inset-0 bg-amber-500/20 blur-[100px] rounded-full animate-pulse" />
-                            <div className="relative bg-black rounded-[3rem] p-16 border border-amber-500/20 shadow-[0_0_100px_rgba(245,158,11,0.1)]">
-                                <Crown className="w-20 h-20 text-amber-500 mx-auto animate-bounce mb-10" />
-                                <p className="text-amber-500 font-black font-mono text-xs uppercase tracking-[0.5em] mb-4 opacity-50">Syncing Neural Memory</p>
-                                <div className="text-9xl font-mono font-black text-white tabular-nums tracking-tighter transition-all duration-75">
-                                    {displayedTokens}
-                                </div>
-                                <div className="flex items-center justify-center gap-4 mt-6">
-                                    <div className="h-px w-10 bg-red-500/30" />
-                                    <span className="text-red-500 font-black font-mono text-xl">-{targetCount} Units</span>
-                                    <div className="h-px w-10 bg-red-500/30" />
-                                </div>
-                            </div>
-                        </div>
-                        <p className="text-slate-500 font-mono text-sm leading-relaxed max-w-sm mx-auto animate-pulse">
-                            Finalizing secure handshake & anchoring submissions to distributed ledgers...
+            {/* ACTIVE MONITORING DISCLAIMER - Simplified */}
+            {currentStatus !== 'DONE' && (
+                <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 flex items-center gap-4">
+                    <div className="flex-shrink-0 w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center">
+                        <AlertCircle className="w-5 h-5 text-amber-500" />
+                    </div>
+                    <div>
+                        <h4 className="text-amber-500 text-xs font-bold uppercase tracking-widest mb-1">Active Monitoring Required</h4>
+                        <p className="text-amber-200/60 text-[10px] leading-relaxed font-mono">
+                            Keep this tab <span className="text-amber-400 font-bold underline">ACTIVE</span> and your device <span className="text-amber-400 font-bold underline">UNLOCKED</span>.
+                            Switching tabs or minimizing the browser will pause the automation process.
                         </p>
                     </div>
                 </div>
             )}
 
-            {/* --- COMPLETED / ABORTED CARDS (CLEAN FOCUS) --- */}
-            <div className="flex flex-col items-center gap-10">
-                {tokenPhase === 'DONE' && (
-                    <div ref={completionRef} className="w-full max-w-3xl glass-panel p-12 rounded-[2.5rem] border-emerald-500/20 bg-emerald-500/[0.02] animate-fade-in-up text-center space-y-8 relative overflow-hidden group">
-                        <div className="absolute inset-0 bg-gradient-to-b from-emerald-500/5 to-transparent pointer-events-none" />
-                        <div className="relative mx-auto w-24 h-24 rounded-full bg-emerald-500/20 flex items-center justify-center border border-emerald-500/30 group-hover:scale-110 transition-transform duration-500">
-                            <CheckCircle className="w-12 h-12 text-emerald-500" />
-                        </div>
-                        <div className="space-y-4">
-                            <h3 className="text-5xl font-serif font-black text-white tracking-tight">Sequence complete</h3>
-                            <p className="text-slate-400 text-lg max-w-lg mx-auto leading-relaxed">
-                                Automation successful. All <span className="text-emerald-400 font-black">{targetCount} payloads</span> were delivered and confirmed by the remote host.
-                            </p>
-                        </div>
-                        <div className="flex justify-center gap-6 pt-4">
-                            <button onClick={onNewMission} className="px-10 py-5 bg-emerald-600 hover:bg-emerald-500 text-white font-black uppercase text-xs tracking-widest rounded-2xl transition-all shadow-xl active:scale-95 group/btn">
-                                <span className="flex items-center gap-2">Initialize New mission <ChevronRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" /></span>
-                            </button>
-                            <button onClick={onBackToConfig} className="px-10 py-5 bg-white/5 hover:bg-white/10 border border-white/10 text-white font-black uppercase text-xs tracking-widest rounded-2xl transition-all active:scale-95">
-                                Home Base
-                            </button>
-                        </div>
-                    </div>
-                )}
 
-                {currentStatus === 'ABORTED' && (
-                    <div ref={abortRef} className="w-full max-w-3xl glass-panel p-12 rounded-[2.5rem] border-red-500/20 bg-red-500/[0.02] animate-fade-in-up text-center space-y-8">
-                        <div className="mx-auto w-20 h-20 rounded-full bg-red-500/10 flex items-center justify-center border border-red-500/20">
-                            <AlertCircle className="w-10 h-10 text-red-500" />
-                        </div>
-                        <div className="space-y-2">
-                            <h3 className="text-4xl font-serif font-black text-white tracking-tight">Thread Kill confirmed</h3>
-                            <p className="text-slate-400 text-sm max-w-md mx-auto leading-relaxed">
-                                Operation manually terminated. Deployment halted at <span className="text-red-400 font-black">{currentCount} / {targetCount}</span> items. No further resource deduction will occur.
-                            </p>
-                        </div>
-                        <div className="flex justify-center gap-4">
-                            <button onClick={onBackToConfig} className="px-8 py-4 bg-amber-600 text-white font-black uppercase text-[10px] tracking-widest rounded-2xl hover:bg-amber-500 transition-all active:scale-95">
-                                Modify mission
-                            </button>
-                            <button onClick={onNewMission} className="px-8 py-4 bg-white/5 border border-white/10 text-white font-black uppercase text-[10px] tracking-widest rounded-2xl hover:bg-white/10 transition-all active:scale-95">
-                                Emergency reset
-                            </button>
-                        </div>
-                    </div>
-                )}
+            {/* Stats Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <StatCard
+                    icon={<CheckCircle className="text-emerald-500" />}
+                    label="Submissions"
+                    value={`${currentCount}/${targetCount}`}
+                    sub="Successful Links"
+                    isAlert={true}
+                />
+                <StatCard
+                    icon={<Zap className="text-amber-500" />}
+                    label="Neural Speed"
+                    value={`${(currentCount / (elapsedTime / 60 || 1)).toFixed(1)}`}
+                    sub="Responses / Min"
+                />
+                <StatCard
+                    icon={<Cpu className="text-blue-500" />}
+                    label="Current Step"
+                    value={currentStatus.replace('RUNNING', 'EXECUTING')}
+                    sub="Active Process"
+                />
+                <StatCard
+                    icon={<Shield className="text-purple-500" />}
+                    label="Protection"
+                    value="ENCRYPTED"
+                    sub="Stealth Mode"
+                />
             </div>
 
-            {/* --- STATS GRID (PREMIUM CARDS) --- */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 px-4 md:px-0">
-                <StatCard icon={<Zap />} label="Neural Load" value={`${currentCount} / ${targetCount}`} sub="Payloads Deployed" color="text-amber-500" progress={progress} />
-                <StatCard icon={<Cpu />} label="Kernel state" value={currentStatus === 'RUNNING' ? 'EXECUTING' : currentStatus} sub="Hardware status" color="text-blue-500" />
-                <StatCard icon={<Activity />} label="Throughput" value={`${(currentCount / (elapsedTime / 60 || 1)).toFixed(1)}`} sub="Units / Minute" color="text-emerald-500" />
-                <StatCard icon={<Shield />} label="Bypass protocol" value="STEALTH-V2" sub="Anti-Fingerprint" color="text-purple-500" />
-            </div>
-
-            {/* --- MONITORING BAR --- */}
-            {currentStatus !== 'DONE' && currentStatus !== 'ABORTED' && (
-                <div className="mx-4 md:mx-0 p-6 rounded-[1.5rem] bg-amber-500/[0.02] border border-amber-500/10 flex flex-col md:flex-row items-center gap-6 group hover:bg-amber-500/[0.04] transition-all">
-                    <div className="h-14 w-14 rounded-2xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20 group-hover:scale-110 transition-transform">
-                        <Activity className="w-7 h-7 text-amber-500 animate-pulse" />
-                    </div>
-                    <div className="flex-1 text-center md:text-left">
-                        <p className="text-amber-500 font-black text-[10px] uppercase tracking-[0.3em] mb-1">Safety Lock: Active</p>
-                        <p className="text-slate-400 text-xs font-medium leading-relaxed">
-                            Automation process is bound to browser context. Keep this <span className="text-amber-200 underline underline-offset-4 decoration-amber-500/50">TAB FOCUSED</span> to maintain system clock synchronization.
-                        </p>
-                    </div>
-                    <div className="hidden lg:block px-4 py-2 rounded-xl bg-white/5 border border-white/5 text-[9px] font-black uppercase tracking-widest text-slate-500">
-                        Handshake 200 OK
-                    </div>
-                </div>
-            )}
-
-            {/* --- NEURAL LINK TERMINAL --- */}
-            <div className="mx-4 md:mx-0 group glass-panel rounded-[2rem] overflow-hidden border-white/5 shadow-2xl transition-all duration-700 hover:shadow-amber-500/5">
-                <div className="bg-white/5 px-8 py-5 border-b border-white/5 flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                        <Terminal className="w-5 h-5 text-amber-500/50" />
-                        <div>
-                            <span className="text-[10px] font-black text-white uppercase tracking-[0.3em] block">Neural telemetry stream</span>
-                            <span className="text-[9px] font-mono text-slate-500 block">CONNECTED: LOCALHOST/TRK-PRD-HUB</span>
-                        </div>
-                    </div>
+            {/* Terminal View */}
+            <div className="glass-panel rounded-2xl overflow-hidden border-white/5 shadow-2xl">
+                <div className="bg-white/5 px-6 py-3 border-b border-white/5 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <div className="flex gap-1.5 mr-6">
-                            {[1, 2, 3].map(i => <div key={i} className="w-1.5 h-1.5 rounded-full bg-white/10" />)}
-                        </div>
-                        <div className="px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center gap-2">
-                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                            <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest">Relay Up</span>
-                        </div>
+                        <Terminal className="w-4 h-4 text-slate-400" />
+                        <span className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-widest">Neural Link Stream</span>
+                    </div>
+                    <div className="flex gap-1.5">
+                        <div className="w-2 h-2 rounded-full bg-red-500/20" />
+                        <div className="w-2 h-2 rounded-full bg-amber-500/20" />
+                        <div className="w-2 h-2 rounded-full bg-emerald-500/20" />
                     </div>
                 </div>
-                <div ref={logContainerRef} className="bg-[#020617]/95 p-10 h-[500px] overflow-y-auto font-mono text-[11px] leading-[1.8] custom-scrollbar selection:bg-amber-500/40 relative">
-                    <div className="absolute inset-0 bg-scanning-pattern pointer-events-none opacity-5" />
+                <div
+                    ref={logContainerRef}
+                    className="bg-[#020617]/80 backdrop-blur-3xl p-6 h-[400px] overflow-y-auto font-mono text-xs space-y-2 selection:bg-amber-500/30 custom-scrollbar relative"
+                >
                     {logs.length === 0 && (
-                        <div className="h-full flex flex-col items-center justify-center opacity-20 space-y-4">
-                            <Cpu className="w-16 h-16 text-amber-500 animate-spin-slow" />
-                            <p className="text-amber-500 font-bold tracking-[0.5em] uppercase text-xs">Awaiting Initial Handshake...</p>
-                        </div>
+                        <div className="text-slate-600 animate-pulse">Waiting for initial handshake...</div>
                     )}
                     {logs.map((log, i) => (
-                        <div key={i} className="flex gap-8 group/line animate-slide-in-left border-b border-white/[0.02] py-3 first:pt-0">
-                            <span className="text-slate-700 shrink-0 tabular-nums font-bold opacity-30 group-hover/line:opacity-100 transition-opacity">
-                                {new Date(log.timestamp).toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                        <div key={i} className="flex gap-4 animate-fade-in group">
+                            <span className="text-slate-700 shrink-0 text-[10px] pt-0.5">[{new Date(log.timestamp).toLocaleTimeString()}]</span>
+                            <span className={`
+                ${log.status === 'DONE' ? 'text-emerald-400' : ''}
+                ${log.status === 'ERROR' ? 'text-red-400 font-bold' : ''}
+                ${log.status === 'COOLDOWN' ? 'text-purple-400 italic' : ''}
+                ${log.status === 'RUNNING' || log.status === 'INIT' ? 'text-amber-200/80' : ''}
+                group-hover:text-white transition-colors leading-relaxed
+              `}>
+                                {log.msg}
                             </span>
-                            <div className="flex-1 flex items-start gap-4">
-                                <span className={`shrink-0 text-[10px] font-black uppercase tracking-tighter px-2 py-0.5 rounded leading-none mt-0.5
-                                    ${log.status === 'DONE' ? 'bg-emerald-500 text-black' :
-                                        log.status === 'ERROR' ? 'bg-red-500 text-black' :
-                                            log.status === 'COOLDOWN' ? 'bg-purple-500 text-white' :
-                                                'bg-white/10 text-slate-400'}`}>
-                                    {log.status === 'RUNNING' ? 'DEPLOY' : log.status}
-                                </span>
-                                <span className={`transition-colors duration-300 ${log.status === 'DONE' ? 'text-emerald-400' : log.status === 'ERROR' ? 'text-red-400' : 'group-hover/line:text-white text-slate-400'}`}>
-                                    {log.msg}
-                                </span>
-                            </div>
                         </div>
                     ))}
+                    <div ref={logEndRef} />
                 </div>
             </div>
 
             <style>{`
-                .bg-scanning-pattern {
-                    background-image: linear-gradient(0deg, transparent 24%, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.05) 26%, transparent 27%, transparent 74%, rgba(255,255,255,0.05) 75%, rgba(255,255,255,0.05) 76%, transparent 77%, transparent);
-                    background-size: 50px 50px;
-                }
-                .custom-scrollbar::-webkit-scrollbar { width: 5px; }
-                .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-                .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.05); border-radius: 10px; }
-                .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(245,158,11,0.2); }
-                @keyframes slide-in-left { from { transform: translateX(-10px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-                .animate-slide-in-left { animation: slide-in-left 0.4s ease-out forwards; }
-                .animate-spin-slow { animation: spin 10s linear infinite; }
-            `}</style>
+         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(245,158,11,0.3); }
+
+        @keyframes alert-blink {
+            0%, 100% { opacity: 1; filter: drop-shadow(0 0 10px rgba(16, 185, 129, 0.4)); transform: scale(1); }
+            50% { opacity: 0.8; filter: drop-shadow(0 0 20px rgba(16, 185, 129, 0.8)); transform: scale(1.02); }
+        }
+        .animate-alert-blink {
+            animation: alert-blink 1.5s infinite ease-in-out;
+        }
+
+        @keyframes count-pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+        .animate-count-pulse {
+            animation: count-pulse 0.5s ease-out;
+        }
+      `}</style>
         </div>
     );
 };
 
-const StatCard = ({ icon, label, value, sub, color, progress }: { icon: React.ReactNode, label: string, value: string, sub: string, color: string, progress?: number }) => (
-    <div className="group relative glass-panel p-8 rounded-[2rem] border-white/5 hover:border-white/10 transition-all duration-700 hover:-translate-y-2">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-white/[0.02] rounded-full blur-[60px] -translate-y-1/2 translate-x-1/2 group-hover:bg-white/[0.05] transition-all" />
-        <div className="relative z-10 space-y-6">
-            <div className="flex items-center justify-between">
-                <div className={`p-3 rounded-2xl bg-white/5 border border-white/5 group-hover:bg-white/10 transition-all duration-500 ${color}`}>
-                    {React.cloneElement(icon as React.ReactElement, { className: 'w-6 h-6' })}
-                </div>
-                {progress !== undefined && (
-                    <div className="px-2 py-0.5 rounded-lg bg-white/5 text-[9px] font-black text-slate-500 opacity-50 uppercase tracking-widest">
-                        {Math.round(progress)}% Peak
-                    </div>
-                )}
+const StatCard = ({ icon, label, value, sub, isAlert }: { icon: React.ReactNode, label: string, value: string, sub: string, isAlert?: boolean }) => (
+    <div className={`glass-panel p-6 rounded-2xl border-white/5 hover:border-amber-500/30 transition-all duration-500 group ${isAlert ? 'border-emerald-500/20 bg-emerald-500/[0.02]' : ''}`}>
+        <div className="flex items-center gap-3 mb-4">
+            <div className={`p-2 rounded-lg bg-white/5 group-hover:scale-110 transition-transform duration-500 ${isAlert ? 'text-emerald-500' : ''}`}>
+                {icon}
             </div>
-            <div>
-                <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-2 block group-hover:text-slate-400 transition-colors">{label}</span>
-                <div className="text-3xl font-mono font-black text-white tracking-tighter mb-1 group-hover:text-amber-100 transition-colors">{value}</div>
-                <div className="text-[10px] text-slate-600 font-bold uppercase tracking-widest">{sub}</div>
-            </div>
+            <span className={`text-[10px] font-mono text-slate-500 uppercase tracking-widest font-bold ${isAlert ? 'text-emerald-500/80' : ''}`}>{label}</span>
         </div>
+        <div className={`text-2xl font-bold text-white mb-1 tracking-tight ${isAlert ? 'animate-alert-blink text-emerald-400' : ''}`}>{value}</div>
+        <div className="text-[10px] text-slate-600 font-medium uppercase tracking-wider">{sub}</div>
     </div>
 );
 

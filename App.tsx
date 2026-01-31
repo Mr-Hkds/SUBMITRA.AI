@@ -789,6 +789,56 @@ function App() {
                 }
             });
 
+            // --- DETERMINISTIC DECK GENERATION (EXACT PERCENTAGE ADHERENCE) ---
+            // We pre-calculate the exact answers for the entire batch to ensure math perfect distribution
+            const questionDecks: Record<string, string[]> = {};
+
+            analysis.questions.forEach(q => {
+                if ((q.type === 'MULTIPLE_CHOICE' || q.type === 'DROPDOWN' || q.type === 'CHECKBOXES') && q.options.length > 0) {
+                    const deck: string[] = [];
+
+                    // 1. Calculate exact counts using Largest Remainder Method
+                    const totalWeight = q.options.reduce((sum, opt) => sum + (opt.weight || 0), 0) || 100;
+
+                    const counts = q.options.map(opt => {
+                        const preciseCount = ((opt.weight || 0) / totalWeight) * targetCount;
+                        return {
+                            value: opt.value,
+                            integer: Math.floor(preciseCount),
+                            fraction: preciseCount - Math.floor(preciseCount),
+                            originalWeight: opt.weight || 0
+                        };
+                    });
+
+                    // Initial sum of integer parts
+                    let currentTotal = counts.reduce((sum, item) => sum + item.integer, 0);
+                    let remainder = targetCount - currentTotal;
+
+                    // Sort by fraction descending to distribute remainder
+                    counts.sort((a, b) => b.fraction - a.fraction);
+
+                    // Distribute remainder
+                    for (let i = 0; i < remainder; i++) {
+                        counts[i].integer += 1;
+                    }
+
+                    // Build the deck
+                    counts.forEach(item => {
+                        for (let k = 0; k < item.integer; k++) {
+                            deck.push(item.value);
+                        }
+                    });
+
+                    // Shuffle the deck (Fisher-Yates)
+                    for (let i = deck.length - 1; i > 0; i--) {
+                        const j = Math.floor(Math.random() * (i + 1));
+                        [deck[i], deck[j]] = [deck[j], deck[i]];
+                    }
+
+                    questionDecks[q.id] = deck;
+                }
+            });
+
             pushLog(`Handshake verified. Establishing secure neural link...`);
             await smartDelay(2000); // Immersion delay
 
@@ -823,39 +873,36 @@ function App() {
                         const domains = ['gmail.com', 'yahoo.com', 'outlook.com', 'icloud.com'];
                         value = `${name}${Math.floor(Math.random() * 99)}@${domains[Math.floor(Math.random() * domains.length)]}`;
                     }
-                    // 4. Random fallback for options
-                    else if (q.options.length > 0) {
-                        const picker = (options: any[]) => {
-                            const total = options.reduce((acc, opt) => acc + (opt.weight || 0), 0);
-                            if (total === 0) return options[Math.floor(Math.random() * options.length)].value;
-                            let r = Math.random() * total;
-                            for (const opt of options) {
-                                if (r < (opt.weight || 0)) return opt.value;
-                                r -= (opt.weight || 0);
-                            }
-                            return options[0].value;
-                        };
-
+                    // 4. Deterministic Deck Usage
+                    else if (questionDecks[q.id]) {
                         if (q.type === 'CHECKBOXES') {
-                            // Pick multiple options - logic improved to pick 1-3 random options based on weights
-                            const numToPick = Math.min(q.options.length, Math.floor(Math.random() * 3) + 1);
-                            const picked: string[] = [];
-                            const available = [...q.options];
+                            // For checkboxes, we might want multiple options. 
+                            // The deck currently gives 1 option per 'slot'. 
+                            // To simulate multiple checks deterministically is complex.
+                            // fallback: We take the main "deck" option, and potentially add 1 more random high-weight option if lucky.
+                            // ideally, the user's weight config for checkboxes implies "Selection Frequency".
 
-                            for (let p = 0; p < numToPick; p++) {
-                                if (available.length === 0) break;
-                                // For simplicity using weighted picker on available pool
-                                const choice = picker(available);
-                                picked.push(choice);
-                                // Remove to avoid duplicates
-                                const idx = available.findIndex(o => o.value === choice);
-                                available.splice(idx, 1);
+                            const primaryChoice = questionDecks[q.id][i] || q.options[0].value;
+                            const selections = [primaryChoice];
+
+                            // Optional: Add secondary selection based on raw probability
+                            if (Math.random() > 0.7) {
+                                const otherOptions = q.options.filter(o => o.value !== primaryChoice && (o.weight || 0) > 20);
+                                if (otherOptions.length > 0) {
+                                    selections.push(otherOptions[Math.floor(Math.random() * otherOptions.length)].value);
+                                }
                             }
-                            value = picked;
+                            value = selections;
                         } else {
-                            value = picker(q.options);
+                            // Single choice (Radio/Dropdown) - EXACT matching
+                            value = questionDecks[q.id][i] || q.options[0].value;
                         }
                     }
+                    // 5. Fallback
+                    else if (q.options.length > 0) {
+                        value = q.options[0].value;
+                    }
+
 
                     if (value) submissionData[q.entryId] = value;
                 });
