@@ -282,7 +282,7 @@ const MissionControl: React.FC<MissionControlProps> = ({ logs, targetCount, init
                             </span>
                         </div>
                         <h2 className="text-2xl font-serif font-bold text-white tracking-tight">{formTitle}</h2>
-                        <p className="text-xs text-slate-400 font-mono">ID: {Math.random().toString(36).substr(2, 9).toUpperCase()}</p>
+                        <SystemTelemetry />
                     </div>
                 </div>
 
@@ -348,32 +348,36 @@ const MissionControl: React.FC<MissionControlProps> = ({ logs, targetCount, init
             )}
 
 
-            {/* Stats Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <StatCard
-                    icon={<CheckCircle className="text-emerald-500" />}
-                    label="Submissions"
-                    value={`${currentCount}/${targetCount}`}
-                    sub="Successful Links"
-                    isAlert={true}
+            {/* Premium Stats Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <PremiumStatCard
+                    variant="progress"
+                    label="MISSION STATUS"
+                    value={currentCount}
+                    total={targetCount}
+                    sub="Anchored Blocks"
+                    color="emerald"
                 />
-                <StatCard
-                    icon={<Zap className="text-amber-500" />}
-                    label="Neural Speed"
-                    value={`${(currentCount / (elapsedTime / 60 || 1)).toFixed(1)}`}
-                    sub="Responses / Min"
+                <PremiumStatCard
+                    variant="velocity"
+                    label="NEURAL VELOCITY"
+                    value={elapsedTime > 0 ? (currentCount / (elapsedTime / 60)).toFixed(1) : "0.0"}
+                    sub="Ops / Minute"
+                    color="amber"
                 />
-                <StatCard
-                    icon={<Cpu className="text-blue-500" />}
-                    label="Current Step"
-                    value={currentStatus.replace('RUNNING', 'EXECUTING')}
-                    sub="Active Process"
-                />
-                <StatCard
-                    icon={<Shield className="text-purple-500" />}
-                    label="Protection"
-                    value="ENCRYPTED"
-                    sub="Stealth Mode"
+                <PremiumStatCard
+                    variant="timer"
+                    label="ESTIMATED ARRIVAL"
+                    value={currentCount > 0 && elapsedTime > 0
+                        ? (() => {
+                            const rate = currentCount / elapsedTime;
+                            const remaining = targetCount - currentCount;
+                            const estSeconds = remaining / rate;
+                            return estSeconds > 0 && isFinite(estSeconds) ? estSeconds : 0;
+                        })()
+                        : null}
+                    sub="T-Minus Countdown"
+                    color="blue"
                 />
             </div>
 
@@ -433,22 +437,198 @@ const MissionControl: React.FC<MissionControlProps> = ({ logs, targetCount, init
         .animate-count-pulse {
             animation: count-pulse 0.5s ease-out;
         }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
       `}</style>
         </div>
     );
 };
 
-const StatCard = ({ icon, label, value, sub, isAlert }: { icon: React.ReactNode, label: string, value: string, sub: string, isAlert?: boolean }) => (
-    <div className={`glass-panel p-6 rounded-2xl border-white/5 hover:border-amber-500/30 transition-all duration-500 group ${isAlert ? 'border-emerald-500/20 bg-emerald-500/[0.02]' : ''}`}>
-        <div className="flex items-center gap-3 mb-4">
-            <div className={`p-2 rounded-lg bg-white/5 group-hover:scale-110 transition-transform duration-500 ${isAlert ? 'text-emerald-500' : ''}`}>
-                {icon}
+const PremiumStatCard = ({ variant, label, value, total, sub, color }: any) => {
+    // Check if "loading" or zero state
+    const isZero = !value || value === "0" || value === "0.0" || value === 0;
+
+    return (
+        <div className="relative overflow-hidden rounded-2xl bg-[#0B0F19] border border-white/5 shadow-2xl group transition-all duration-500 hover:shadow-emerald-500/10 hover:border-white/10">
+            {/* Noise Texture */}
+            <div className="absolute inset-0 opacity-[0.03] bg-[url('data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E')] pointer-events-none mix-blend-overlay" />
+
+            {/* Subtle Gradient Glow */}
+            <div className={`absolute -top-20 -right-20 w-40 h-40 bg-${color}-500/10 blur-[60px] rounded-full group-hover:bg-${color}-500/20 transition-all duration-700`} />
+
+            <div className="relative z-10 p-6 flex flex-col h-full bg-gradient-to-b from-white/[0.02] to-transparent">
+                <div className="flex justify-between items-start mb-6">
+                    <span className="text-[9px] font-mono tracking-[0.2em] text-slate-500 font-bold uppercase">{label}</span>
+                    <div className={`flex items-center gap-2`}>
+                        <div className={`w-1.5 h-1.5 rounded-full ${isZero ? 'bg-slate-700' : `bg-${color}-500 animate-pulse shadow-[0_0_8px_currentColor]`}`} />
+                        {isZero && <span className="text-[9px] text-slate-600 animate-pulse">INIT</span>}
+                    </div>
+                </div>
+
+                <div className="flex-1 flex items-center gap-5">
+                    {/* Visualizations */}
+                    {variant === 'progress' && (
+                        <div className="relative w-14 h-14 flex items-center justify-center shrink-0">
+                            <svg className="w-full h-full -rotate-90 drop-shadow-[0_0_10px_rgba(16,185,129,0.2)]">
+                                <circle cx="28" cy="28" r="24" stroke="currentColor" strokeWidth="3" fill="transparent" className="text-white/5" />
+                                <circle
+                                    cx="28" cy="28" r="24"
+                                    stroke="currentColor" strokeWidth="3" fill="transparent"
+                                    strokeDasharray={150.8}
+                                    strokeDashoffset={150.8 - (150.8 * (Math.min(Number(value) / (Number(total) || 1), 1)))}
+                                    className={`text-${color}-500 transition-all duration-1000 ease-out`}
+                                    strokeLinecap="round"
+                                />
+                            </svg>
+                            <div className="absolute inset-0 flex items-center justify-center">
+                                <Activity className={`w-4 h-4 text-${color}-500/50`} />
+                            </div>
+                        </div>
+                    )}
+
+                    {variant === 'velocity' && (
+                        <div className="flex items-end gap-[3px] h-10 shrink-0 pb-1 px-1">
+                            {[1, 2, 3, 4, 5, 6].map(i => (
+                                <div key={i} className={`w-1.5 bg-gradient-to-t from-${color}-500 to-${color}-400/50 rounded-sm animate-[count-pulse_0.8s_ease-in-out_infinite]`} style={{ height: isZero ? '4px' : `${20 + (Math.random() * 80)}%`, animationDelay: `${i * 0.15}s`, opacity: 0.8 }} />
+                            ))}
+                        </div>
+                    )}
+
+                    {variant === 'timer' && (
+                        <div className={`p-3 rounded-xl bg-${color}-500/5 border border-${color}-500/10 shrink-0 relative overflow-hidden`}>
+                            <div className={`absolute inset-0 bg-${color}-500/10 blur-xl`} />
+                            <Clock className={`w-6 h-6 text-${color}-400 relative z-10`} />
+                        </div>
+                    )}
+
+                    {/* Numeric Value */}
+                    <div className="flex flex-col">
+                        {variant === 'timer' && !isZero ? (
+                            <span className="text-2xl font-mono font-bold text-white tracking-tight tabular-nums">
+                                {Math.floor(Number(value) / 60)}<span className="text-slate-600 mx-0.5 animate-pulse">:</span>{(Number(value) % 60).toFixed(0).padStart(2, '0')}
+                            </span>
+                        ) : (
+                            <div className="flex items-baseline gap-1.5">
+                                <span className="text-3xl font-mono font-bold text-white tracking-tighter tabular-nums drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)]">
+                                    {isZero && variant === 'timer' ? '--:--' : value}
+                                </span>
+                                {total && <span className="text-xs font-mono text-slate-500 font-medium">/ <span className="text-slate-400">{total}</span></span>}
+                            </div>
+                        )}
+                        <span className={`text-[9px] font-mono uppercase tracking-widest mt-1 ${isZero ? 'text-slate-700' : `text-${color}-400/60`}`}>
+                            {isZero ? 'WAITING FOR DATA' : sub}
+                        </span>
+                    </div>
+                </div>
             </div>
-            <span className={`text-[10px] font-mono text-slate-500 uppercase tracking-widest font-bold ${isAlert ? 'text-emerald-500/80' : ''}`}>{label}</span>
+
+            {/* Bottom Active Line - Pro Style */}
+            {!isZero && (
+                <div className={`absolute bottom-0 left-0 h-[1px] bg-gradient-to-r from-transparent via-${color}-500/50 to-transparent w-full animate-[shimmer_3s_infinite]`} />
+            )}
         </div>
-        <div className={`text-2xl font-bold text-white mb-1 tracking-tight ${isAlert ? 'animate-alert-blink text-emerald-400' : ''}`}>{value}</div>
-        <div className="text-[10px] text-slate-600 font-medium uppercase tracking-wider">{sub}</div>
-    </div>
-);
+    );
+};
+
+const LiveSessionID = () => {
+    const [scramble, setScramble] = useState("initiating...");
+    const [stableId] = useState(() => Math.random().toString(36).substr(2, 6).toUpperCase());
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setScramble(Math.random().toString(36).substr(2, 4).toUpperCase());
+        }, 120);
+        return () => clearInterval(interval);
+    }, []);
+
+    return (
+        <div className="flex items-center gap-2 mt-1">
+            <div className="group flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#0B0F19] border border-white/5 hover:border-emerald-500/20 transition-all duration-300">
+                <div className="flex gap-0.5 items-end h-3">
+                    <span className="w-0.5 h-2 bg-emerald-500 animate-[count-pulse_0.6s_ease-in-out_infinite]" />
+                    <span className="w-0.5 h-3 bg-emerald-500/50 animate-[count-pulse_0.8s_ease-in-out_infinite]" />
+                    <span className="w-0.5 h-1.5 bg-emerald-500/20 animate-[count-pulse_1s_ease-in-out_infinite]" />
+                </div>
+
+                <div className="flex items-center gap-1.5">
+                    <span className="text-[9px] font-mono text-slate-500 uppercase tracking-widest">SECURE LINK</span>
+                    <div className="h-3 w-[1px] bg-slate-800" />
+                    <span className="text-[10px] font-mono text-slate-300 tracking-wider">
+                        <span className="text-emerald-500/80">{stableId}-</span>
+                        <span className="opacity-60">{scramble}</span>
+                    </span>
+                </div>
+
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse ml-1" />
+            </div>
+        </div>
+    );
+};
+
+const SystemTelemetry = () => {
+    const [ping, setPing] = useState(24);
+    const [activityIndex, setActivityIndex] = useState(0);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setPing(prev => Math.max(12, Math.min(prev + (Math.random() > 0.5 ? 2 : -2), 48)));
+            setActivityIndex(prev => (prev + 1) % 4);
+        }, 800);
+        return () => clearInterval(interval);
+    }, []);
+
+    return (
+        <div className="flex items-center gap-3 mt-1.5 animate-fade-in">
+            {/* Connection Status Pill */}
+            <div className="group flex items-center gap-3 px-3 py-1.5 rounded-full bg-[#0B0F19]/80 border border-white/5 hover:border-emerald-500/20 transition-all duration-300 shadow-lg backdrop-blur-md">
+
+                {/* Ping Indicator */}
+                <div className="flex items-center gap-2 pr-3 border-r border-white/5">
+                    <div className="relative flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                    </div>
+                    <span className="font-mono text-[10px] text-slate-400">
+                        <span className={`font-bold ${ping < 30 ? 'text-emerald-400' : 'text-amber-400'}`}>{ping}ms</span>
+                        <span className="hidden sm:inline text-slate-600 ml-1">LATENCY</span>
+                    </span>
+                </div>
+
+                {/* Region */}
+                <div className="flex items-center gap-2 pr-3 border-r border-white/5 hidden sm:flex">
+                    <Activity className="w-3 h-3 text-slate-500" />
+                    <span className="font-mono text-[10px] text-slate-400">
+                        ASIA-SE1 <span className="text-slate-600">::</span> OPTIMIZED
+                    </span>
+                </div>
+
+                {/* Encryption Pulse */}
+                <div className="flex items-center gap-2">
+                    <Shield className="w-3 h-3 text-emerald-500/80" />
+                    <span className="font-mono text-[10px] text-emerald-500/60 tracking-wider">
+                        AES-256
+                    </span>
+                </div>
+            </div>
+
+            {/* Packet Visualizer (Tiny) */}
+            <div className="flex gap-0.5 items-end h-4 opacity-50">
+                {[1, 2, 3, 4].map(i => (
+                    <div
+                        key={i}
+                        className={`w-0.5 bg-emerald-500/50 transition-all duration-300 ease-in-out`}
+                        style={{
+                            height: i === activityIndex + 1 ? '100%' : '30%',
+                            opacity: i === activityIndex + 1 ? 1 : 0.3
+                        }}
+                    />
+                ))}
+            </div>
+        </div>
+    );
+};
 
 export default MissionControl;

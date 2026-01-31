@@ -278,7 +278,7 @@ function App() {
     const [error, setError] = useState<string | null>(null);
     const [analysis, setAnalysis] = useState<FormAnalysis | null>(null);
     const [targetCount, setTargetCount] = useState(10);
-    const [delayMin, setDelayMin] = useState(300);
+    const [delayMin, setDelayMin] = useState(500);
     const [nameSource, setNameSource] = useState<'auto' | 'indian' | 'custom'>('auto');
     const [customNamesRaw, setCustomNamesRaw] = useState('');
 
@@ -1201,15 +1201,37 @@ function App() {
                                                     <button onClick={reset} className="glass-panel px-6 py-3 rounded-lg text-slate-400 text-sm hover:text-white transition">
                                                         Cancel
                                                     </button>
-                                                    <button
-                                                        onClick={handleCompile}
-                                                        className="relative overflow-hidden gold-button px-8 py-3 rounded-lg text-sm shadow-[0_0_25px_rgba(251,191,36,0.15)] animate-sheen"
-                                                    >
-                                                        <span className="relative z-10 flex items-center gap-2">
-                                                            <Zap className="w-4 h-4" />
-                                                            Launch Mission Control
-                                                        </span>
-                                                    </button>
+                                                    <div className="group relative">
+                                                        <div className="absolute -inset-0.5 rounded-xl bg-gradient-to-r from-amber-600 via-amber-400 to-amber-600 opacity-30 group-hover:opacity-75 blur-md transition-opacity duration-500" />
+                                                        <button
+                                                            onClick={handleCompile}
+                                                            className="relative flex items-center gap-5 px-8 py-4 bg-slate-950 rounded-xl border border-amber-500/30 group-hover:border-amber-400/80 transition-all duration-300 overflow-hidden shadow-2xl w-full"
+                                                        >
+                                                            <div className="absolute inset-0 bg-gradient-to-br from-slate-900 to-black opacity-90" />
+                                                            <div className="absolute inset-y-0 left-0 w-1 bg-amber-500/50 group-hover:bg-amber-400 transition-colors" />
+
+                                                            {/* Symbol Box */}
+                                                            <div className="relative flex-shrink-0 w-12 h-12 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center group-hover:scale-110 transition-transform duration-500 group-hover:bg-amber-500/20 group-hover:shadow-[0_0_15px_rgba(245,158,11,0.3)]">
+                                                                <Zap className="w-6 h-6 text-amber-500 group-hover:text-amber-200 transition-colors" />
+                                                            </div>
+
+                                                            {/* Typography */}
+                                                            <div className="text-left relative z-10 flex flex-col justify-center">
+                                                                <div className="flex items-center gap-2 mb-0.5">
+                                                                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_5px_#10b981]" />
+                                                                    <span className="text-[9px] font-mono text-emerald-400/90 tracking-widest uppercase">
+                                                                        System Ready
+                                                                    </span>
+                                                                </div>
+                                                                <div className="text-sm font-bold text-white tracking-[0.15em] uppercase font-sans group-hover:text-amber-100 transition-colors whitespace-nowrap">
+                                                                    Initiate Launch
+                                                                </div>
+                                                            </div>
+
+                                                            {/* Continuous Shimmer */}
+                                                            <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full animate-[shimmer_3s_infinite] skew-x-12" />
+                                                        </button>
+                                                    </div>
                                                 </div>
                                                 <span className="text-[10px] text-amber-500 font-bold uppercase tracking-widest opacity-70">
                                                     Finalize configuration then launch process
@@ -1332,31 +1354,40 @@ function App() {
                                                         <div className="flex items-center gap-2">
                                                             <Zap className="w-4 h-4 text-amber-500" /> Interaction Speed
                                                         </div>
-                                                        <span className={`font-mono ${delayMin <= 100 ? 'text-red-400' : delayMin <= 500 ? 'text-amber-400' : 'text-emerald-400'}`}>
-                                                            {delayMin === 1500 ? 'Slow' : delayMin === 500 ? 'Fast' : 'Fastest'} ({delayMin}ms)
+                                                        <span className={`font-mono ${delayMin === 0 ? 'text-fuchsia-400' : delayMin <= 100 ? 'text-red-400' : delayMin <= 500 ? 'text-amber-400' : 'text-emerald-400'}`}>
+                                                            {delayMin === 1500 ? 'Slow' : delayMin === 500 ? 'Fast' : delayMin === 100 ? 'Fastest' : 'Superfast'} ({delayMin}ms)
                                                         </span>
                                                     </div>
 
-                                                    <div className="grid grid-cols-3 gap-2">
+                                                    <div className="grid grid-cols-4 gap-2">
                                                         {[
-                                                            { id: 'slow', label: 'Slow', val: 1500, desc: 'Safe & Stealthy', color: 'emerald' },
-                                                            { id: 'fast', label: 'Fast', val: 500, desc: 'Recommended', color: 'amber' },
-                                                            { id: 'fastest', label: 'Fastest', val: 100, desc: 'Extreme Speed', color: 'red' }
+                                                            { id: 'slow', label: 'Slow', val: 1500, desc: 'Safe', color: 'emerald' },
+                                                            { id: 'fast', label: 'Fast', val: 500, desc: 'Auto', color: 'amber' },
+                                                            { id: 'fastest', label: 'Fastest', val: 100, desc: 'Extreme', color: 'red' },
+                                                            { id: 'superfast', label: 'Super', val: 0, desc: '0 Latency', color: 'fuchsia' }
                                                         ].map((speed) => (
                                                             <button
                                                                 key={speed.id}
                                                                 onClick={() => setDelayMin(speed.val)}
-                                                                className={`flex flex-col items-center py-3 px-2 rounded-xl border transition-all active:scale-95 ${delayMin === speed.val
+                                                                className={`flex flex-col items-center py-3 px-1 rounded-xl border transition-all active:scale-95 ${delayMin === speed.val
                                                                     ? `bg-${speed.color}-500/20 border-${speed.color}-500 text-white shadow-lg`
                                                                     : 'bg-white/5 border-white/5 text-slate-500 hover:bg-white/10 hover:border-white/10'
                                                                     }`}
                                                             >
-                                                                <span className="text-[10px] font-bold uppercase tracking-wider mb-0.5">{speed.label}</span>
-                                                                <span className="text-[8px] opacity-60 text-center leading-tight">{speed.desc}</span>
+                                                                <span className="text-[9px] font-bold uppercase tracking-wider mb-0.5">{speed.label}</span>
+                                                                <span className="text-[7px] opacity-60 text-center leading-tight">{speed.desc}</span>
                                                             </button>
                                                         ))}
                                                     </div>
 
+                                                    {delayMin === 0 && (
+                                                        <div className="p-3 rounded-lg bg-fuchsia-500/10 border border-fuchsia-500/20 text-[9px] text-fuchsia-200/80 leading-relaxed font-mono animate-pulse">
+                                                            <span className="text-fuchsia-400 font-bold block mb-1 flex items-center gap-1.5 uppercase">
+                                                                <Zap className="w-3 h-3" /> Warp Drive Engaged
+                                                            </span>
+                                                            Zero latency mode. Requests execute instantly. Ensure database can handle rapid concurrent writes.
+                                                        </div>
+                                                    )}
                                                     {delayMin === 100 && (
                                                         <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-[9px] text-red-200/80 leading-relaxed font-mono animate-pulse">
                                                             <span className="text-red-400 font-bold block mb-1 flex items-center gap-1.5 uppercase">
