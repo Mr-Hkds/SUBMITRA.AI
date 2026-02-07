@@ -1,9 +1,7 @@
 # AutoForm AI - Intelligent Automation & Mission Control
 **Powered by BHARAMRATRI PRODUCTIONS**
 
-<div align="center">
-  <img src="https://images.unsplash.com/photo-1614728853793-274e0d9b5028?ixlib=rb-1.2.1&auto=format&fit=crop&w=1200&q=80" alt="AutoForm AI Banner" width="100%" style="border-radius: 8px;" />
-</div>
+🔗 Live Demo: https://autoformai.vercel.app
 
 ## 🚀 Overview
 
