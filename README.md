@@ -7,7 +7,7 @@
 
 ## 🚀 Overview
 
-**AutoForm AI** is a state-of-the-art automation platform designed to streamline complex workflows, manage mission-critical data, and provide real-time analytics through a premium, futuristic interface. Built with a focus on speed, reliability, and aesthetics, it serves as a central hub for digital operations.
+**AutoForm.AI** is a state-of-the-art automation platform designed to streamline complex workflows, manage mission-critical data, and provide real-time analytics through a premium, futuristic interface. Built with a focus on speed, reliability, and aesthetics, it serves as a central hub for digital operations.
 
 Whether you're managing large-scale data entry, monitoring key performance indicators (KPIs), or handling secure transactions, AutoForm AI provides a sleek "Mission Control" experience that feels like stepping into the future.
 
@@ -62,8 +62,8 @@ Follow these steps to set up the project locally.
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/Mr-Hkds/AUTOFORM-NaagraazProduction.git
-   cd AUTOFORM-NaagraazProduction
+   git clone https://github.com/Mr-Hkds/AUTOFORM.Ai.git
+   cd AUTOFORM.Ai
    ```
 
 2. **Install dependencies**
