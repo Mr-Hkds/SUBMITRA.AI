@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 
 // Log Version for Vercel Verification
-console.log('[SYSTEM] AutoForm AI 4.0.2 STABLE Loaded');
+console.log('[SYSTEM] AutoForm AI 4.0.3 PERFORMANCE UPGRADE Loaded');
 import { Bot, Copy, CheckCircle, AlertCircle, BarChart3, ArrowRight, ArrowLeft, RotateCcw, Sparkles, Code2, Terminal, Zap, Command, Activity, Cpu, Crown, LogOut, Settings, Lock, Laptop, Monitor, Target, ShieldCheck, ExternalLink, Rocket } from 'lucide-react';
 import { fetchAndParseForm } from './services/formParser';
 import { analyzeForm as analyzeFormWithStatistics, generateResponseSuggestions } from './services/analysisService';
@@ -1227,7 +1227,7 @@ function App() {
                     <div className="letterbox-bar bottom-0 border-t border-white/5" />
 
                     {/* Engagement Flash Overlay */}
-                    <div className="fixed inset-0 z-[110] pointer-events-none mix-blend-screen opacity-0 animate-[engagement-flash_1s_ease-out_2.5s_forwards]" />
+                    <div className="fixed inset-0 z-[110] pointer-events-none mix-blend-screen opacity-0 animate-[engagement-flash_1.2s_ease-out_3.8s_forwards]" />
 
                     {/* Background Content */}
                     <div className="absolute inset-0 bg-black z-0" />
