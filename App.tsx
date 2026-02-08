@@ -27,6 +27,30 @@ import Step2Dashboard from './components/Step2Dashboard';
 
 // --- VISUAL COMPONENTS ---
 
+const DRAFT_STORAGE_KEY = 'autoform_ai_draft_v1';
+
+type DraftPayload = {
+    version: 1;
+    savedAt: number;
+    url: string;
+    step: 1 | 2 | 3;
+    analysis: FormAnalysis | null;
+    targetCount: number;
+    delayMin: number;
+    nameSource: 'auto' | 'indian' | 'custom';
+    customNamesRaw: string;
+    customResponses: Record<string, string>;
+    aiPromptData: string;
+};
+
+const formatDraftAge = (savedAt: number) => {
+    const diffMs = Date.now() - savedAt;
+    const mins = Math.max(1, Math.floor(diffMs / 60000));
+    if (mins < 60) return `${mins} minute${mins === 1 ? '' : 's'} ago`;
+    const hours = Math.floor(mins / 60);
+    return `${hours} hour${hours === 1 ? '' : 's'} ago`;
+};
+
 
 const Badge = ({ children, color = "obsidian" }: { children?: React.ReactNode, color?: "obsidian" | "gold" | "premium" }) => {
     const styles = {
@@ -252,6 +276,43 @@ const Footer = React.memo(({ onLegalNav }: { onLegalNav: (type: 'privacy' | 'ter
     </footer>
 ));
 
+const DraftRecoveryModal = ({
+    draft,
+    onRestore,
+    onDiscard
+}: {
+    draft: DraftPayload;
+    onRestore: () => void;
+    onDiscard: () => void;
+}) => (
+    <div className="fixed inset-0 z-[110] flex items-center justify-center p-6">
+        <div className="absolute inset-0 bg-black/80 backdrop-blur-md" />
+        <div className="relative z-10 w-full max-w-lg rounded-2xl border border-emerald-500/20 bg-[#050505] p-6 md:p-8 shadow-2xl">
+            <p className="text-[11px] uppercase tracking-[0.2em] text-emerald-400 font-mono mb-3">Recovery Protocol</p>
+            <h3 className="text-xl font-serif text-white mb-2">Resume your previous mission?</h3>
+            <p className="text-sm text-slate-400 mb-6">
+                A saved draft from <span className="text-slate-200">{formatDraftAge(draft.savedAt)}</span> was detected.
+                Restore and continue from step {draft.step}, or discard it and start clean.
+            </p>
+
+            <div className="flex gap-3 justify-end">
+                <button
+                    onClick={onDiscard}
+                    className="px-4 py-2 rounded-lg border border-white/10 text-slate-300 hover:text-white hover:border-white/20 transition"
+                >
+                    Discard Draft
+                </button>
+                <button
+                    onClick={onRestore}
+                    className="px-4 py-2 rounded-lg bg-emerald-500 text-black font-semibold hover:bg-emerald-400 transition"
+                >
+                    Restore Draft
+                </button>
+            </div>
+        </div>
+    </div>
+);
+
 // DELETED: LoadingState replaced by LoadingScreen component
 
 function App() {
@@ -289,17 +350,116 @@ function App() {
     // NEW: AI Data Context State
     const [aiPromptData, setAiPromptData] = useState('');
     const [parsingError, setParsingError] = useState<string | null>(null);
+    const [customResponses, setCustomResponses] = useState<Record<string, string>>({});
 
     const [copied, setCopied] = useState(false);
     const [currentToken, setCurrentToken] = useState<TokenMetadata | null>(null);
     const [rateLimitCooldown, setRateLimitCooldown] = useState(0);
     const [showVideoModal, setShowVideoModal] = useState(false);
     const [questionSearch, setQuestionSearch] = useState('');
+    const [isDraftHydrated, setIsDraftHydrated] = useState(false);
+    const [pendingDraft, setPendingDraft] = useState<DraftPayload | null>(null);
 
     // AUTOMATION STATE
     const [isAutoRunning, setIsAutoRunning] = useState(false);
     const [automationLogs, setAutomationLogs] = useState<any[]>([]);
     const [visualTokenOverride, setVisualTokenOverride] = useState<number | null>(null);
+
+    useEffect(() => {
+        try {
+            const rawDraft = localStorage.getItem(DRAFT_STORAGE_KEY);
+            if (rawDraft) {
+                const parsed = JSON.parse(rawDraft) as DraftPayload;
+                if (parsed?.version === 1 && parsed.savedAt) {
+                    setPendingDraft(parsed);
+                }
+            }
+        } catch (e) {
+            console.warn('[Draft] Failed to read draft from localStorage:', e);
+        } finally {
+            setIsDraftHydrated(true);
+        }
+    }, []);
+
+    const restoreDraft = () => {
+        if (!pendingDraft) return;
+        setUrl(pendingDraft.url || '');
+        setAnalysis(pendingDraft.analysis || null);
+        setTargetCount(pendingDraft.targetCount || 10);
+        setDelayMin(pendingDraft.delayMin || 500);
+        setNameSource(pendingDraft.nameSource || 'auto');
+        setCustomNamesRaw(pendingDraft.customNamesRaw || '');
+        setCustomResponses(pendingDraft.customResponses || {});
+        setAiPromptData(pendingDraft.aiPromptData || '');
+        setStep(pendingDraft.step || 1);
+        setPendingDraft(null);
+    };
+
+    const discardDraft = () => {
+        localStorage.removeItem(DRAFT_STORAGE_KEY);
+        setPendingDraft(null);
+    };
+
+    useEffect(() => {
+        if (!isDraftHydrated || authLoading) return;
+
+        const hasMeaningfulDraft =
+            !!url.trim() ||
+            !!analysis ||
+            Object.keys(customResponses).length > 0 ||
+            !!customNamesRaw.trim() ||
+            !!aiPromptData.trim() ||
+            step > 1;
+
+        if (!hasMeaningfulDraft) {
+            localStorage.removeItem(DRAFT_STORAGE_KEY);
+            return;
+        }
+
+        const timeoutId = window.setTimeout(() => {
+            const payload: DraftPayload = {
+                version: 1,
+                savedAt: Date.now(),
+                url,
+                step,
+                analysis,
+                targetCount,
+                delayMin,
+                nameSource,
+                customNamesRaw,
+                customResponses,
+                aiPromptData
+            };
+            localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(payload));
+        }, 400);
+
+        return () => window.clearTimeout(timeoutId);
+    }, [
+        isDraftHydrated,
+        authLoading,
+        url,
+        step,
+        analysis,
+        targetCount,
+        delayMin,
+        nameSource,
+        customNamesRaw,
+        customResponses,
+        aiPromptData
+    ]);
+
+    useEffect(() => {
+        const hasUnsavedWork = !!analysis || step > 1 || !!url.trim() || Object.keys(customResponses).length > 0;
+        if (!hasUnsavedWork) return;
+
+        const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+            event.preventDefault();
+            event.returnValue = '';
+        };
+
+        window.addEventListener('beforeunload', handleBeforeUnload);
+        return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+    }, [analysis, step, url, customResponses]);
 
     useEffect(() => {
         const handleMissionUpdate = (event: MessageEvent) => {
@@ -468,6 +628,7 @@ function App() {
 
     const handleLogout = async () => {
         await logout();
+        localStorage.removeItem(DRAFT_STORAGE_KEY);
         setUser(null);
         setStep(1);
         setUrl('');
@@ -603,10 +764,6 @@ function App() {
             setAiProgress('');
         }
     };
-
-
-
-    const [customResponses, setCustomResponses] = useState<Record<string, string>>({});
 
     useEffect(() => {
         if (analysis) {
@@ -1180,6 +1337,7 @@ function App() {
     };
 
     const reset = () => {
+        localStorage.removeItem(DRAFT_STORAGE_KEY);
         setStep(1);
         setUrl('');
         setAnalysis(null);
@@ -1195,6 +1353,13 @@ function App() {
     return (
         <div className="min-h-screen flex flex-col pt-16 relative overflow-hidden">
             {showLogin && <LoginModal onClose={() => setShowLogin(false)} onLogin={handleLogin} />}
+            {pendingDraft && (
+                <DraftRecoveryModal
+                    draft={pendingDraft}
+                    onRestore={restoreDraft}
+                    onDiscard={discardDraft}
+                />
+            )}
             {showPricing && user && <PaymentModal onClose={() => setShowPricing(false)} user={user} />}
             <VideoModal isOpen={showVideoModal} onClose={() => setShowVideoModal(false)} />
             {showRecommendationModal && (
