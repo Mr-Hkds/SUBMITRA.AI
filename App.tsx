@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 
-// Log Version for Vercel Verification
-console.log('[SYSTEM] AutoForm AI 4.0.4 MISSION READY Loaded');
+const VERSION = "4.0.5";
+
 import { Bot, Copy, CheckCircle, AlertCircle, BarChart3, ArrowRight, ArrowLeft, RotateCcw, Sparkles, Code2, Terminal, Zap, Command, Activity, Cpu, Crown, LogOut, Settings, Lock, Laptop, Monitor, Target, ShieldCheck, ExternalLink, Rocket } from 'lucide-react';
 import { fetchAndParseForm } from './services/formParser';
 import { analyzeForm as analyzeFormWithStatistics, generateResponseSuggestions } from './services/analysisService';
@@ -1366,6 +1366,7 @@ function App() {
             <Header
                 reset={reset}
                 step={step}
+                version={VERSION}
                 user={visualTokenOverride !== null ? (user ? { ...user, tokens: visualTokenOverride } : user) : user}
                 loading={authLoading}
                 onLogout={handleLogout}

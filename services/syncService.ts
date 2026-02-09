@@ -12,26 +12,30 @@ interface PendingPayment {
 /**
  * Persist a failed payment verification for later retry
  */
-export const savePendingPayment = async (paymentId: string, amount: number, userId: string) => {
-    try {
-        const existingRaw = await (window as any).storage.get(PENDING_PAYMENTS_KEY);
-        const existing: PendingPayment[] = existingRaw ? JSON.parse(existingRaw) : [];
+const storage = (window as any).storage;
+if (!storage) {
+    console.warn("[SyncService] window.storage is not available. Verification skipping persistence.");
+    return;
+}
 
-        // Avoid duplicates
-        if (existing.some(p => p.paymentId === paymentId)) return;
+const existingRaw = await storage.get(PENDING_PAYMENTS_KEY);
+const existing: PendingPayment[] = existingRaw ? JSON.parse(existingRaw) : [];
 
-        const updated = [...existing, {
-            paymentId,
-            amount,
-            userId,
-            timestamp: Date.now()
-        }];
+// Avoid duplicates
+if (existing.some(p => p.paymentId === paymentId)) return;
 
-        await (window as any).storage.set(PENDING_PAYMENTS_KEY, JSON.stringify(updated));
-        console.log(`[SyncService] Saved pending payment: ${paymentId}`);
+const updated = [...existing, {
+    paymentId,
+    amount,
+    userId,
+    timestamp: Date.now()
+}];
+
+await (window as any).storage.set(PENDING_PAYMENTS_KEY, JSON.stringify(updated));
+console.log(`[SyncService] Saved pending payment: ${paymentId}`);
     } catch (error) {
-        console.error("[SyncService] Failed to save pending payment:", error);
-    }
+    console.error("[SyncService] Failed to save pending payment:", error);
+}
 };
 
 /**
@@ -39,7 +43,10 @@ export const savePendingPayment = async (paymentId: string, amount: number, user
  */
 export const syncPendingPayments = async () => {
     try {
-        const existingRaw = await (window as any).storage.get(PENDING_PAYMENTS_KEY);
+        const storage = (window as any).storage;
+        if (!storage) return;
+
+        const existingRaw = await storage.get(PENDING_PAYMENTS_KEY);
         if (!existingRaw) return;
 
         const pending: PendingPayment[] = JSON.parse(existingRaw);

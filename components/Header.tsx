@@ -5,6 +5,7 @@ import { User } from '../types';
 interface HeaderProps {
     reset: () => void;
     step: number;
+    version: string;
     user: User | null;
     loading: boolean;
     onLogout: () => void;
@@ -13,7 +14,7 @@ interface HeaderProps {
     onDashboardClick: () => void;
 }
 
-const Header: React.FC<HeaderProps> = React.memo(({ reset, step, user, loading, onLogout, onShowPricing, onSignInClick, onDashboardClick }) => {
+const Header: React.FC<HeaderProps> = React.memo(({ reset, step, version, user, loading, onLogout, onShowPricing, onSignInClick, onDashboardClick }) => {
     return (
         <header className="fixed top-4 left-0 right-0 z-50 px-4 md:px-6 flex justify-center pointer-events-none">
             <div className="w-full max-w-6xl glass-panel-premium backdrop-blur-xl bg-[#030303]/80 border border-white/5 shadow-2xl rounded-2xl md:rounded-full px-4 md:px-6 py-3 flex items-center justify-between pointer-events-auto transition-all duration-300 hover:border-white/10 hover:bg-[#050505]/90">
@@ -38,9 +39,14 @@ const Header: React.FC<HeaderProps> = React.memo(({ reset, step, user, loading, 
                     </div>
 
                     <div className="flex flex-col justify-center">
-                        <span className="font-serif font-bold text-lg tracking-tight leading-none text-white group-hover:text-emerald-100 transition-colors">
-                            AutoForm <span className="text-emerald-500">.AI</span>
-                        </span>
+                        <div className="flex items-center gap-2">
+                            <span className="font-serif font-bold text-lg tracking-tight leading-none text-white group-hover:text-emerald-100 transition-colors">
+                                AutoForm <span className="text-emerald-500">.AI</span>
+                            </span>
+                            <span className="text-[7px] font-mono text-emerald-500/60 border border-emerald-500/20 px-1 rounded bg-emerald-500/5 mt-0.5">
+                                {version}
+                            </span>
+                        </div>
                         <span className="text-[8px] text-slate-500 font-mono uppercase tracking-[0.2em] hidden sm:block">
                             A <span className="text-amber-500/80">BHARAMRATRI</span> PRODUCTION
                         </span>
