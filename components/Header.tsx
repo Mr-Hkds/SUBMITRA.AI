@@ -43,9 +43,6 @@ const Header: React.FC<HeaderProps> = React.memo(({ reset, step, version, user, 
                             <span className="font-serif font-bold text-lg tracking-tight leading-none text-white group-hover:text-emerald-100 transition-colors">
                                 AutoForm <span className="text-emerald-500">.AI</span>
                             </span>
-                            <span className="text-[4px] font-mono text-emerald-500/60 border border-emerald-500/20 px-1 rounded bg-emerald-500/5 mt-0.5">
-                                {version}
-                            </span>
                         </div>
                         <span className="text-[8px] text-slate-500 font-mono uppercase tracking-[0.2em] hidden sm:block">
                             A <span className="text-amber-500/80">BHARAMRATRI</span> PRODUCTION
