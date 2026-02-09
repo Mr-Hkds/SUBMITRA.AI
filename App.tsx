@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 
 // Log Version for Vercel Verification
-console.log('[SYSTEM] AutoForm AI 4.0.3 PERFORMANCE UPGRADE Loaded');
+console.log('[SYSTEM] AutoForm AI 4.0.4 MISSION READY Loaded');
 import { Bot, Copy, CheckCircle, AlertCircle, BarChart3, ArrowRight, ArrowLeft, RotateCcw, Sparkles, Code2, Terminal, Zap, Command, Activity, Cpu, Crown, LogOut, Settings, Lock, Laptop, Monitor, Target, ShieldCheck, ExternalLink, Rocket } from 'lucide-react';
 import { fetchAndParseForm } from './services/formParser';
 import { analyzeForm as analyzeFormWithStatistics, generateResponseSuggestions } from './services/analysisService';
@@ -1192,6 +1192,17 @@ function App() {
                             50% { opacity: 0.5; }
                             100% { top: 100%; opacity: 0; }
                         }
+                        @keyframes packet-run-h {
+                            0% { left: -10%; opacity: 0; }
+                            10% { opacity: 1; }
+                            90% { opacity: 1; }
+                            100% { left: 110%; opacity: 0; }
+                        }
+                        @keyframes telemetry-roll {
+                            0% { opacity: 0.5; }
+                            50% { opacity: 1; }
+                            100% { opacity: 0.5; }
+                        }
                         .letterbox-bar {
                             position: absolute;
                             left: 0;
@@ -1220,6 +1231,14 @@ function App() {
                             height: 20px;
                             border-color: rgba(16, 185, 129, 0.4);
                         }
+                        .data-packet {
+                            position: absolute;
+                            width: 15px;
+                            height: 1px;
+                            background: linear-gradient(90deg, transparent, #10b981, transparent);
+                            filter: drop-shadow(0 0 5px #10b981);
+                            animation: packet-run-h 2s linear infinite;
+                        }
                     `}</style>
 
                     {/* Cinematic Bars */}
@@ -1227,7 +1246,7 @@ function App() {
                     <div className="letterbox-bar bottom-0 border-t border-white/5" />
 
                     {/* Engagement Flash Overlay */}
-                    <div className="fixed inset-0 z-[110] pointer-events-none mix-blend-screen opacity-0 animate-[engagement-flash_1.2s_ease-out_3.8s_forwards]" />
+                    <div className="fixed inset-0 z-[110] pointer-events-none mix-blend-screen opacity-0 animate-[engagement-flash_1.2s_3.8s_ease-out_forwards]" />
 
                     {/* Background Content */}
                     <div className="absolute inset-0 bg-black z-0" />
@@ -1244,9 +1263,13 @@ function App() {
                         <div className="tactical-border bottom-0 left-0 border-b-2 border-l-2" />
                         <div className="tactical-border bottom-0 right-0 border-b-2 border-r-2" />
 
+                        {/* Animated Border Packets */}
+                        <div className="data-packet top-0 left-0" style={{ animationDelay: '0s' }} />
+                        <div className="data-packet bottom-0 left-0" style={{ animationDelay: '1s' }} />
+
                         <div className="glass-panel-premium border border-white/10 overflow-hidden relative">
                             {/* HUD Scan Line */}
-                            <div className="absolute left-0 right-0 h-1 bg-gradient-to-r from-transparent via-emerald-500/30 to-transparent shadow-[0_0_15px_rgba(16,185,129,0.5)] animate-[hud-scan_2s_linear_infinite]" />
+                            <div className="absolute left-0 right-0 h-1 bg-gradient-to-r from-transparent via-emerald-500/30 to-transparent shadow-[0_0_15px_rgba(16,185,129,0.5)] animate-[hud-scan_3s_linear_infinite]" />
 
                             <div className="p-8 flex flex-col items-center text-center">
                                 {/* Core Visual */}
@@ -1255,44 +1278,68 @@ function App() {
                                     <div className="w-20 h-20 rounded-2xl border border-emerald-500/40 bg-black/40 flex items-center justify-center relative backdrop-blur-3xl overflow-hidden group">
                                         <div className="absolute inset-0 bg-gradient-to-tr from-emerald-500/10 via-transparent to-transparent group-hover:animate-shimmer-flow" />
                                         <Cpu className="w-10 h-10 text-emerald-400 group-hover:scale-110 transition-transform duration-500" />
+
+                                        {/* Activity Spinners */}
+                                        <div className="absolute inset-1 border border-emerald-500/10 rounded-xl animate-spin [animation-duration:4s]" />
+                                        <div className="absolute inset-2 border border-emerald-500/5 rounded-lg animate-reverse-spin [animation-duration:6s]" />
                                     </div>
-                                    <div className="absolute -top-2 -right-2 px-1.5 py-0.5 bg-emerald-500 text-black text-[8px] font-bold uppercase rounded">Live</div>
+                                    <div className="absolute -top-2 -right-2 px-1.5 py-0.5 bg-emerald-500 text-black text-[8px] font-bold uppercase rounded animate-pulse">Live</div>
                                 </div>
 
                                 {/* Mission Status */}
                                 <div className="space-y-4 w-full">
                                     <div className="flex items-center justify-between">
-                                        <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest">Operation: Synchronize</span>
-                                        <span className="text-[10px] font-mono text-emerald-500 font-bold uppercase">System: Stable</span>
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
+                                            <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest">Op: Sync_Neural</span>
+                                        </div>
+                                        <span className="text-[10px] font-mono text-emerald-500/50 font-bold uppercase animate-[telemetry-roll_0.5s_infinite]">
+                                            0x{Math.floor(Math.random() * 65535).toString(16).toUpperCase().padStart(4, '0')}
+                                        </span>
                                     </div>
 
-                                    <div className="h-14 border border-white/5 bg-black/40 rounded-xl flex items-center justify-center relative overflow-hidden group">
+                                    <div className="h-16 border border-white/5 bg-black/40 rounded-xl flex flex-col items-center justify-center relative overflow-hidden group p-2">
                                         {/* Decorative Technical Text */}
-                                        <div className="absolute left-2 top-2 text-[6px] font-mono text-slate-700 uppercase tracking-tighter">Memory_Alloc: 512mb</div>
-                                        <div className="absolute right-2 bottom-2 text-[6px] font-mono text-slate-700 uppercase tracking-tighter">Latency: 0.1ms</div>
+                                        <div className="absolute left-2 top-2 text-[6px] font-mono text-slate-700 uppercase tracking-tighter">Alloc: {512 + Math.floor(Math.random() * 256)}mb</div>
+                                        <div className="absolute right-2 bottom-2 text-[6px] font-mono text-slate-700 uppercase tracking-tighter">Latency: {(0.1 + Math.random() * 0.2).toFixed(2)}ms</div>
 
-                                        <span className="text-sm font-mono text-white tracking-[0.3em] font-bold uppercase">
-                                            {progress < 25 ? "Verifying Access" :
-                                                progress < 50 ? "Neural Handshake" :
-                                                    progress < 75 ? "Syncing Logic" :
-                                                        "Engaging Drive"}
+                                        <span className="text-sm font-mono text-white tracking-[0.3em] font-bold uppercase transition-all duration-300">
+                                            {progress < 15 ? "AUTH_HANDSHAKE" :
+                                                progress < 30 ? "VEC_MAPPING" :
+                                                    progress < 45 ? "NEURAL_OVERRIDE" :
+                                                        progress < 60 ? "BIT_SYNCHRONIZE" :
+                                                            progress < 75 ? "BEYOND_GATEWAY" :
+                                                                progress < 90 ? "INIT_DRIVE" :
+                                                                    "LAUNCH_COMPLETE"}
                                         </span>
+                                        <div className="text-[8px] font-mono text-emerald-500/40 mt-1 animate-pulse">
+                                            {progress < 25 ? "[CALIBRATING_OPTICS]" :
+                                                progress < 50 ? "[MOUNTING_FS_REMOTE]" :
+                                                    progress < 75 ? "[BYPASS_SSL_LAYER]" :
+                                                        "[MISSION_VECTOR_READY]"}
+                                        </div>
                                     </div>
                                 </div>
 
                                 {/* Multi-Stage Progress */}
                                 <div className="mt-8 w-full space-y-2">
-                                    <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden flex gap-1 p-[1px]">
-                                        {[...Array(20)].map((_, i) => (
+                                    <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden flex gap-1 p-[1px] relative">
+                                        {/* Charge Spark Effect */}
+                                        <div
+                                            className="absolute top-0 bottom-0 w-8 bg-gradient-to-r from-transparent via-white/40 to-transparent blur-sm pointer-events-none transition-all duration-300"
+                                            style={{ left: `${progress}%`, opacity: progress > 0 && progress < 100 ? 1 : 0 }}
+                                        />
+
+                                        {[...Array(24)].map((_, i) => (
                                             <div
                                                 key={i}
-                                                className={`flex-1 h-full rounded-sm transition-all duration-500 ${Math.floor((progress / 100) * 20) > i ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]' : 'bg-white/10'}`}
+                                                className={`flex-1 h-full rounded-sm transition-all duration-500 ${Math.floor((progress / 100) * 24) > i ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]' : 'bg-white/10'}`}
                                             />
                                         ))}
                                     </div>
-                                    <div className="flex justify-between text-[8px] font-mono text-slate-600 uppercase tracking-widest">
+                                    <div className="flex justify-between text-[8px] font-mono text-slate-600 uppercase tracking-widest px-1">
                                         <span>Sub-Routine Init</span>
-                                        <span>Target: Mission_Ctrl</span>
+                                        <span className="text-emerald-500/60 font-bold tabular-nums">{progress}%</span>
                                     </div>
                                 </div>
                             </div>
@@ -1301,11 +1348,14 @@ function App() {
                         {/* Side HUD Telemetry */}
                         <div className="absolute -left-32 top-1/2 -translate-y-1/2 hidden lg:flex flex-col gap-4 w-28 opacity-40">
                             {[1, 2, 3].map(i => (
-                                <div key={i} className="space-y-1">
+                                <div key={i} className="space-y-1 bg-black/20 p-1.5 rounded border border-white/5 backdrop-blur-sm">
                                     <div className="h-0.5 w-full bg-white/10 overflow-hidden">
-                                        <div className="h-full bg-emerald-500/50 w-1/2 animate-pulse" />
+                                        <div className="h-full bg-emerald-500/50 w-1/2 animate-shimmer-flow" />
                                     </div>
-                                    <div className="text-[7px] font-mono text-slate-500 uppercase">Tlm_Stream_{i}</div>
+                                    <div className="flex justify-between text-[6px] font-mono text-slate-500 uppercase">
+                                        <span>STR_{i}</span>
+                                        <span className="text-emerald-500">{(Math.random() * 99).toFixed(1)}</span>
+                                    </div>
                                 </div>
                             ))}
                         </div>
