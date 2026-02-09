@@ -27,6 +27,70 @@ import Step2Dashboard from './components/Step2Dashboard';
 
 // --- VISUAL COMPONENTS ---
 
+const DRAFT_STORAGE_KEY = 'autoform_ai_draft_v1';
+
+type DraftPayload = {
+    version: 1;
+    savedAt: number;
+    url: string;
+    step: 1 | 2 | 3;
+    analysis: FormAnalysis | null;
+    targetCount: number;
+    delayMin: number;
+    nameSource: 'auto' | 'indian' | 'custom';
+    customNamesRaw: string;
+    customResponses: Record<string, string>;
+    aiPromptData: string;
+};
+
+const formatDraftAge = (savedAt: number) => {
+    const diffMs = Date.now() - savedAt;
+    const mins = Math.max(1, Math.floor(diffMs / 60000));
+    if (mins < 60) return `${mins} minute${mins === 1 ? '' : 's'} ago`;
+    const hours = Math.floor(mins / 60);
+    return `${hours} hour${hours === 1 ? '' : 's'} ago`;
+};
+
+
+const DRAFT_STORAGE_KEY = 'autoform_ai_draft_v1';
+
+type DraftPayload = {
+    version: 1;
+    savedAt: number;
+    url: string;
+    step: 1 | 2 | 3;
+    analysis: FormAnalysis | null;
+    targetCount: number;
+    delayMin: number;
+    nameSource: 'auto' | 'indian' | 'custom';
+    customNamesRaw: string;
+    customResponses: Record<string, string>;
+    aiPromptData: string;
+};
+
+const isDraftPayload = (value: unknown): value is DraftPayload => {
+    if (!value || typeof value !== 'object') return false;
+    const draft = value as Partial<DraftPayload>;
+    return draft.version === 1
+        && typeof draft.savedAt === 'number'
+        && typeof draft.url === 'string'
+        && (draft.step === 1 || draft.step === 2 || draft.step === 3)
+        && typeof draft.targetCount === 'number'
+        && typeof draft.delayMin === 'number'
+        && (draft.nameSource === 'auto' || draft.nameSource === 'indian' || draft.nameSource === 'custom')
+        && typeof draft.customNamesRaw === 'string'
+        && !!draft.customResponses
+        && typeof draft.customResponses === 'object'
+        && typeof draft.aiPromptData === 'string';
+};
+
+const formatDraftAge = (savedAt: number) => {
+    const diffMs = Date.now() - savedAt;
+    const mins = Math.max(1, Math.floor(diffMs / 60000));
+    if (mins < 60) return `${mins} minute${mins === 1 ? '' : 's'} ago`;
+    const hours = Math.floor(mins / 60);
+    return `${hours} hour${hours === 1 ? '' : 's'} ago`;
+};
 
 const DRAFT_STORAGE_KEY = 'autoform_ai_draft_v1';
 
@@ -292,6 +356,43 @@ const Footer = React.memo(({ onLegalNav }: { onLegalNav: (type: 'privacy' | 'ter
     </footer>
 ));
 
+const DraftRecoveryModal = ({
+    draft,
+    onRestore,
+    onDiscard
+}: {
+    draft: DraftPayload;
+    onRestore: () => void;
+    onDiscard: () => void;
+}) => (
+    <div className="fixed inset-0 z-[110] flex items-center justify-center p-6">
+        <div className="absolute inset-0 bg-black/80 backdrop-blur-md" />
+        <div className="relative z-10 w-full max-w-lg rounded-2xl border border-emerald-500/20 bg-[#050505] p-6 md:p-8 shadow-2xl">
+            <p className="text-[11px] uppercase tracking-[0.2em] text-emerald-400 font-mono mb-3">Recovery Protocol</p>
+            <h3 className="text-xl font-serif text-white mb-2">Resume your previous mission?</h3>
+            <p className="text-sm text-slate-400 mb-6">
+                A saved draft from <span className="text-slate-200">{formatDraftAge(draft.savedAt)}</span> was detected.
+                Restore and continue from step {draft.step}, or discard it and start clean.
+            </p>
+
+            <div className="flex gap-3 justify-end">
+                <button
+                    onClick={onDiscard}
+                    className="px-4 py-2 rounded-lg border border-white/10 text-slate-300 hover:text-white hover:border-white/20 transition"
+                >
+                    Discard Draft
+                </button>
+                <button
+                    onClick={onRestore}
+                    className="px-4 py-2 rounded-lg bg-emerald-500 text-black font-semibold hover:bg-emerald-400 transition"
+                >
+                    Restore Draft
+                </button>
+            </div>
+        </div>
+    </div>
+);
+
 // DELETED: LoadingState replaced by LoadingScreen component
 
 
@@ -365,6 +466,8 @@ function App() {
     const [rateLimitCooldown, setRateLimitCooldown] = useState(0);
     const [showVideoModal, setShowVideoModal] = useState(false);
     const [questionSearch, setQuestionSearch] = useState('');
+    const [isDraftHydrated, setIsDraftHydrated] = useState(false);
+    const [pendingDraft, setPendingDraft] = useState<DraftPayload | null>(null);
 
     // AUTOMATION STATE
     const [isAutoRunning, setIsAutoRunning] = useState(false);
@@ -638,6 +741,7 @@ function App() {
     const handleLogout = async () => {
         localStorage.removeItem(DRAFT_STORAGE_KEY);
         await logout();
+        localStorage.removeItem(DRAFT_STORAGE_KEY);
         setUser(null);
         setStep(1);
         setUrl('');
