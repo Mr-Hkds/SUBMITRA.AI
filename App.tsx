@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 // Log Version for Vercel Verification
 console.log('[SYSTEM] AutoForm AI 4.0.3 PERFORMANCE UPGRADE Loaded');
@@ -255,6 +255,16 @@ const Footer = React.memo(({ onLegalNav }: { onLegalNav: (type: 'privacy' | 'ter
 // DELETED: LoadingState replaced by LoadingScreen component
 
 function App() {
+    const LAUNCH_HANDOFF_MS = 4000;
+    const LAUNCH_OVERLAY_MS = 4500;
+    const LAUNCH_STAGES = ['Integrity Check', 'Handshake', 'Pipeline Sync', 'Mission Boot'];
+    const LAUNCH_ACTIVITIES = [
+        'auth token sealed',
+        'response payload indexed',
+        'runner context primed',
+        'handoff to mission control'
+    ];
+
     // User State
     const [user, setUser] = useState<User | null>(null);
     const [authLoading, setAuthLoading] = useState(true);
@@ -284,6 +294,11 @@ function App() {
     const [customNamesRaw, setCustomNamesRaw] = useState('');
     const [speedMode, setSpeedMode] = useState<'auto' | 'manual'>('auto');
     const [isLaunching, setIsLaunching] = useState(false);
+    const [launchProgress, setLaunchProgress] = useState(0);
+    const launchFrameRef = useRef<number | null>(null);
+    const launchStepTimerRef = useRef<number | null>(null);
+    const launchRunTimerRef = useRef<number | null>(null);
+    const launchPayloadRef = useRef<Record<string, string> | null>(null);
 
     // NEW: AI Data Context State
     const [aiPromptData, setAiPromptData] = useState('');
@@ -345,7 +360,113 @@ function App() {
         return () => window.removeEventListener('popstate', handlePopState);
     }, []);
 
+
+    useEffect(() => {
+        if (!isLaunching) {
+            setLaunchProgress(0);
+            if (launchFrameRef.current !== null) {
+                cancelAnimationFrame(launchFrameRef.current);
+                launchFrameRef.current = null;
+            }
+            return;
+        }
+
+        const start = performance.now();
+        const tick = (now: number) => {
+            const raw = Math.min((now - start) / LAUNCH_HANDOFF_MS, 1);
+            const eased = 1 - Math.pow(1 - raw, 2.2);
+            const stageBoost = raw < 0.9 ? (Math.sin(now / 180) + 1) * 0.15 : 0;
+            const targetPercent = Math.min(100, Math.round(eased * 100 + stageBoost));
+
+            setLaunchProgress(prev => (targetPercent > prev ? targetPercent : prev));
+
+            if (raw < 1) {
+                launchFrameRef.current = requestAnimationFrame(tick);
+            } else {
+                launchFrameRef.current = null;
+            }
+        };
+
+        launchFrameRef.current = requestAnimationFrame(tick);
+
+        return () => {
+            if (launchFrameRef.current !== null) {
+                cancelAnimationFrame(launchFrameRef.current);
+                launchFrameRef.current = null;
+            }
+        };
+    }, [isLaunching]);
+
+    useEffect(() => {
+        return () => {
+            if (launchStepTimerRef.current !== null) {
+                window.clearTimeout(launchStepTimerRef.current);
+            }
+            if (launchRunTimerRef.current !== null) {
+                window.clearTimeout(launchRunTimerRef.current);
+            }
+            if (launchFrameRef.current !== null) {
+                cancelAnimationFrame(launchFrameRef.current);
+            }
+        };
+    }, []);
+
+    useEffect(() => {
+        if (!isLaunching) return;
+
+        const handleLaunchKeyDown = (event: KeyboardEvent) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                void continueLaunchNow();
+            }
+        };
+
+        window.addEventListener('keydown', handleLaunchKeyDown);
+        return () => window.removeEventListener('keydown', handleLaunchKeyDown);
+    }, [isLaunching]);
+
     const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
+
+
+    const activeLaunchStageIndex = Math.min(
+        LAUNCH_STAGES.length - 1,
+        Math.floor((launchProgress / 100) * LAUNCH_STAGES.length)
+    );
+    const currentLaunchStage = LAUNCH_STAGES[activeLaunchStageIndex];
+    const launchEta = Math.max(0, (((100 - launchProgress) / 100) * (LAUNCH_HANDOFF_MS / 1000))).toFixed(1);
+    const launchStatusLabel = launchProgress >= 96 ? 'System: Armed' : `System: ${currentLaunchStage}`;
+
+    const clearLaunchSequence = () => {
+        if (launchStepTimerRef.current !== null) {
+            window.clearTimeout(launchStepTimerRef.current);
+            launchStepTimerRef.current = null;
+        }
+        if (launchRunTimerRef.current !== null) {
+            window.clearTimeout(launchRunTimerRef.current);
+            launchRunTimerRef.current = null;
+        }
+        if (launchFrameRef.current !== null) {
+            cancelAnimationFrame(launchFrameRef.current);
+            launchFrameRef.current = null;
+        }
+    };
+
+    const continueLaunchNow = async () => {
+        if (!launchPayloadRef.current) return;
+
+        clearLaunchSequence();
+        setLaunchProgress(100);
+        setStep(3);
+        setIsLaunching(false);
+
+        try {
+            await handleAutoRun(launchPayloadRef.current);
+        } catch (err) {
+            console.error('Auto-Run failed', err);
+        } finally {
+            launchPayloadRef.current = null;
+        }
+    };
 
     const handleLegalNav = (type: 'privacy' | 'terms' | 'refund' | 'contact' | null) => {
         setLegalType(type);
@@ -1072,6 +1193,9 @@ function App() {
         setAutomationLogs([]);
 
         // --- ATMOSPHERIC VERIFICATION SEQUENCE (4500ms) ---
+        launchPayloadRef.current = mergedResponses;
+        clearLaunchSequence();
+        setLaunchProgress(0);
         setIsLaunching(true);
 
         // Sequence: 
@@ -1080,18 +1204,13 @@ function App() {
         // 4000ms: Page Swap (Behind the flash)
         // 4500ms: Transition End
 
-        setTimeout(() => {
+        launchStepTimerRef.current = window.setTimeout(() => {
             setStep(3);
-        }, 4000);
+        }, LAUNCH_HANDOFF_MS);
 
-        setTimeout(async () => {
-            setIsLaunching(false);
-            try {
-                await handleAutoRun(mergedResponses);
-            } catch (err) {
-                console.error("Auto-Run failed", err);
-            }
-        }, 4500);
+        launchRunTimerRef.current = window.setTimeout(() => {
+            void continueLaunchNow();
+        }, LAUNCH_OVERLAY_MS);
     };
 
     const handleAIInject = () => {
@@ -1231,12 +1350,14 @@ function App() {
 
                     {/* Background Content */}
                     <div className="absolute inset-0 bg-black z-0" />
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_20%,rgba(16,185,129,0.16),transparent_48%)] z-[1]" />
+                    <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(2,6,23,0.2)_0%,rgba(2,6,23,0.85)_100%)] z-[1]" />
                     <div className="neural-stream">
                         {Array(50).fill('01011010 SYNC_CORE_LOAD AUTH_HANDSHAKE_PROCEED\n0x7F2A9B ENGINE_READY NEURAL_LINK_ESTABLISHED\nSYSTEM_INTEGRITY_CHECK_PASS MISSION_VECTOR_LOCKED\n').join('')}
                     </div>
 
                     {/* TACTICAL COMMAND HUD */}
-                    <div className="relative z-10 w-[90%] max-w-lg animate-[core-inhale_0.6s_ease-out_forwards]">
+                    <div className="relative z-10 w-[92%] max-w-xl animate-[core-inhale_0.6s_ease-out_forwards]">
 
                         {/* HUD Corners */}
                         <div className="tactical-border top-0 left-0 border-t-2 border-l-2" />
@@ -1244,11 +1365,12 @@ function App() {
                         <div className="tactical-border bottom-0 left-0 border-b-2 border-l-2" />
                         <div className="tactical-border bottom-0 right-0 border-b-2 border-r-2" />
 
-                        <div className="glass-panel-premium border border-white/10 overflow-hidden relative">
+                        <div className="glass-panel-premium border border-emerald-400/20 shadow-[0_20px_80px_rgba(16,185,129,0.12)] overflow-hidden relative rounded-2xl">
+                            <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(135deg,rgba(16,185,129,0.08),transparent_45%,rgba(16,185,129,0.06))]" />
                             {/* HUD Scan Line */}
                             <div className="absolute left-0 right-0 h-1 bg-gradient-to-r from-transparent via-emerald-500/30 to-transparent shadow-[0_0_15px_rgba(16,185,129,0.5)] animate-[hud-scan_2s_linear_infinite]" />
 
-                            <div className="p-8 flex flex-col items-center text-center">
+                            <div className="p-7 md:p-8 flex flex-col items-center text-center">
                                 {/* Core Visual */}
                                 <div className="relative mb-10">
                                     <div className="absolute inset-0 bg-emerald-500/10 blur-3xl scale-150 animate-pulse" />
@@ -1261,21 +1383,18 @@ function App() {
 
                                 {/* Mission Status */}
                                 <div className="space-y-4 w-full">
-                                    <div className="flex items-center justify-between">
+                                    <div className="flex items-center justify-between rounded-lg border border-white/10 bg-black/30 px-3 py-2">
                                         <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest">Operation: Synchronize</span>
-                                        <span className="text-[10px] font-mono text-emerald-500 font-bold uppercase">System: Stable</span>
+                                        <span className="text-[10px] font-mono text-emerald-500 font-bold uppercase">{launchStatusLabel}</span>
                                     </div>
 
-                                    <div className="h-14 border border-white/5 bg-black/40 rounded-xl flex items-center justify-center relative overflow-hidden group">
+                                    <div className="h-14 border border-emerald-500/20 bg-black/45 rounded-xl flex items-center justify-center relative overflow-hidden group shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
                                         {/* Decorative Technical Text */}
                                         <div className="absolute left-2 top-2 text-[6px] font-mono text-slate-700 uppercase tracking-tighter">Memory_Alloc: 512mb</div>
                                         <div className="absolute right-2 bottom-2 text-[6px] font-mono text-slate-700 uppercase tracking-tighter">Latency: 0.1ms</div>
 
                                         <span className="text-sm font-mono text-white tracking-[0.3em] font-bold uppercase">
-                                            {progress < 25 ? "Verifying Access" :
-                                                progress < 50 ? "Neural Handshake" :
-                                                    progress < 75 ? "Syncing Logic" :
-                                                        "Engaging Drive"}
+                                            {currentLaunchStage}
                                         </span>
                                     </div>
                                 </div>
@@ -1286,14 +1405,77 @@ function App() {
                                         {[...Array(20)].map((_, i) => (
                                             <div
                                                 key={i}
-                                                className={`flex-1 h-full rounded-sm transition-all duration-500 ${Math.floor((progress / 100) * 20) > i ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]' : 'bg-white/10'}`}
+                                                className={`flex-1 h-full rounded-sm transition-all duration-500 ${Math.floor((launchProgress / 100) * 20) > i ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]' : 'bg-white/10'}`}
                                             />
                                         ))}
                                     </div>
+                                    <div className="h-2.5 w-full bg-black/60 border border-emerald-500/15 rounded-full overflow-hidden">
+                                        <div
+                                            className="h-full bg-gradient-to-r from-emerald-500/70 via-emerald-400 to-emerald-500 shadow-[0_0_14px_rgba(16,185,129,0.7)] transition-[width] duration-100"
+                                            style={{ width: `${launchProgress}%` }}
+                                        />
+                                    </div>
                                     <div className="flex justify-between text-[8px] font-mono text-slate-600 uppercase tracking-widest">
                                         <span>Sub-Routine Init</span>
-                                        <span>Target: Mission_Ctrl</span>
+                                        <span>{launchProgress}% · ETA {launchEta}s</span>
                                     </div>
+
+                                    <div className="grid grid-cols-2 gap-2 pt-2">
+                                        {LAUNCH_STAGES.map((stage, idx) => {
+                                            const state = idx < activeLaunchStageIndex
+                                                ? 'done'
+                                                : idx === activeLaunchStageIndex
+                                                    ? 'active'
+                                                    : 'pending';
+
+                                            return (
+                                                <div
+                                                    key={stage}
+                                                    className={`rounded-lg border px-2 py-1.5 text-left transition-all duration-300 ${state === 'done'
+                                                        ? 'border-emerald-500/30 bg-emerald-500/10'
+                                                        : state === 'active'
+                                                            ? 'border-emerald-400/50 bg-emerald-500/15 shadow-[0_0_20px_rgba(16,185,129,0.15)]'
+                                                            : 'border-white/10 bg-black/30'
+                                                        }`}
+                                                >
+                                                    <div className="flex items-center gap-1.5">
+                                                        <span className={`h-1.5 w-1.5 rounded-full ${state === 'done'
+                                                            ? 'bg-emerald-500'
+                                                            : state === 'active'
+                                                                ? 'bg-emerald-400 animate-pulse'
+                                                                : 'bg-slate-600'
+                                                            }`} />
+                                                        <span className={`text-[8px] font-mono uppercase tracking-wider ${state === 'pending' ? 'text-slate-600' : 'text-emerald-200'}`}>
+                                                            {stage}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+
+                                    <div className="w-full rounded-lg border border-emerald-500/15 bg-black/35 p-2.5 space-y-1.5">
+                                        {LAUNCH_ACTIVITIES.map((activity, idx) => {
+                                            const done = idx < activeLaunchStageIndex;
+                                            const active = idx === activeLaunchStageIndex;
+                                            return (
+                                                <div key={activity} className="flex items-center justify-between text-[8px] font-mono uppercase tracking-widest">
+                                                    <span className={done || active ? 'text-emerald-200' : 'text-slate-600'}>{activity}</span>
+                                                    <span className={done ? 'text-emerald-400' : active ? 'text-amber-400 animate-pulse' : 'text-slate-600'}>
+                                                        {done ? 'ok' : active ? 'running' : 'queued'}
+                                                    </span>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+
+                                    <button
+                                        onClick={() => void continueLaunchNow()}
+                                        className="mt-3 w-full rounded-lg border border-emerald-300/40 bg-gradient-to-r from-emerald-500/20 to-emerald-400/10 px-3 py-2 text-[10px] font-mono uppercase tracking-[0.18em] text-emerald-100 hover:from-emerald-500/30 hover:to-emerald-400/20 transition shadow-[0_0_18px_rgba(16,185,129,0.18)]"
+                                    >
+                                        Continue Now • Enter
+                                    </button>
+                                    <p className="mt-1 text-[8px] font-mono uppercase tracking-wider text-slate-400">Need speed? Skip cinematic and jump straight to mission control</p>
                                 </div>
                             </div>
                         </div>
