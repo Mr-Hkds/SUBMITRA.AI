@@ -2,18 +2,17 @@ import React, { useState, useEffect, useRef } from 'react';
 
 const VERSION = "4.0.5";
 
-import { Bot, Copy, CheckCircle, AlertCircle, BarChart3, ArrowRight, ArrowLeft, RotateCcw, Sparkles, Code2, Terminal, Zap, Command, Activity, Cpu, Crown, LogOut, Settings, Lock, Laptop, Monitor, Target, ShieldCheck, ExternalLink, Rocket } from 'lucide-react';
+import { Bot, Copy, CheckCircle, AlertCircle, BarChart3, ArrowRight, ArrowLeft, RotateCcw, Sparkles, Code2, Terminal, Zap, Command, Activity, Cpu, Crown, LogOut, Settings, Lock, Laptop, Monitor, Target, ShieldCheck, ExternalLink, Rocket, Shield, FileText, ChevronRight, Clock, CheckCircle2, ChevronDown, Eye, Code, FileJson, Fingerprint, Network, TerminalSquare, ShieldAlert } from 'lucide-react';
 import { fetchAndParseForm } from './services/formParser';
 import { analyzeForm as analyzeFormWithStatistics, generateResponseSuggestions } from './services/analysisService';
 import { generateAutomationScript } from './utils/scriptTemplate';
 import { generateIndianNames } from './utils/indianNames';
 import { generateAIPrompt, parseAIResponse } from './utils/parsingUtils';
-import { signInWithGoogle, logout, subscribeToUserProfile, incrementUsageCount, trackAuthState } from './services/authService';
+import { signInWithGoogle, logout, subscribeToUserProfile, incrementUsageCount, trackAuthState, submitTokenRequest, checkPendingRequest } from './services/authService';
 import { generateScriptToken, checkRateLimit, getTokenExpirationHours, TokenMetadata } from './services/securityService';
-import { syncPendingPayments } from './services/syncService';
 import { FormAnalysis, User } from './types';
 
-import PaymentModal from './components/PaymentModal';
+// PaymentModal removed for ethical reasons
 import LoadingScreen from './components/LoadingScreen';
 import AdminDashboard from './pages/AdminDashboard';
 import HeroSection from './components/HeroSection';
@@ -236,7 +235,7 @@ const Footer = React.memo(({ onLegalNav }: { onLegalNav: (type: 'privacy' | 'ter
                     {/* Signature Text */}
                     <MatrixReveal
                         text="BLACK_LOTUS"
-                    className="relative z-10 text-lg md:text-xl font-bold liquid-gold-text drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)]"
+                        className="relative z-10 text-lg md:text-xl font-bold liquid-gold-text drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)]"
                     />
                 </div>
             </div>
@@ -245,7 +244,7 @@ const Footer = React.memo(({ onLegalNav }: { onLegalNav: (type: 'privacy' | 'ter
             {/* Version System Tag */}
             <div className="absolute bottom-2 right-4 opacity-80 hover:opacity-100 transition-opacity">
                 <span className="text-[9px] text-slate-500 font-mono tracking-[0.2em] uppercase">
-                    
+
                 </span>
             </div>
         </div>
@@ -269,8 +268,35 @@ function App() {
     const [user, setUser] = useState<User | null>(null);
     const [authLoading, setAuthLoading] = useState(true);
     const [aiProgress, setAiProgress] = useState<string>('');
-    const [showPricing, setShowPricing] = useState(false);
+    const [showTokenRequest, setShowTokenRequest] = useState(false);
+    const [tokenRequestAmount, setTokenRequestAmount] = useState<number>(50);
+    const [tokenRequestStatus, setTokenRequestStatus] = useState<'idle' | 'checking' | 'submitting' | 'success' | 'error' | 'pending_exists'>('idle');
+    const [tokenRequestMessage, setTokenRequestMessage] = useState('');
     const [showLogin, setShowLogin] = useState(false);
+
+    // Check for pending requests when modal opens
+    useEffect(() => {
+        const checkExisting = async () => {
+            if (showTokenRequest && user) {
+                setTokenRequestStatus('checking');
+                const hasPending = await checkPendingRequest(user.uid);
+                if (hasPending) {
+                    setTokenRequestStatus('pending_exists');
+                    setTokenRequestMessage("You already have an active token request pending administrator approval.");
+                } else {
+                    setTokenRequestStatus('idle');
+                    setTokenRequestMessage('');
+                }
+            }
+        };
+        checkExisting();
+    }, [showTokenRequest, user]);
+
+    // Access Control
+    const [isSiteUnlocked, setIsSiteUnlocked] = useState(() => {
+        return localStorage.getItem('NAAGRAAZ_ACCESS_KEY') === 'root-access';
+    });
+    const [accessKeyInput, setAccessKeyInput] = useState('');
     // REMOVED EXTENSION DETECTION - NOW USING SYSTEM NATIVE ENGINE
     const isExtensionInstalled = false; // Forced false to bypass logic
     const [stopAutomation, setStopAutomation] = useState(false);
@@ -522,9 +548,6 @@ function App() {
                 if (updatedUser) setUser(updatedUser);
             });
 
-            // RELIABILITY: Trigger background sync on login
-            syncPendingPayments();
-
             return () => unsub();
         }
     }, [user?.uid]);
@@ -562,12 +585,34 @@ function App() {
         }
     }, [speedMode, targetCount, analysis?.questions.length]);
 
+    const handleTokenRequest = async () => {
+        if (!user || tokenRequestStatus === 'pending_exists') return;
+        if (tokenRequestAmount < 1 || tokenRequestAmount > 200) {
+            setTokenRequestMessage("Amount must be between 1 and 200.");
+            setTokenRequestStatus('error');
+            return;
+        }
+
+        setTokenRequestStatus('submitting');
+        const result = await submitTokenRequest(user, tokenRequestAmount);
+
+        if (result.success) {
+            setTokenRequestStatus('success');
+            setTokenRequestMessage(result.message);
+            setTimeout(() => {
+                setShowTokenRequest(false);
+                setTokenRequestStatus('idle');
+                setTokenRequestMessage('');
+            }, 3000);
+        } else {
+            setTokenRequestStatus('error');
+            setTokenRequestMessage(result.message);
+        }
+    };
+
     const checkBalanceAndRedirect = (val: number) => {
         if (user && val > (user.tokens || 0)) {
-            setError("Token Limit Exceeded: Insufficient balance. Redirecting to upgrades...");
-            setTimeout(() => {
-                setShowPricing(true);
-            }, 1500);
+            setShowTokenRequest(true);
             return true;
         }
         return false;
@@ -713,7 +758,7 @@ function App() {
 
         // Check token balance logic
         if ((user.tokens || 0) < targetCount) {
-            setShowPricing(true);
+            setShowTokenRequest(true);
             return false;
         }
 
@@ -877,7 +922,7 @@ function App() {
         }
 
         if ((user.tokens || 0) < targetCount) {
-            setShowPricing(true);
+            setShowTokenRequest(true);
             return;
         }
 
@@ -1141,7 +1186,7 @@ function App() {
         }
 
         if (!user.tokens || user.tokens < targetCount) {
-            setShowPricing(true);
+            setShowTokenRequest(true);
             return;
         }
 
@@ -1262,10 +1307,184 @@ function App() {
     // REMOVED BLOCKING LOGIN CHECK
     /* if (!user) { ... } */
 
+    if (!isSiteUnlocked) {
+        const handleUnlock = () => {
+            if (accessKeyInput === 'root-access') {
+                localStorage.setItem('NAAGRAAZ_ACCESS_KEY', 'root-access');
+                setIsSiteUnlocked(true);
+            } else {
+                setAccessKeyInput('');
+            }
+        };
+        return (
+            <div className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-[#050505] px-4 overflow-hidden font-mono">
+                {/* Mr. Robot Styled Terminal Background */}
+                <div className="absolute inset-0 pointer-events-none">
+                    {/* Geometric Subtle Red Grid */}
+                    <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(239,68,68,0.15)_1px,transparent_1px),linear-gradient(to_bottom,rgba(239,68,68,0.15)_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_100%_100%_at_50%_50%,#000_40%,transparent_100%)] opacity-80" />
+
+                    {/* Scanning Laser Line */}
+                    <div
+                        className="w-full h-[30%] bg-gradient-to-b from-transparent via-red-900/20 to-transparent opacity-100 absolute left-0 right-0 top-0"
+                        style={{ animation: 'scanline 4s linear infinite' }}
+                    />
+                    <style>{`
+                        @keyframes scanline {
+                            0% { transform: translateY(-100%); }
+                            100% { transform: translateY(400%); }
+                        }
+                    `}</style>
+                </div>
+
+                <div className="relative w-full max-w-sm bg-[#0a0a0a]/90 backdrop-blur-xl border border-red-500/20 p-8 rounded-2xl shadow-xl shadow-red-900/10 z-10">
+                    {/* Icon */}
+                    <div className="flex justify-center mb-6">
+                        <div className="w-12 h-12 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center shadow-sm relative overflow-hidden group">
+                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]" />
+                            <ShieldAlert className="w-5 h-5 text-red-500 relative z-10" />
+                        </div>
+                    </div>
+
+                    {/* Heading */}
+                    <div className="text-center mb-8 space-y-2">
+                        <h1 className="text-2xl font-semibold text-white tracking-tight">Access Denied</h1>
+                        <p className="text-sm text-slate-400 font-sans">
+                            Public access has been permanently disabled for ethical reasons.
+                        </p>
+                    </div>
+
+                    {/* Form */}
+                    <div className="space-y-4">
+                        <div className="relative">
+                            <label htmlFor="accessKey" className="sr-only">Access Key</label>
+                            <input
+                                id="accessKey"
+                                type="password"
+                                placeholder="Authorization Key"
+                                value={accessKeyInput}
+                                onChange={(e) => setAccessKeyInput(e.target.value)}
+                                onKeyDown={(e) => { if (e.key === 'Enter') handleUnlock(); }}
+                                className="w-full bg-[#050505] border border-slate-800 focus:border-red-500/50 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-1 focus:ring-red-500/50 placeholder:text-slate-600 text-sm transition-all text-center tracking-widest relative z-10"
+                                autoFocus
+                                autoComplete="off"
+                            />
+                        </div>
+                        <button
+                            onClick={handleUnlock}
+                            className="w-full bg-white hover:bg-slate-200 text-slate-950 font-semibold rounded-lg py-3 text-sm active:scale-[0.98] transition-all duration-200 relative overflow-hidden group uppercase tracking-widest"
+                        >
+                            <span className="relative z-10">Authorize</span>
+                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]" />
+                        </button>
+                    </div>
+
+                    {/* Footer Credits text shimmer directly over text */}
+                    <div className="mt-8 pt-6 border-t border-slate-800/50 text-center space-y-1.5 flex flex-col items-center">
+                        <p className="text-xs font-bold tracking-widest uppercase text-transparent bg-clip-text bg-[linear-gradient(90deg,#64748b,white,#64748b)] bg-[length:200%_auto] animate-[text-shimmer_3s_linear_infinite]">
+                            Built by Black Lotus
+                        </p>
+                        <p className="text-[10px] font-medium text-slate-600 uppercase tracking-widest">
+                            Bharamratri Studios
+                        </p>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="min-h-screen flex flex-col pt-16 relative overflow-hidden">
             {showLogin && <LoginModal onClose={() => setShowLogin(false)} onLogin={handleLogin} />}
-            {showPricing && user && <PaymentModal onClose={() => setShowPricing(false)} user={user} />}
+            {showTokenRequest && user && (
+                <div className="fixed inset-0 z-[150] flex flex-col items-center justify-center p-6 bg-slate-950/80 backdrop-blur-sm animate-fade-in">
+                    <div className="max-w-md w-full bg-slate-900 border border-slate-700/50 p-6 rounded-2xl shadow-xl">
+                        <h3 className="text-xl font-bold text-white mb-2">Request Tokens</h3>
+                        <p className="text-sm text-slate-400 mb-6">
+                            You have run out of tokens. You can request up to 200 tokens from the administrator. Only one active request is allowed at a time.
+                        </p>
+
+                        <div className="space-y-4">
+                            {tokenRequestStatus === 'checking' ? (
+                                <div className="py-8 flex flex-col items-center justify-center">
+                                    <Activity className="w-8 h-8 text-emerald-500 animate-spin mb-4" />
+                                    <p className="text-sm text-slate-400 font-mono">Checking system records...</p>
+                                </div>
+                            ) : tokenRequestStatus === 'pending_exists' ? (
+                                <div className="py-6 flex flex-col items-center text-center bg-amber-500/10 border border-amber-500/20 rounded-xl p-4">
+                                    <Clock className="w-10 h-10 text-amber-500 mb-3" />
+                                    <h4 className="text-amber-400 font-bold mb-1 tracking-wide">REQUEST PENDING</h4>
+                                    <p className="text-sm text-amber-500/80 leading-relaxed font-medium">
+                                        {tokenRequestMessage}
+                                    </p>
+                                </div>
+                            ) : (
+                                <>
+                                    <div>
+                                        <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                                            Number of Tokens
+                                        </label>
+                                        <input
+                                            type="number"
+                                            min="1"
+                                            max="200"
+                                            value={tokenRequestAmount}
+                                            onChange={(e) => setTokenRequestAmount(Number(e.target.value))}
+                                            className="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 text-white focus:border-emerald-500 focus:outline-none font-mono"
+                                            disabled={tokenRequestStatus === 'submitting' || tokenRequestStatus === 'success'}
+                                        />
+                                    </div>
+
+                                    {tokenRequestStatus === 'error' && (
+                                        <div className="bg-red-500/10 border border-red-500/20 p-3 rounded-lg flex items-center gap-2 text-red-400">
+                                            <AlertCircle className="w-4 h-4 shrink-0" />
+                                            <p className="text-sm font-medium">{tokenRequestMessage}</p>
+                                        </div>
+                                    )}
+                                    {tokenRequestStatus === 'success' && (
+                                        <div className="bg-emerald-500/10 border border-emerald-500/20 p-3 rounded-lg flex items-center gap-2 text-emerald-400">
+                                            <CheckCircle className="w-4 h-4 shrink-0" />
+                                            <p className="text-sm font-medium">{tokenRequestMessage}</p>
+                                        </div>
+                                    )}
+                                </>
+                            )}
+
+                            <div className="pt-4 flex gap-3">
+                                <button
+                                    onClick={() => {
+                                        setShowTokenRequest(false);
+                                        setTokenRequestStatus('idle');
+                                        setTokenRequestMessage('');
+                                    }}
+                                    className="flex-1 px-4 py-3 rounded-lg bg-slate-800 text-slate-300 font-semibold hover:bg-slate-700 transition-colors"
+                                    disabled={tokenRequestStatus === 'submitting'}
+                                >
+                                    Close
+                                </button>
+                                {tokenRequestStatus !== 'pending_exists' && tokenRequestStatus !== 'checking' && (
+                                    <button
+                                        onClick={handleTokenRequest}
+                                        className="flex-1 px-4 py-3 rounded-lg bg-emerald-600 text-white font-semibold hover:bg-emerald-500 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                                        disabled={tokenRequestStatus === 'submitting' || tokenRequestStatus === 'success'}
+                                    >
+                                        {tokenRequestStatus === 'submitting' ? (
+                                            <>
+                                                <Activity className="w-4 h-4 animate-spin" />
+                                                <span>Submitting...</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Command className="w-4 h-4" />
+                                                <span>Send Request</span>
+                                            </>
+                                        )}
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
             <VideoModal isOpen={showVideoModal} onClose={() => setShowVideoModal(false)} />
             {showRecommendationModal && (
                 <RecommendationModal
@@ -1442,7 +1661,7 @@ function App() {
                 user={visualTokenOverride !== null ? (user ? { ...user, tokens: visualTokenOverride } : user) : user}
                 loading={authLoading}
                 onLogout={handleLogout}
-                onShowPricing={() => setShowPricing(true)}
+                onShowPricing={() => setShowTokenRequest(true)}
                 onSignInClick={() => setShowLogin(true)}
                 onDashboardClick={() => setShowAdminDashboard(true)}
             />
@@ -1471,7 +1690,7 @@ function App() {
                                         loading={loading}
                                         version={VERSION}
                                         user={user}
-                                        onShowPricing={() => setShowPricing(true)}
+                                        onShowPricing={() => setShowTokenRequest(true)}
                                     />
                                 )}
 
@@ -1500,7 +1719,7 @@ function App() {
                                         handleCompile={handleCompile}
                                         handleAIInject={handleAIInject}
                                         reset={reset}
-                                        setShowPricing={setShowPricing}
+                                        setShowPricing={setShowTokenRequest}
                                         setShowRecommendationModal={setShowRecommendationModal}
                                         checkBalanceAndRedirect={checkBalanceAndRedirect}
                                         isLaunching={isLaunching}

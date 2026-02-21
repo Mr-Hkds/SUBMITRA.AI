@@ -164,6 +164,50 @@ export const addTokens = async (uid: string, amount: number) => {
     }
 };
 
+export const checkPendingRequest = async (uid: string): Promise<boolean> => {
+    try {
+        // To avoid bringing in complex query setup if missing index, we can just do a simple fetch if user volume is low,
+        // or properly use query. Assuming basic get functionality here based on structure, or we can use the backend
+        // For simplicity we will check via a REST call or a targeted query if imported.
+        // Let's import query and where from firestore at the top and do it cleanly.
+        const { query, where, getDocs, collection } = await import("firebase/firestore");
+        const q = query(collection(db, "tokenRequests"), where("userId", "==", uid), where("status", "==", "pending"));
+        const querySnapshot = await getDocs(q);
+        return !querySnapshot.empty;
+    } catch (e) {
+        console.error("Failed to check pending requests:", e);
+        return false;
+    }
+};
+
+export const submitTokenRequest = async (user: User, amount: number): Promise<{ success: boolean; message: string }> => {
+    try {
+        if (amount < 1 || amount > 200) {
+            return { success: false, message: "Request amount must be between 1 and 200." };
+        }
+
+        const hasPending = await checkPendingRequest(user.uid);
+        if (hasPending) {
+            return { success: false, message: "You already have a pending token request." };
+        }
+
+        const { collection, addDoc } = await import("firebase/firestore");
+        await addDoc(collection(db, "tokenRequests"), {
+            userId: user.uid,
+            userEmail: user.email || "Unknown",
+            userName: user.displayName || "Unknown User",
+            requestedAmount: amount,
+            status: "pending",
+            createdAt: serverTimestamp()
+        });
+
+        return { success: true, message: "Token request submitted successfully." };
+    } catch (e) {
+        console.error("Failed to submit token request:", e);
+        return { success: false, message: "An error occurred while submitting." };
+    }
+};
+
 export const recordTransaction = async (paymentId: string, amount: number, tokens: number, uid: string, packId: string) => {
     try {
         const transactionRef = doc(db, "transactions", paymentId);

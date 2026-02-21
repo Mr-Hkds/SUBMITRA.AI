@@ -60,29 +60,14 @@ export interface User {
   tokens: number;
 }
 
-export interface PaymentRequest {
-  id: string; // Document ID
+export interface TokenRequest {
+  id?: string;
   userId: string;
   userEmail: string;
-  amount: number;
-  utr: string; // Transaction ID
-  tokens: number; // Added for token based system
-  screenshotUrl?: string;
+  userName: string;
+  requestedAmount: number; // max 200
   status: 'pending' | 'approved' | 'rejected';
   createdAt: any;
   processedAt?: any;
 }
 
-export interface PaymentTransaction {
-  id?: string; // Document ID
-  userId: string;
-  userEmail: string;
-  paymentId: string;
-  orderId: string;
-  amount: number;
-  tokens: number;
-  status: 'success' | 'failed' | 'pending' | 'completed' | 'captured';
-  method: string;
-  metadata?: any;
-  createdAt: any;
-}

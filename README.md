@@ -3,6 +3,18 @@
 
 🔗 Live Demo: https://autoformai.vercel.app
 
+## 🛑 PROJECT HALTED
+
+**Due to ethical and academic concerns, the active development and public access to AutoForm AI have been permanently halted.** 
+This project was built for educational research but its capabilities raised valid concerns regarding academic integrity. Consequently:
+- **No further updates** will be published to this repository.
+- **The live website** is now restricted behind an administrative access key.
+- **Commercial token purchasing** (via Razorpay or any other means) has been completely disabled permanently.
+
+We appreciate the support from those who tested the platform respectfully, and remind all developers that with powerful automation comes the responsibility to use it ethically.
+
+---
+
 ## 🚀 Overview
 
 **AutoForm.AI** is a state-of-the-art automation platform designed to streamline complex workflows, manage mission-critical data, and provide real-time analytics through a premium, futuristic interface. Built with a focus on speed, reliability, and aesthetics, it serves as a central hub for digital operations.

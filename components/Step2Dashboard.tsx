@@ -1,14 +1,11 @@
-import React, { useMemo, useCallback } from 'react';
-import { Settings, CheckCircle, ArrowRight, Crown, AlertCircle, Target, ShieldCheck, Zap, Sparkles, Command, ExternalLink, Activity, RotateCcw } from 'lucide-react';
+import React, { useMemo, useCallback, useState } from 'react';
+import { Settings, CheckCircle, ArrowRight, Crown, AlertCircle, Target, ShieldCheck, Zap, Sparkles, Command, ExternalLink, Activity, RotateCcw, LayoutGrid, MessageSquare, Bot } from 'lucide-react';
 import { FormAnalysis, FormQuestion, QuestionType, User } from '../types';
 import QuestionCard from './QuestionCard';
 import TagInput from './TagInput';
 import { generateAIPrompt } from '../utils/parsingUtils';
 
-// Re-using Badge from App if not exported? 
-// Ideally should export Badge from a shared place. 
-// For now, I'll inline a simple Badge or assume it's passed or available. 
-// I'll define local Badge to avoid broken ref.
+// --- LOCAL BADGE ---
 const Badge = ({ children, color = "obsidian" }: { children?: React.ReactNode, color?: "obsidian" | "gold" | "premium" }) => {
     const styles = {
         obsidian: "bg-white/5 text-slate-400 border-white/5",
@@ -52,6 +49,8 @@ interface Step2DashboardProps {
     error: string | null;
 }
 
+type TabKey = 'settings' | 'questions' | 'ai';
+
 const Step2Dashboard = React.memo((props: Step2DashboardProps) => {
     const {
         analysis,
@@ -83,7 +82,10 @@ const Step2Dashboard = React.memo((props: Step2DashboardProps) => {
         error
     } = props;
 
-    const [questionSearch, setQuestionSearch] = React.useState('');
+    const [activeTab, setActiveTab] = useState<TabKey>('settings');
+    const [questionSearch, setQuestionSearch] = useState('');
+    const [showBanner, setShowBanner] = useState(true);
+    const [customCountActive, setCustomCountActive] = useState(false);
 
     // Update Single Question Handler
     const handleQuestionUpdate = useCallback((updatedQuestion: FormQuestion) => {
@@ -113,92 +115,76 @@ const Step2Dashboard = React.memo((props: Step2DashboardProps) => {
         !q.title.toLowerCase().includes('name')
     ), [analysis.questions]);
 
+    const hasAITab = relevantTextFields.length > 0;
+    const hasRequiredAI = relevantTextFields.some(q => q.required);
+
+    const tabs: { key: TabKey; label: string; icon: React.ReactNode; badge?: string }[] = useMemo(() => {
+        const t: { key: TabKey; label: string; icon: React.ReactNode; badge?: string }[] = [
+            { key: 'settings', label: 'Settings', icon: <Settings className="w-4 h-4" /> },
+            { key: 'questions', label: 'Questions', icon: <LayoutGrid className="w-4 h-4" />, badge: `${analysis.questions.length}` },
+        ];
+        if (hasAITab) {
+            t.push({
+                key: 'ai',
+                label: 'AI Assistant',
+                icon: <Bot className="w-4 h-4" />,
+                badge: hasRequiredAI ? 'Required' : undefined
+            });
+        }
+        return t;
+    }, [analysis.questions.length, hasAITab, hasRequiredAI]);
+
+    const presets = [5, 10, 15, 20, 30];
+    const isPreset = presets.includes(targetCount);
+
+    const speedLabel = delayMin === 0 ? 'Warp' : delayMin === 100 ? 'Intensive' : delayMin === 500 ? 'Efficient' : 'Realistic';
+
     return (
-        <section className="w-full animate-fade-in-up">
-            {/* Progress Indicator */}
-            <div className="mb-6 flex items-center justify-center gap-3">
-                <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-emerald-500/20 border-2 border-emerald-500 flex items-center justify-center">
-                        <CheckCircle className="w-4 h-4 text-emerald-400" />
-                    </div>
-                    <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider">Analyzed</span>
-                </div>
-                <div className="w-12 h-0.5 bg-gradient-to-r from-emerald-500 to-amber-500" />
-                <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-amber-500 border-2 border-amber-400 flex items-center justify-center animate-pulse">
-                        <span className="text-xs font-black text-white">2</span>
-                    </div>
-                    <span className="text-xs font-bold text-amber-400 uppercase tracking-wider">Configure</span>
-                </div>
-                <div className="w-12 h-0.5 bg-white/10" />
-                <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-white/5 border-2 border-white/20 flex items-center justify-center">
-                        <span className="text-xs font-black text-white/40">3</span>
-                    </div>
-                    <span className="text-xs font-bold text-white/40 uppercase tracking-wider">Launch</span>
-                </div>
-            </div>
+        <section className="w-full animate-fade-in-up pb-28">
 
-            {/* Instruction Banner */}
-            <div className="mb-6 glass-panel p-4 rounded-xl border-l-4 border-emerald-500 bg-gradient-to-r from-emerald-500/10 to-transparent animate-fade-in-up">
-                <div className="flex items-start gap-3">
-                    <div className="bg-emerald-500/20 p-2 rounded-lg">
-                        <ArrowRight className="w-5 h-5 text-emerald-400" />
-                    </div>
-                    <div className="flex-1">
-                        <h3 className="text-sm font-bold text-white mb-1 uppercase tracking-wide">Ready for Launch?</h3>
-                        <p className="text-xs text-slate-300 leading-relaxed">Review your settings below, then click the vibrant <span className="text-emerald-400 font-semibold">"Launch Mission"</span> button to begin.</p>
-                    </div>
-                </div>
-            </div>
-
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8 border-b border-white/5 pb-8">
-                <div>
-                    <h2 className="text-3xl font-serif font-bold text-white mb-2 tracking-tight">{analysis.title}</h2>
-                    <div className="flex gap-3">
-                        <Badge color="obsidian">{analysis.questions.length} Fields</Badge>
-                        <Badge color="gold">Algorithm Optimized</Badge>
-                        {user && (user.tokens || 0) < targetCount && (
-                            <button
-                                onClick={() => setShowPricing(true)}
-                                className="text-[10px] text-amber-500 hover:text-amber-400 font-bold uppercase tracking-widest flex items-center gap-1.5 animate-pulse ml-1"
-                            >
-                                <Crown className="w-3 h-3" />
-                                Low on tokens? Refill
-                            </button>
-                        )}
-                    </div>
-                </div>
-                <div className="flex flex-col items-end gap-2">
-                    <div className="flex gap-3">
-                        <button onClick={reset} className="glass-panel px-6 py-3 rounded-lg text-slate-400 text-sm hover:text-white transition">
-                            Cancel
+            {/* HEADER: Title + Badges */}
+            <div className="mb-6">
+                <h2 className="text-2xl md:text-3xl font-serif font-bold text-white mb-2 tracking-tight">{analysis.title}</h2>
+                <div className="flex flex-wrap gap-3 items-center">
+                    <Badge color="obsidian">{analysis.questions.length} Fields</Badge>
+                    <Badge color="gold">Algorithm Optimized</Badge>
+                    {user && (user.tokens || 0) < targetCount && (
+                        <button
+                            onClick={() => setShowPricing(true)}
+                            className="text-[10px] text-amber-500 hover:text-amber-400 font-bold uppercase tracking-widest flex items-center gap-1.5 animate-pulse"
+                        >
+                            <Crown className="w-3 h-3" />
+                            Low on tokens? Refill
                         </button>
-                        <div className="relative">
-                            <div className="absolute -inset-2 bg-emerald-500/10 rounded-2xl blur-xl animate-pulse group-hover:bg-emerald-500/20 transition-colors" />
-                            <button
-                                onClick={handleCompile}
-                                disabled={isLaunching}
-                                className={`relative group flex items-center gap-3 px-6 py-3.5 bg-gradient-to-r from-emerald-500/90 to-teal-600/90 rounded-xl shadow-lg border border-emerald-400/20 transition-all duration-200 ${isLaunching ? 'scale-95 brightness-75' : 'hover:scale-[1.02] active:scale-[0.98]'}`}
-                            >
-                                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.15)_0%,transparent_70%)] opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-xl" />
-                                <div className="flex items-center gap-1.5 px-2 py-0.5 bg-black/20 rounded-md border border-white/10">
-                                    <div className="w-1 h-1 rounded-full bg-emerald-400 animate-pulse" />
-                                    <span className="text-[9px] font-bold text-white uppercase tracking-wider">Ready</span>
-                                </div>
-                                <div className="bg-black/15 p-2 rounded-lg group-hover:bg-black/25 transition-colors">
-                                    <Zap className="w-5 h-5 text-white" />
-                                </div>
-                                <div className="flex flex-col items-start flex-1">
-                                    <span className="text-[10px] font-semibold text-emerald-100/70 uppercase tracking-wide">Ready to Start</span>
-                                    <span className="text-base font-bold text-white uppercase tracking-wide">Launch Mission</span>
-                                </div>
-                            </button>
-                        </div>
-                    </div>
+                    )}
                 </div>
             </div>
 
+            {/* SMART DEFAULTS BANNER */}
+            {showBanner && (
+                <div className="mb-6 relative overflow-hidden rounded-xl border border-emerald-500/20 bg-gradient-to-r from-emerald-500/[0.08] to-teal-500/[0.04] p-4 animate-fade-in-up">
+                    <div className="flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-3">
+                            <div className="bg-emerald-500/20 p-2.5 rounded-lg flex-shrink-0">
+                                <Sparkles className="w-5 h-5 text-emerald-400" />
+                            </div>
+                            <div>
+                                <p className="text-sm font-semibold text-white">Smart defaults configured</p>
+                                <p className="text-xs text-slate-400 mt-0.5">Everything is ready to go. Adjust settings below or hit <span className="text-emerald-400 font-semibold">Launch</span> at the bottom to start.</p>
+                            </div>
+                        </div>
+                        <button
+                            onClick={() => setShowBanner(false)}
+                            className="text-slate-500 hover:text-white transition-colors text-lg px-2 flex-shrink-0"
+                            aria-label="Dismiss banner"
+                        >
+                            ×
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* ERROR DISPLAY */}
             {error && (
                 <div className="mb-6 flex items-center gap-3 text-red-200 bg-red-950/80 border border-red-500/30 px-6 py-4 rounded-xl text-sm font-medium backdrop-blur-xl shadow-xl">
                     <AlertCircle className="w-5 h-5 flex-shrink-0" />
@@ -206,170 +192,194 @@ const Step2Dashboard = React.memo((props: Step2DashboardProps) => {
                 </div>
             )}
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* CONFIGURATION SIDEBAR */}
-                <div className="space-y-6">
-                    <div className="glass-panel p-6 rounded-xl space-y-8">
-                        <div className="flex items-center gap-2 text-sm font-bold text-white uppercase tracking-wider">
-                            <Settings className="w-4 h-4 text-amber-500" /> Runtime Config
+            {/* TAB BAR */}
+            <div className="flex gap-1 p-1 bg-white/[0.03] rounded-xl border border-white/5 mb-6">
+                {tabs.map(tab => (
+                    <button
+                        key={tab.key}
+                        onClick={() => setActiveTab(tab.key)}
+                        className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg text-xs font-bold uppercase tracking-wider transition-all duration-200 active:scale-[0.97] ${activeTab === tab.key
+                                ? 'bg-white/10 text-white shadow-lg border border-white/10'
+                                : 'text-slate-500 hover:text-slate-300 hover:bg-white/[0.03] border border-transparent'
+                            }`}
+                    >
+                        {tab.icon}
+                        <span className="hidden sm:inline">{tab.label}</span>
+                        {tab.badge && (
+                            <span className={`text-[9px] px-1.5 py-0.5 rounded-md font-mono ${tab.badge === 'Required'
+                                    ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                                    : 'bg-white/5 text-slate-500'
+                                }`}>
+                                {tab.badge}
+                            </span>
+                        )}
+                    </button>
+                ))}
+            </div>
+
+            {/* ─────────────────────────────────────── */}
+            {/* TAB: SETTINGS                           */}
+            {/* ─────────────────────────────────────── */}
+            {activeTab === 'settings' && (
+                <div className="space-y-8 animate-fade-in-up">
+
+                    {/* RESPONSE COUNT */}
+                    <div className="glass-panel p-6 rounded-xl">
+                        <div className="flex items-center justify-between mb-5">
+                            <div className="flex items-center gap-2 text-sm font-bold text-white uppercase tracking-wider">
+                                <Target className="w-4 h-4 text-emerald-500" />
+                                Number of Responses
+                            </div>
+                            <button
+                                onClick={() => setShowRecommendationModal(true)}
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-500 hover:bg-amber-500/20 transition-all active:scale-95"
+                            >
+                                <ShieldCheck className="w-3 h-3" />
+                                <span className="text-[9px] font-bold uppercase tracking-wider">Academic Guide</span>
+                            </button>
                         </div>
 
-                        <div className="mt-4 mb-4">
-                            <label className="block text-sm font-bold text-white uppercase tracking-widest mb-4 flex items-center justify-between gap-2">
+                        {/* PRESET PILLS */}
+                        <div className="flex flex-wrap gap-2">
+                            {presets.map(preset => (
+                                <button
+                                    key={preset}
+                                    onClick={() => {
+                                        checkBalanceAndRedirect(preset);
+                                        setTargetCount(preset);
+                                        setCustomCountActive(false);
+                                    }}
+                                    className={`px-5 py-3 rounded-xl text-sm font-mono font-bold transition-all duration-200 active:scale-95 border ${targetCount === preset && !customCountActive
+                                            ? 'bg-amber-500 text-black border-amber-400 shadow-[0_0_20px_rgba(245,158,11,0.25)]'
+                                            : 'bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white border-white/5 hover:border-white/10'
+                                        }`}
+                                >
+                                    {preset}
+                                </button>
+                            ))}
+
+                            {/* CUSTOM PILL */}
+                            <button
+                                onClick={() => setCustomCountActive(true)}
+                                className={`flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-mono font-bold transition-all duration-200 active:scale-95 border ${customCountActive || (!isPreset && !isNaN(targetCount))
+                                        ? 'bg-amber-500 text-black border-amber-400 shadow-[0_0_20px_rgba(245,158,11,0.25)]'
+                                        : 'bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white border-white/5 hover:border-white/10'
+                                    }`}
+                            >
+                                Custom:
+                                <input
+                                    type="number"
+                                    min={1}
+                                    max={30}
+                                    value={customCountActive || !isPreset ? (isNaN(targetCount) ? '' : targetCount) : ''}
+                                    placeholder="—"
+                                    onClick={(e) => { e.stopPropagation(); setCustomCountActive(true); }}
+                                    onChange={(e) => {
+                                        setCustomCountActive(true);
+                                        if (e.target.value === '') {
+                                            setTargetCount(NaN);
+                                            return;
+                                        }
+                                        const val = Math.min(Number(e.target.value), 30);
+                                        checkBalanceAndRedirect(val);
+                                        setTargetCount(val);
+                                    }}
+                                    className="w-10 bg-transparent text-center outline-none font-mono font-bold placeholder:text-current/40 [-moz-appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                />
+                            </button>
+                        </div>
+
+                        {/* TOKEN WARNING */}
+                        {user && targetCount > (user.tokens || 0) && (
+                            <div className="mt-4 bg-red-900/40 text-red-200 text-xs px-4 py-3 rounded-xl border border-red-500/30 animate-fade-in flex items-center justify-between">
                                 <span className="flex items-center gap-2">
-                                    <Target className="w-4 h-4 text-emerald-500" />
-                                    Number of Responses
+                                    <AlertCircle className="w-4 h-4" />
+                                    Insufficient Tokens (Current: {user.tokens})
                                 </span>
                                 <button
-                                    onClick={() => setShowRecommendationModal(true)}
-                                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-500 hover:bg-amber-500/20 transition-all active:scale-95"
+                                    onClick={() => setShowPricing(true)}
+                                    className="bg-red-500 text-white px-3 py-1 rounded-lg font-bold text-[10px] uppercase tracking-wider hover:bg-red-400 transition-colors"
                                 >
-                                    <ShieldCheck className="w-3 h-3" />
-                                    <span className="text-[9px] font-bold uppercase tracking-wider">Academic Guide</span>
+                                    Upgrade
                                 </button>
-                            </label>
-
-                            <div className="flex flex-col gap-6">
-                                <div className="flex items-center gap-4">
-                                    <button
-                                        onClick={() => setTargetCount(Math.max(1, (targetCount || 0) - 10))}
-                                        className="w-14 h-14 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center font-bold text-2xl transition-all active:scale-90 border border-slate-700"
-                                    >
-                                        −
-                                    </button>
-                                    <input
-                                        type="number"
-                                        min={1}
-                                        max={30}
-                                        value={isNaN(targetCount) ? '' : targetCount}
-                                        onChange={(e) => {
-                                            if (e.target.value === '') {
-                                                setTargetCount(NaN);
-                                                return;
-                                            }
-                                            const val = Math.min(Number(e.target.value), 30);
-                                            checkBalanceAndRedirect(val);
-                                            setTargetCount(val);
-                                        }}
-                                        className="flex-1 h-14 bg-slate-900/50 border-2 border-slate-700 rounded-2xl text-center text-amber-400 font-mono font-bold text-2xl focus:outline-none focus:border-amber-500 transition-colors shadow-inner"
-                                    />
-                                    <button
-                                        onClick={() => {
-                                            const newVal = Math.min(30, (targetCount || 0) + 10);
-                                            checkBalanceAndRedirect(newVal);
-                                            setTargetCount(newVal);
-                                        }}
-                                        className="w-14 h-14 rounded-2xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 hover:text-amber-400 flex items-center justify-center font-bold text-2xl transition-all active:scale-90 border border-amber-500/30"
-                                    >
-                                        +
-                                    </button>
-                                </div>
-
-                                <div className="grid grid-cols-5 gap-2">
-                                    {[5, 10, 15, 20, 30].map((preset) => (
-                                        <button
-                                            key={preset}
-                                            onClick={() => {
-                                                checkBalanceAndRedirect(preset);
-                                                setTargetCount(preset);
-                                            }}
-                                            className={`py-3 rounded-xl text-xs font-mono font-bold transition-all active:scale-95 border ${targetCount === preset
-                                                ? 'bg-amber-500 text-black border-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.3)]'
-                                                : 'bg-slate-800/50 text-slate-400 hover:bg-slate-700 hover:text-white border-slate-700'
-                                                }`}
-                                        >
-                                            {preset}
-                                        </button>
-                                    ))}
-                                </div>
                             </div>
+                        )}
+                    </div>
 
-                            {user && targetCount > (user.tokens || 0) && (
-                                <div className="mt-4 bg-red-900/40 text-red-200 text-xs px-4 py-3 rounded-xl border border-red-500/30 animate-fade-in flex items-center justify-between">
-                                    <span className="flex items-center gap-2">
-                                        <AlertCircle className="w-4 h-4" />
-                                        Insufficient Tokens (Current: {user.tokens})
-                                    </span>
+                    {/* INTERACTION SPEED */}
+                    <div className="glass-panel p-6 rounded-xl">
+                        <div className="flex items-center justify-between mb-5">
+                            <div className="flex items-center gap-2 text-sm font-bold text-white uppercase tracking-wider">
+                                <Zap className="w-4 h-4 text-amber-500" />
+                                Interaction Speed
+                            </div>
+                            <span className={`text-xs font-mono font-bold px-3 py-1 rounded-lg border ${delayMin === 0
+                                    ? 'text-fuchsia-400 bg-fuchsia-500/10 border-fuchsia-500/20'
+                                    : delayMin <= 100
+                                        ? 'text-red-400 bg-red-500/10 border-red-500/20'
+                                        : delayMin <= 500
+                                            ? 'text-amber-400 bg-amber-500/10 border-amber-500/20'
+                                            : 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20'
+                                }`}>
+                                {speedLabel} ({delayMin}ms)
+                            </span>
+                        </div>
+
+                        <div className="grid grid-cols-3 gap-3">
+                            {[
+                                { mode: 'auto' as const, delay: null, label: 'Best Choice', desc: 'Recommended', color: 'emerald' },
+                                { mode: 'manual' as const, delay: 1000, label: 'Steady', desc: 'Human-like', color: 'amber' },
+                                { mode: 'manual' as const, delay: 0, label: 'Warp Drive', desc: '0 Latency', color: 'fuchsia' },
+                            ].map(opt => {
+                                const isActive = opt.mode === 'auto'
+                                    ? speedMode === 'auto'
+                                    : speedMode === 'manual' && (opt.delay === 0 ? delayMin === 0 : delayMin >= 1000);
+
+                                const colorMap: Record<string, string> = {
+                                    emerald: isActive ? 'bg-emerald-500/15 border-emerald-500 text-white shadow-[0_0_20px_rgba(16,185,129,0.1)]' : '',
+                                    amber: isActive ? 'bg-amber-500/15 border-amber-500 text-white shadow-[0_0_20px_rgba(245,158,11,0.1)]' : '',
+                                    fuchsia: isActive ? 'bg-fuchsia-500/15 border-fuchsia-500 text-white shadow-[0_0_20px_rgba(217,70,239,0.1)]' : '',
+                                };
+
+                                return (
                                     <button
-                                        onClick={() => setShowPricing(true)}
-                                        className="bg-red-500 text-white px-3 py-1 rounded-lg font-bold text-[10px] uppercase tracking-wider hover:bg-red-400 transition-colors"
+                                        key={opt.label}
+                                        onClick={() => {
+                                            if (opt.mode === 'auto') {
+                                                setSpeedMode('auto');
+                                            } else {
+                                                setSpeedMode('manual');
+                                                setDelayMin(opt.delay!);
+                                            }
+                                        }}
+                                        className={`flex flex-col items-center py-4 px-2 rounded-xl border transition-all duration-200 active:scale-95 ${isActive
+                                                ? colorMap[opt.color]
+                                                : 'bg-white/[0.03] border-white/5 text-slate-500 hover:bg-white/[0.06] hover:border-white/10 hover:text-slate-300'
+                                            }`}
                                     >
-                                        Upgrade
+                                        <span className="text-[10px] font-bold uppercase tracking-wider mb-1">{opt.label}</span>
+                                        <span className="text-[8px] opacity-60">{opt.desc}</span>
                                     </button>
-                                </div>
-                            )}
+                                );
+                            })}
                         </div>
 
-                        <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-[10px] text-red-200/80 leading-relaxed font-mono">
-                            <span className="text-red-400 font-bold block mb-1 flex items-center gap-1.5">
-                                <ShieldCheck className="w-3 h-3" />
-                                SYSTEM SECURITY PROTOCOL
-                            </span>
-                            To maintain account integrity, avoid exceeding 100 responses per hour per IP address.
-                        </div>
+                        {speedMode === 'auto' && (
+                            <div className="mt-3 flex items-center gap-2 text-[10px] text-emerald-400 bg-emerald-500/5 px-3 py-2 rounded-lg border border-emerald-500/10">
+                                <CheckCircle className="w-3 h-3" />
+                                Speed will be automatically optimized for safety
+                            </div>
+                        )}
                     </div>
 
-                    <div className="flex justify-between items-center text-xs font-bold text-white uppercase tracking-widest">
-                        <div className="flex items-center gap-2">
-                            <Zap className="w-4 h-4 text-amber-500" /> Interaction Speed
-                        </div>
-                        <div className="flex items-center gap-2">
-                            {speedMode === 'auto' && (
-                                <span className="text-[10px] bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/20">
-                                    AUTO-OPTIMIZED
-                                </span>
-                            )}
-                            <span className={`font-mono ${delayMin === 0 ? 'text-fuchsia-400' : delayMin <= 100 ? 'text-red-400' : delayMin <= 500 ? 'text-amber-400' : 'text-emerald-400'}`}>
-                                {delayMin === 0 ? 'Warp' : delayMin === 100 ? 'Intensive' : delayMin === 500 ? 'Efficient' : 'Realistic'} ({delayMin}ms)
-                            </span>
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-3 gap-2">
-                        <button
-                            onClick={() => setSpeedMode('auto')}
-                            className={`flex flex-col items-center py-3 px-1 rounded-xl border transition-all active:scale-95 col-span-1 ${speedMode === 'auto'
-                                ? 'bg-emerald-500/20 border-emerald-500 text-white shadow-lg'
-                                : 'bg-white/5 border-white/5 text-slate-500 hover:bg-white/10 hover:border-white/10'
-                                }`}
-                        >
-                            <span className="text-[9px] font-bold uppercase tracking-wider mb-0.5">Best Choice</span>
-                            <span className="text-[7px] opacity-60 text-center leading-tight">Recommended</span>
-                        </button>
-                        <button
-                            onClick={() => { setSpeedMode('manual'); setDelayMin(1000); }}
-                            className={`flex flex-col items-center py-3 px-1 rounded-xl border transition-all active:scale-95 ${speedMode === 'manual' && delayMin >= 1000
-                                ? 'bg-amber-500/20 border-amber-500 text-white shadow-lg'
-                                : 'bg-white/5 border-white/5 text-slate-500 hover:bg-white/10 hover:border-white/10'
-                                }`}
-                        >
-                            <span className="text-[9px] font-bold uppercase tracking-wider mb-0.5">Steady</span>
-                            <span className="text-[7px] opacity-60 text-center leading-tight">Human-Like</span>
-                        </button>
-                        <button
-                            onClick={() => { setSpeedMode('manual'); setDelayMin(0); }}
-                            className={`flex flex-col items-center py-3 px-1 rounded-xl border transition-all active:scale-95 ${speedMode === 'manual' && delayMin === 0
-                                ? 'bg-fuchsia-500/20 border-fuchsia-500 text-white shadow-lg'
-                                : 'bg-white/5 border-white/5 text-slate-500 hover:bg-white/10 hover:border-white/10'
-                                }`}
-                        >
-                            <span className="text-[9px] font-bold uppercase tracking-wider mb-0.5">Warp Drive</span>
-                            <span className="text-[7px] opacity-60 text-center leading-tight">0 Latency</span>
-                        </button>
-                    </div>
-
-                </div>
-
-                {/* MAIN DASHBOARD (Questions & AI) */}
-                <div className="lg:col-span-2 flex flex-col gap-6">
-                    {/* Name Source Selection */}
+                    {/* NAME SOURCE (only show if form has name fields) */}
                     {analysis.questions.some(q => q.title.toLowerCase().includes('name')) && (
-                        <div className="glass-panel p-6 rounded-xl space-y-4 border-l-2 border-l-amber-500/50 bg-amber-500/[0.02]">
-                            <div className="flex items-center justify-between mb-2">
+                        <div className="glass-panel p-6 rounded-xl">
+                            <div className="flex items-center justify-between mb-5">
                                 <div className="flex items-center gap-2 text-sm font-bold text-white uppercase tracking-wider">
-                                    <Command className="w-4 h-4 text-amber-500" /> Identity Generator Configuration
+                                    <Command className="w-4 h-4 text-amber-500" />
+                                    Name Generator
                                 </div>
-                                <span className="text-[9px] text-amber-500 font-bold bg-amber-500/10 px-2 py-1 rounded">REQUIRED CONFIGURATION</span>
                             </div>
 
                             <div className="grid grid-cols-3 gap-3">
@@ -381,149 +391,227 @@ const Step2Dashboard = React.memo((props: Step2DashboardProps) => {
                                     <button
                                         key={opt.id}
                                         onClick={() => setNameSource(opt.id as any)}
-                                        className={`text-[10px] font-mono group relative overflow-hidden flex flex-col items-center py-4 rounded-xl border transition-all ${nameSource === opt.id
-                                            ? 'bg-amber-500/20 border-amber-500 text-white shadow-[0_0_20px_rgba(245,158,11,0.15)]'
-                                            : 'bg-white/5 border-white/5 text-slate-500 hover:bg-white/10 hover:border-white/10'
+                                        className={`relative overflow-hidden flex flex-col items-center py-4 rounded-xl border transition-all duration-200 active:scale-95 ${nameSource === opt.id
+                                                ? 'bg-amber-500/15 border-amber-500 text-white shadow-[0_0_20px_rgba(245,158,11,0.1)]'
+                                                : 'bg-white/[0.03] border-white/5 text-slate-500 hover:bg-white/[0.06] hover:border-white/10 hover:text-slate-300'
                                             }`}
                                     >
-                                        {nameSource === opt.id && <div className="absolute inset-x-0 bottom-0 h-1 bg-amber-500" />}
-                                        <span className="font-bold tracking-widest uppercase mb-1">{opt.label}</span>
-                                        <span className="opacity-50 text-[8px] tracking-tight">{opt.desc}</span>
+                                        {nameSource === opt.id && <div className="absolute inset-x-0 bottom-0 h-0.5 bg-amber-500" />}
+                                        <span className="text-[10px] font-bold tracking-widest uppercase mb-1">{opt.label}</span>
+                                        <span className="text-[8px] opacity-60">{opt.desc}</span>
                                     </button>
                                 ))}
                             </div>
 
                             {nameSource === 'custom' && (
-                                <TagInput
-                                    value={customNamesRaw}
-                                    onChange={(val) => setCustomNamesRaw(val)}
-                                    placeholder="Enter names and press Enter or Comma..."
-                                />
+                                <div className="mt-4">
+                                    <TagInput
+                                        value={customNamesRaw}
+                                        onChange={(val) => setCustomNamesRaw(val)}
+                                        placeholder="Enter names and press Enter or Comma..."
+                                    />
+                                </div>
                             )}
                         </div>
                     )}
 
-                    {/* AI DATA INJECTION */}
-                    {relevantTextFields.length > 0 && (
-                        <div className={`glass-panel p-6 rounded-xl space-y-4 border-l-2 relative overflow-hidden ${parsingError ? 'border-red-500 bg-red-500/5' : relevantTextFields.some(q => q.required) ? 'border-amber-500/50' : 'border-emerald-500/50'}`}>
-                            <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
-                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
-                                <div className="flex items-center gap-2 text-sm font-bold text-white uppercase tracking-wider">
-                                    <Sparkles className="w-4 h-4 text-emerald-500" /> AI Data Injection
-                                    {relevantTextFields.some(q => q.required) ? (
-                                        <span className="text-[10px] text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded ml-2 border border-amber-500/20 shadow-sm animate-pulse">REQUIRED CONFIGURATION</span>
-                                    ) : (
-                                        <span className="text-[10px] text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded ml-2 border border-emerald-500/20 shadow-sm opacity-80">OPTIONAL CONFIGURATION</span>
-                                    )}
+                    {/* SECURITY NOTE */}
+                    <div className="p-3 rounded-lg bg-red-500/5 border border-red-500/10 text-[10px] text-red-200/60 leading-relaxed font-mono flex items-start gap-2">
+                        <ShieldCheck className="w-3 h-3 text-red-400 mt-0.5 flex-shrink-0" />
+                        <span>To maintain account integrity, avoid exceeding 100 responses per hour per IP address.</span>
+                    </div>
+                </div>
+            )}
+
+            {/* ─────────────────────────────────────── */}
+            {/* TAB: QUESTIONS                          */}
+            {/* ─────────────────────────────────────── */}
+            {activeTab === 'questions' && (
+                <div className="animate-fade-in-up">
+                    {/* Search + Tip */}
+                    <div className="space-y-4 mb-6">
+                        <div className="relative">
+                            <Command className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                            <input
+                                type="text"
+                                placeholder="Search fields (e.g. 'Age', 'Experience')..."
+                                value={questionSearch}
+                                onChange={(e) => setQuestionSearch(e.target.value)}
+                                className="w-full bg-white/[0.03] border border-white/10 rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder:text-slate-500 focus:border-amber-500/50 focus:ring-4 focus:ring-amber-500/10 outline-none transition-all"
+                            />
+                        </div>
+
+                        <div className="p-3 rounded-lg bg-amber-500/5 border border-amber-500/10 flex items-start gap-3">
+                            <Settings className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
+                            <p className="text-xs text-amber-200/70 leading-relaxed">
+                                Adjust the weightage percentages to control how responses are distributed. Totals should equal 100% for each field.
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* Question Cards  */}
+                    <div className="space-y-4">
+                        {filteredQuestions.map((q, idx) => (
+                            <QuestionCard
+                                key={q.id}
+                                index={idx}
+                                question={q}
+                                onUpdate={handleQuestionUpdate}
+                                customResponse={customResponses[q.id]}
+                                onCustomResponseChange={(val) => handleCustomResponseChange(q.id, val)}
+                            />
+                        ))}
+                    </div>
+
+                    {filteredQuestions.length === 0 && questionSearch && (
+                        <div className="text-center py-16 text-slate-500">
+                            <p className="text-sm">No fields matching "{questionSearch}"</p>
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* ─────────────────────────────────────── */}
+            {/* TAB: AI ASSISTANT                       */}
+            {/* ─────────────────────────────────────── */}
+            {activeTab === 'ai' && hasAITab && (
+                <div className="animate-fade-in-up">
+                    <div className={`glass-panel p-6 rounded-xl space-y-6 border-l-2 ${parsingError ? 'border-red-500' : hasRequiredAI ? 'border-amber-500/50' : 'border-emerald-500/50'
+                        }`}>
+                        {/* HEADER */}
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <div>
+                                <h3 className="text-base font-bold text-white mb-1 flex items-center gap-2">
+                                    <Sparkles className="w-4 h-4 text-emerald-500" />
+                                    AI-Generated Answers
+                                </h3>
+                                <p className="text-xs text-slate-400">
+                                    Need unique text responses? Let ChatGPT generate them for you.
+                                </p>
+                            </div>
+                            {hasRequiredAI && (
+                                <span className="text-[10px] text-amber-500 bg-amber-500/10 px-3 py-1.5 rounded-lg border border-amber-500/20 font-bold uppercase tracking-wider flex-shrink-0 animate-pulse">
+                                    Required
+                                </span>
+                            )}
+                        </div>
+
+                        {/* STEPS */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {/* Instructions */}
+                            <div className="space-y-4">
+                                <div className="space-y-3">
+                                    <div className="flex items-start gap-3">
+                                        <div className="w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                            <span className="text-[10px] font-bold text-emerald-400">1</span>
+                                        </div>
+                                        <p className="text-sm text-slate-300">
+                                            Click the button below to copy a ready-made prompt and open ChatGPT.
+                                        </p>
+                                    </div>
+                                    <div className="flex items-start gap-3">
+                                        <div className="w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                            <span className="text-[10px] font-bold text-emerald-400">2</span>
+                                        </div>
+                                        <p className="text-sm text-slate-300">
+                                            Paste the prompt in ChatGPT, copy its JSON response, and paste it on the right.
+                                        </p>
+                                    </div>
+                                    <div className="flex items-start gap-3">
+                                        <div className="w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                            <span className="text-[10px] font-bold text-emerald-400">3</span>
+                                        </div>
+                                        <p className="text-sm text-slate-300">
+                                            Hit "Apply AI Data" and you're done!
+                                        </p>
+                                    </div>
                                 </div>
+
                                 <button
                                     onClick={() => {
                                         const prompt = generateAIPrompt(analysis.title, analysis.description, analysis.questions, targetCount);
                                         navigator.clipboard.writeText(prompt);
                                         window.open('https://chatgpt.com', '_blank');
-                                        alert("System: Prompt copied to clipboard. Redirecting to ChatGPT for data synthesis.");
+                                        alert("Prompt copied to clipboard! Paste it in ChatGPT.");
                                     }}
-                                    className="gold-button px-6 py-3 rounded-xl text-xs font-bold uppercase tracking-widest flex items-center gap-2 shadow-lg shadow-amber-500/20 active:scale-95 transition-all"
+                                    className="w-full gold-button px-6 py-3.5 rounded-xl text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg shadow-amber-500/20 active:scale-95 transition-all"
                                 >
-                                    <ExternalLink className="w-4 h-4" /> Synchronize with ChatGPT
+                                    <ExternalLink className="w-4 h-4" />
+                                    Copy Prompt & Open ChatGPT
+                                </button>
+
+                                <button
+                                    onClick={handleAIInject}
+                                    className="w-full py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs uppercase tracking-widest transition-all shadow-lg active:scale-95 flex items-center justify-center gap-2 border border-emerald-400/20"
+                                >
+                                    <Activity className="w-4 h-4" />
+                                    Apply AI Data
                                 </button>
                             </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
-                                <div className="space-y-4">
-                                    <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-3">
-                                        <div className="flex items-center gap-2 text-[10px] font-bold text-emerald-400 uppercase tracking-widest">
-                                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                            Protocol Instructions
-                                        </div>
-                                       <p className="text-[11px] text-slate-400 leading-relaxed font-medium">
-  Follow these steps carefully:
-  <br />
-  1. Click <strong>Synchronise with ChatGPT</strong> — the prompt is copied automatically.
-  <br />
-  2. Paste the prompt into ChatGPT and run it.
-  <br />
-  3. Copy the generated JSON exactly as provided.
-  <br />
-  4. Paste the JSON into the input box below.
-  <br />
-  5. Click <strong>Inject Synthesized Data</strong> to process the data.
-</p>
-                                    </div>
-                                    <button
-                                        onClick={handleAIInject}
-                                        className="w-full py-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs uppercase tracking-widest transition-all shadow-lg active:scale-95 flex items-center justify-center gap-2 border border-emerald-400/20"
-                                    >
-                                        <Activity className="w-4 h-4" /> Inject Synthesized Data
-                                    </button>
-                                </div>
-                                <div className="relative">
-                                    <textarea
-                                        value={aiPromptData}
-                                        onChange={(e) => {
-                                            setAiPromptData(e.target.value);
-                                            if (parsingError) setParsingError(null);
-                                        }}
-                                        placeholder='Paste JSON response here...'
-                                        className={`w-full h-full min-h-[150px] bg-[#020617] border-2 rounded-2xl p-4 text-xs text-white font-mono focus:outline-none transition-all resize-none shadow-inner ${parsingError ? 'border-red-500/50 focus:border-red-500' : 'border-white/5 focus:border-emerald-500/50'}`}
-                                    />
-                                    {parsingError && (
-                                        <div className="absolute bottom-4 right-4 text-[10px] text-red-400 font-bold bg-black/90 px-3 py-1.5 rounded-lg backdrop-blur border border-red-500/30 shadow-xl">
-                                            {parsingError}
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-
-                    {/* DATA PREVIEW / DEMOGRAPHICS */}
-                    <div className="glass-panel p-1 rounded-xl flex flex-col h-[600px] border-t border-t-white/10 relative">
-                        <div className="absolute top-0 inset-x-0 bg-amber-500/10 border-b border-amber-500/10 p-2 flex items-center justify-center gap-2 text-[10px] text-amber-300 font-mono z-20 backdrop-blur-sm">
-                            <Activity className="w-3 h-3 text-amber-400" />
-                            <span>Data Synthesis & Distribution Control</span>
-                        </div>
-
-                        <div className="px-6 py-4 mt-12 border-b border-white/5 flex flex-col gap-4 bg-white/[0.02]">
-                            <div className="flex justify-between items-center">
-                                <span className="text-xs font-bold text-slate-300 uppercase tracking-widest">Field Distributions</span>
-                                <div className="relative group">
-                                    <Settings className="w-4 h-4 text-slate-600 group-hover:text-amber-500 transition-colors" />
-                                </div>
-                            </div>
-
-                            <div className="flex flex-col gap-3">
-                                <div className="relative">
-                                    <Command className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500" />
-                                    <input
-                                        type="text"
-                                        placeholder="Search fields (e.g. 'Age', 'Experience')..."
-                                        value={questionSearch}
-                                        onChange={(e) => setQuestionSearch(e.target.value)}
-                                        className="w-full bg-[#050505] border border-white/10 rounded-lg pl-9 pr-4 py-2 text-[10px] text-white font-mono focus:border-amber-500/50 outline-none transition-all"
-                                    />
-                                </div>
-
-                                <div className="p-3 rounded-lg bg-amber-500/5 border border-amber-500/20 flex items-start gap-3">
-                                    <Settings className="w-4 h-4 text-amber-500 mt-0.5" />
-                                    <p className="text-[10px] text-amber-200/70 leading-relaxed font-sans">
-                                        <strong>System Guidance:</strong> You may adjust the weightage percentages below to maintain a realistic distribution. Ensure the total for each field equals 100% for optimal consistency.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
-                            {filteredQuestions.map((q, idx) => (
-                                <QuestionCard
-                                    key={q.id}
-                                    index={idx}
-                                    question={q}
-                                    onUpdate={handleQuestionUpdate}
-                                    customResponse={customResponses[q.id]}
-                                    onCustomResponseChange={(val) => handleCustomResponseChange(q.id, val)}
+                            {/* Textarea */}
+                            <div className="relative">
+                                <textarea
+                                    value={aiPromptData}
+                                    onChange={(e) => {
+                                        setAiPromptData(e.target.value);
+                                        if (parsingError) setParsingError(null);
+                                    }}
+                                    placeholder='Paste ChatGPT JSON response here...'
+                                    className={`w-full h-full min-h-[250px] bg-[#020617] border-2 rounded-2xl p-4 text-xs text-white font-mono focus:outline-none transition-all resize-none shadow-inner ${parsingError ? 'border-red-500/50 focus:border-red-500' : 'border-white/5 focus:border-emerald-500/50'
+                                        }`}
                                 />
-                            ))}
+                                {parsingError && (
+                                    <div className="absolute bottom-4 right-4 text-[10px] text-red-400 font-bold bg-black/90 px-3 py-1.5 rounded-lg backdrop-blur border border-red-500/30 shadow-xl max-w-[80%] truncate">
+                                        {parsingError}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ─────────────────────────────────────── */}
+            {/* STICKY LAUNCH BAR                       */}
+            {/* ─────────────────────────────────────── */}
+            <div className="fixed bottom-0 left-0 right-0 z-50 animate-fade-in-up">
+                <div className="max-w-5xl mx-auto px-4 pb-4">
+                    <div className="relative overflow-hidden bg-slate-900/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl shadow-black/50 px-5 py-3.5 flex items-center justify-between gap-4">
+                        {/* Subtle gradient shine */}
+                        <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/[0.03] via-transparent to-amber-500/[0.03] pointer-events-none" />
+
+                        {/* Left: Form info */}
+                        <div className="flex items-center gap-3 relative z-10 min-w-0">
+                            <div className="hidden sm:flex items-center gap-2 text-xs text-slate-400">
+                                <span className="truncate max-w-[180px] font-medium text-slate-300">{analysis.title}</span>
+                                <span className="text-slate-600">·</span>
+                                <span className="font-mono text-amber-400 font-bold">{isNaN(targetCount) ? '—' : targetCount}</span>
+                                <span>responses</span>
+                                <span className="text-slate-600">·</span>
+                                <span className={`font-mono ${delayMin === 0 ? 'text-fuchsia-400' : delayMin <= 500 ? 'text-amber-400' : 'text-emerald-400'
+                                    }`}>{speedMode === 'auto' ? 'Auto' : speedLabel}</span>
+                            </div>
+                            <button
+                                onClick={reset}
+                                className="text-slate-500 hover:text-white transition-colors sm:border-l sm:border-white/5 sm:pl-3"
+                                aria-label="Cancel"
+                            >
+                                <RotateCcw className="w-4 h-4" />
+                            </button>
+                        </div>
+
+                        {/* Right: Launch button */}
+                        <div className="relative flex-shrink-0 z-10">
+                            <div className="absolute -inset-2 bg-emerald-500/10 rounded-2xl blur-xl animate-pulse" />
+                            <button
+                                onClick={handleCompile}
+                                disabled={isLaunching}
+                                className={`relative group flex items-center gap-2.5 px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-xl shadow-lg border border-emerald-400/20 transition-all duration-200 ${isLaunching ? 'scale-95 brightness-75' : 'hover:scale-[1.02] active:scale-[0.97]'
+                                    }`}
+                            >
+                                <Zap className="w-4 h-4 text-white" />
+                                <span className="text-sm font-bold text-white uppercase tracking-wide">Launch Mission</span>
+                            </button>
                         </div>
                     </div>
                 </div>
