@@ -10,15 +10,15 @@ export const LEGAL_CONTENT = {
             <p>Your data is used strictly for:</p>
             <ul>
                 <li>Authenticating your account and managing token balances.</li>
-                <li>Processing payments via Secure Razorpay gateway.</li>
+                <li>Processing your form automation requests.</li>
                 <li>Improving our form analysis algorithms.</li>
             </ul>
 
             <h3>3. Data Security</h3>
-            <p>We implement industry-standard AES-256 encryption for all data transmissions. We do not store your credit card information; all payments are handled securely by Razorpay.</p>
+            <p>We implement industry-standard AES-256 encryption for all data transmissions. We do not store sensitive payment information.</p>
 
             <h3>4. Third-Party Services</h3>
-            <p>We use Google Firebase for authentication and database services, and Razorpay for payment processing. These services have their own privacy policies which we encourage you to review.</p>
+            <p>We use Google Firebase for authentication and database services. These services have their own privacy policies which we encourage you to review.</p>
 
             <h3>5. Cookies</h3>
             <p>We use essential cookies to maintain your session and security context. No tracking or marketing cookies are deployed.</p>
@@ -75,7 +75,7 @@ export const LEGAL_CONTENT = {
             
             <div class="space-y-4 mt-6">
                 <div>
-                     <p class="text-sm">DESIGNED AND DEVLOPED BY <span class="text-amber-500 font-bold">Mr. Harkamal</span></p>
+                     <p class="text-sm">DESIGNED AND DEVLOPED BY <span class="text-amber-500 font-bold">BLACK_LOTUS</span></p>
 
                 </div>
                 
