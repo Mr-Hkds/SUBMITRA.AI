@@ -1,5 +1,5 @@
 import React, { useMemo, useCallback, useState } from 'react';
-import { Settings, CheckCircle, ArrowRight, Crown, AlertCircle, Target, ShieldCheck, Zap, Sparkles, Command, ExternalLink, Activity, RotateCcw, LayoutGrid, MessageSquare, Bot } from 'lucide-react';
+import { Settings, CheckCircle, ArrowRight, ArrowLeft, Crown, AlertCircle, Target, ShieldCheck, Zap, Sparkles, Command, ExternalLink, Activity, RotateCcw, LayoutGrid, MessageSquare, Bot } from 'lucide-react';
 import { FormAnalysis, FormQuestion, QuestionType, User } from '../types';
 import QuestionCard from './QuestionCard';
 import TagInput from './TagInput';
@@ -82,7 +82,7 @@ const Step2Dashboard = React.memo((props: Step2DashboardProps) => {
         error
     } = props;
 
-    const [activeTab, setActiveTab] = useState<TabKey>('settings');
+    const [activeTab, setActiveTab] = useState<TabKey>('questions');
     const [questionSearch, setQuestionSearch] = useState('');
     const [showBanner, setShowBanner] = useState(true);
     const [customCountActive, setCustomCountActive] = useState(false);
@@ -120,8 +120,8 @@ const Step2Dashboard = React.memo((props: Step2DashboardProps) => {
 
     const tabs: { key: TabKey; label: string; icon: React.ReactNode; badge?: string }[] = useMemo(() => {
         const t: { key: TabKey; label: string; icon: React.ReactNode; badge?: string }[] = [
-            { key: 'settings', label: 'Settings', icon: <Settings className="w-4 h-4" /> },
             { key: 'questions', label: 'Questions', icon: <LayoutGrid className="w-4 h-4" />, badge: `${analysis.questions.length}` },
+            { key: 'settings', label: 'Settings', icon: <Settings className="w-4 h-4" /> },
         ];
         if (hasAITab) {
             t.push({
@@ -142,9 +142,23 @@ const Step2Dashboard = React.memo((props: Step2DashboardProps) => {
     return (
         <section className="w-full animate-fade-in-up pb-28">
 
+            {/* BACK NAVIGATION */}
+            <div className="mb-5">
+                <button
+                    onClick={reset}
+                    className="group flex items-center gap-2 text-xs text-slate-500 hover:text-white font-medium uppercase tracking-wider transition-all duration-200 active:scale-95"
+                >
+                    <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" />
+                    Back to Home
+                </button>
+            </div>
+
             {/* HEADER: Title + Badges */}
             <div className="mb-6">
                 <h2 className="text-2xl md:text-3xl font-serif font-bold text-white mb-2 tracking-tight">{analysis.title}</h2>
+                {analysis.description && (
+                    <p className="text-xs text-slate-500 mb-3 max-w-2xl leading-relaxed line-clamp-2">{analysis.description}</p>
+                )}
                 <div className="flex flex-wrap gap-3 items-center">
                     <Badge color="obsidian">{analysis.questions.length} Fields</Badge>
                     <Badge color="gold">Algorithm Optimized</Badge>
@@ -199,16 +213,16 @@ const Step2Dashboard = React.memo((props: Step2DashboardProps) => {
                         key={tab.key}
                         onClick={() => setActiveTab(tab.key)}
                         className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg text-xs font-bold uppercase tracking-wider transition-all duration-200 active:scale-[0.97] ${activeTab === tab.key
-                                ? 'bg-white/10 text-white shadow-lg border border-white/10'
-                                : 'text-slate-500 hover:text-slate-300 hover:bg-white/[0.03] border border-transparent'
+                            ? 'bg-white/10 text-white shadow-lg border border-white/10'
+                            : 'text-slate-500 hover:text-slate-300 hover:bg-white/[0.03] border border-transparent'
                             }`}
                     >
                         {tab.icon}
                         <span className="hidden sm:inline">{tab.label}</span>
                         {tab.badge && (
                             <span className={`text-[9px] px-1.5 py-0.5 rounded-md font-mono ${tab.badge === 'Required'
-                                    ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-                                    : 'bg-white/5 text-slate-500'
+                                ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                                : 'bg-white/5 text-slate-500'
                                 }`}>
                                 {tab.badge}
                             </span>
@@ -250,8 +264,8 @@ const Step2Dashboard = React.memo((props: Step2DashboardProps) => {
                                         setCustomCountActive(false);
                                     }}
                                     className={`px-5 py-3 rounded-xl text-sm font-mono font-bold transition-all duration-200 active:scale-95 border ${targetCount === preset && !customCountActive
-                                            ? 'bg-amber-500 text-black border-amber-400 shadow-[0_0_20px_rgba(245,158,11,0.25)]'
-                                            : 'bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white border-white/5 hover:border-white/10'
+                                        ? 'bg-amber-500 text-black border-amber-400 shadow-[0_0_20px_rgba(245,158,11,0.25)]'
+                                        : 'bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white border-white/5 hover:border-white/10'
                                         }`}
                                 >
                                     {preset}
@@ -262,8 +276,8 @@ const Step2Dashboard = React.memo((props: Step2DashboardProps) => {
                             <button
                                 onClick={() => setCustomCountActive(true)}
                                 className={`flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-mono font-bold transition-all duration-200 active:scale-95 border ${customCountActive || (!isPreset && !isNaN(targetCount))
-                                        ? 'bg-amber-500 text-black border-amber-400 shadow-[0_0_20px_rgba(245,158,11,0.25)]'
-                                        : 'bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white border-white/5 hover:border-white/10'
+                                    ? 'bg-amber-500 text-black border-amber-400 shadow-[0_0_20px_rgba(245,158,11,0.25)]'
+                                    : 'bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white border-white/5 hover:border-white/10'
                                     }`}
                             >
                                 Custom:
@@ -314,12 +328,12 @@ const Step2Dashboard = React.memo((props: Step2DashboardProps) => {
                                 Interaction Speed
                             </div>
                             <span className={`text-xs font-mono font-bold px-3 py-1 rounded-lg border ${delayMin === 0
-                                    ? 'text-fuchsia-400 bg-fuchsia-500/10 border-fuchsia-500/20'
-                                    : delayMin <= 100
-                                        ? 'text-red-400 bg-red-500/10 border-red-500/20'
-                                        : delayMin <= 500
-                                            ? 'text-amber-400 bg-amber-500/10 border-amber-500/20'
-                                            : 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20'
+                                ? 'text-fuchsia-400 bg-fuchsia-500/10 border-fuchsia-500/20'
+                                : delayMin <= 100
+                                    ? 'text-red-400 bg-red-500/10 border-red-500/20'
+                                    : delayMin <= 500
+                                        ? 'text-amber-400 bg-amber-500/10 border-amber-500/20'
+                                        : 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20'
                                 }`}>
                                 {speedLabel} ({delayMin}ms)
                             </span>
@@ -353,8 +367,8 @@ const Step2Dashboard = React.memo((props: Step2DashboardProps) => {
                                             }
                                         }}
                                         className={`flex flex-col items-center py-4 px-2 rounded-xl border transition-all duration-200 active:scale-95 ${isActive
-                                                ? colorMap[opt.color]
-                                                : 'bg-white/[0.03] border-white/5 text-slate-500 hover:bg-white/[0.06] hover:border-white/10 hover:text-slate-300'
+                                            ? colorMap[opt.color]
+                                            : 'bg-white/[0.03] border-white/5 text-slate-500 hover:bg-white/[0.06] hover:border-white/10 hover:text-slate-300'
                                             }`}
                                     >
                                         <span className="text-[10px] font-bold uppercase tracking-wider mb-1">{opt.label}</span>
@@ -392,8 +406,8 @@ const Step2Dashboard = React.memo((props: Step2DashboardProps) => {
                                         key={opt.id}
                                         onClick={() => setNameSource(opt.id as any)}
                                         className={`relative overflow-hidden flex flex-col items-center py-4 rounded-xl border transition-all duration-200 active:scale-95 ${nameSource === opt.id
-                                                ? 'bg-amber-500/15 border-amber-500 text-white shadow-[0_0_20px_rgba(245,158,11,0.1)]'
-                                                : 'bg-white/[0.03] border-white/5 text-slate-500 hover:bg-white/[0.06] hover:border-white/10 hover:text-slate-300'
+                                            ? 'bg-amber-500/15 border-amber-500 text-white shadow-[0_0_20px_rgba(245,158,11,0.1)]'
+                                            : 'bg-white/[0.03] border-white/5 text-slate-500 hover:bg-white/[0.06] hover:border-white/10 hover:text-slate-300'
                                             }`}
                                     >
                                         {nameSource === opt.id && <div className="absolute inset-x-0 bottom-0 h-0.5 bg-amber-500" />}
