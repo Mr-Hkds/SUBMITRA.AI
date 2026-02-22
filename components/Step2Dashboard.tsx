@@ -134,7 +134,7 @@ const Step2Dashboard = React.memo((props: Step2DashboardProps) => {
         return t;
     }, [analysis.questions.length, hasAITab, hasRequiredAI]);
 
-    const presets = [5, 10, 15, 20, 30];
+    const presets = [5, 10, 25, 50, 75, 100];
     const isPreset = presets.includes(targetCount);
 
     const speedLabel = delayMin === 0 ? 'Warp' : delayMin === 100 ? 'Intensive' : delayMin === 500 ? 'Efficient' : 'Realistic';
@@ -270,7 +270,7 @@ const Step2Dashboard = React.memo((props: Step2DashboardProps) => {
                                 <input
                                     type="number"
                                     min={1}
-                                    max={30}
+                                    max={100}
                                     value={customCountActive || !isPreset ? (isNaN(targetCount) ? '' : targetCount) : ''}
                                     placeholder="—"
                                     onClick={(e) => { e.stopPropagation(); setCustomCountActive(true); }}
@@ -280,7 +280,7 @@ const Step2Dashboard = React.memo((props: Step2DashboardProps) => {
                                             setTargetCount(NaN);
                                             return;
                                         }
-                                        const val = Math.min(Number(e.target.value), 30);
+                                        const val = Math.min(Number(e.target.value), 100);
                                         checkBalanceAndRedirect(val);
                                         setTargetCount(val);
                                     }}
