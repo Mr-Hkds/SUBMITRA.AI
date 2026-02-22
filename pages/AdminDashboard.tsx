@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { collection, getDocs, query, orderBy, limit, onSnapshot, doc, deleteDoc, updateDoc, Timestamp, where, serverTimestamp, increment } from 'firebase/firestore';
+import { collection, getDocs, query, orderBy, limit, onSnapshot, doc, deleteDoc, updateDoc, getDoc, setDoc, Timestamp, where, serverTimestamp, increment } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { User, TokenRequest } from '../types';
-import { CheckCircle, XCircle, Clock, ShieldCheck, ArrowLeft, ArrowRight, Users, RefreshCw, Trash2, Edit2, Activity, Search, Filter, ChevronDown, Download, Bell } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, ShieldCheck, ArrowLeft, ArrowRight, Users, RefreshCw, Trash2, Edit2, Activity, Search, Filter, ChevronDown, Download, Bell, Lock, Unlock } from 'lucide-react';
 
 const AdminDashboard = ({ user, onBack }: { user: User; onBack: () => void }) => {
     const [loading, setLoading] = useState(true);
@@ -25,6 +25,11 @@ const AdminDashboard = ({ user, onBack }: { user: User; onBack: () => void }) =>
     // Search & Filter State
     const [userSearchTerm, setUserSearchTerm] = useState('');
     const [userFilterType, setUserFilterType] = useState<'all' | 'premium' | 'free' | 'inactive'>('all');
+
+    // Site Lock State
+    const [siteLocked, setSiteLocked] = useState(true);
+    const [lockLoading, setLockLoading] = useState(true);
+    const [lockToggling, setLockToggling] = useState(false);
 
     let filteredRequests = tokenRequests.filter(req => {
         if (requestFilter === 'all') return true;
@@ -92,6 +97,40 @@ const AdminDashboard = ({ user, onBack }: { user: User; onBack: () => void }) =>
         fetchTokenRequests();
     }, []);
 
+    // Real-time listener for site lock state
+    useEffect(() => {
+        const configRef = doc(db, 'config', 'site');
+        const unsub = onSnapshot(configRef, (snap) => {
+            if (snap.exists()) {
+                setSiteLocked(snap.data().locked !== false);
+            } else {
+                setSiteLocked(true);
+            }
+            setLockLoading(false);
+        }, () => {
+            setLockLoading(false);
+        });
+        return () => unsub();
+    }, []);
+
+    const handleToggleSiteLock = async () => {
+        setLockToggling(true);
+        try {
+            const configRef = doc(db, 'config', 'site');
+            const snap = await getDoc(configRef);
+            if (snap.exists()) {
+                await updateDoc(configRef, { locked: !siteLocked });
+            } else {
+                await setDoc(configRef, { locked: !siteLocked });
+            }
+        } catch (e: any) {
+            console.error('Failed to toggle site lock:', e);
+            alert('Failed to toggle site lock: ' + (e.message || 'Unknown error'));
+        } finally {
+            setLockToggling(false);
+        }
+    };
+
     const handleApproveRequest = async (req: TokenRequest) => {
         if (!confirm(`Approve request of ${req.requestedAmount} tokens for ${req.userName}?`)) return;
         try {
@@ -103,14 +142,18 @@ const AdminDashboard = ({ user, onBack }: { user: User; onBack: () => void }) =>
                 tokens: increment(req.requestedAmount),
                 isPremium: true
             });
-            setTokenRequests(prev => prev.map(r => r.id === req.id ? { ...r, status: 'approved' } : r));
-
-            // Re-fetch users stats fully reflecting increment
-            fetchData();
+            // Re-fetch completely to reflect changes
+            await fetchTokenRequests();
+            await fetchData();
             if (showUsersModal) fetchAllUsers();
-        } catch (e) {
+            alert(`✅ Approved ${req.requestedAmount} tokens for ${req.userName}.`);
+        } catch (e: any) {
             console.error("Failed to approve request:", e);
-            alert("Error approving request.");
+            if (e.code === 'permission-denied') {
+                alert("Permission Denied: Check your Firestore Security Rules. The admin user may not have the isAdmin flag set in the database.");
+            } else {
+                alert("Error approving request: " + (e.message || "Unknown error"));
+            }
         }
     };
 
@@ -335,6 +378,38 @@ const AdminDashboard = ({ user, onBack }: { user: User; onBack: () => void }) =>
                     <span className="hidden sm:inline">Auto Clean Inactive</span>
                     <span className="sm:hidden">Clean Inactive Users</span>
                 </button>
+            </div>
+
+            {/* SITE LOCK TOGGLE */}
+            <div className="glass-panel rounded-xl overflow-hidden border border-white/10 mb-6 sm:mb-8">
+                <div className="px-4 sm:px-6 py-4 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <div className={`p-2 rounded-lg ${siteLocked ? 'bg-red-500/10' : 'bg-emerald-500/10'}`}>
+                            {siteLocked ? <Lock className="w-5 h-5 text-red-400" /> : <Unlock className="w-5 h-5 text-emerald-400" />}
+                        </div>
+                        <div>
+                            <h3 className="text-sm font-bold text-white uppercase tracking-wider">Site Access Lock</h3>
+                            <p className="text-xs text-slate-400 mt-0.5">
+                                {siteLocked ? 'Site is locked \u2014 visitors see the access key screen' : 'Site is open \u2014 anyone can access without a key'}
+                            </p>
+                        </div>
+                    </div>
+                    <button
+                        onClick={handleToggleSiteLock}
+                        disabled={lockLoading || lockToggling}
+                        className={`relative w-14 h-7 rounded-full transition-all duration-300 focus:outline-none focus:ring-4 disabled:opacity-50 ${siteLocked
+                                ? 'bg-red-500/30 focus:ring-red-500/20'
+                                : 'bg-emerald-500/30 focus:ring-emerald-500/20'
+                            }`}
+                    >
+                        <span
+                            className={`absolute top-0.5 left-0.5 w-6 h-6 rounded-full transition-all duration-300 shadow-lg ${siteLocked
+                                    ? 'translate-x-0 bg-red-500'
+                                    : 'translate-x-7 bg-emerald-500'
+                                }`}
+                        />
+                    </button>
+                </div>
             </div>
 
             {/* Stats Check - KPIs */}

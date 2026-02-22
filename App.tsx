@@ -11,6 +11,8 @@ import { generateAIPrompt, parseAIResponse } from './utils/parsingUtils';
 import { signInWithGoogle, logout, subscribeToUserProfile, incrementUsageCount, trackAuthState, submitTokenRequest, checkPendingRequest } from './services/authService';
 import { generateScriptToken, checkRateLimit, getTokenExpirationHours, TokenMetadata } from './services/securityService';
 import { FormAnalysis, User } from './types';
+import { doc, onSnapshot } from 'firebase/firestore';
+import { db } from './services/firebase';
 
 // PaymentModal removed for ethical reasons
 import LoadingScreen from './components/LoadingScreen';
@@ -298,11 +300,32 @@ function App() {
     const [isSiteUnlocked, setIsSiteUnlocked] = useState(() => {
         return localStorage.getItem('NAAGRAAZ_ACCESS_KEY') === 'root-access';
     });
+    const [siteLocked, setSiteLocked] = useState(true); // Default locked, Firestore overrides
+    const [siteConfigLoading, setSiteConfigLoading] = useState(true);
     const [accessKeyInput, setAccessKeyInput] = useState('');
     const [accessError, setAccessError] = useState(false);
     // REMOVED EXTENSION DETECTION - NOW USING SYSTEM NATIVE ENGINE
     const isExtensionInstalled = false; // Forced false to bypass logic
     const [stopAutomation, setStopAutomation] = useState(false);
+
+    // Listen to site lock config from Firestore (admin toggle)
+    useEffect(() => {
+        const configRef = doc(db, 'config', 'site');
+        const unsub = onSnapshot(configRef, (snap) => {
+            if (snap.exists()) {
+                const data = snap.data();
+                setSiteLocked(data.locked !== false); // Default to locked if field missing
+            } else {
+                setSiteLocked(true); // No config doc = locked by default
+            }
+            setSiteConfigLoading(false);
+        }, (error) => {
+            console.error('Failed to read site config:', error);
+            setSiteLocked(true); // Fail-safe: locked
+            setSiteConfigLoading(false);
+        });
+        return () => unsub();
+    }, []);
 
 
     const [showAdminDashboard, setShowAdminDashboard] = useState(false);
@@ -1336,7 +1359,16 @@ function App() {
     // REMOVED BLOCKING LOGIN CHECK
     /* if (!user) { ... } */
 
-    if (!isSiteUnlocked) {
+    // Show lock screen if: site is locked by admin AND user hasn't entered the local key
+    if (siteConfigLoading) {
+        return (
+            <div className="fixed inset-0 z-[200] flex items-center justify-center bg-[#050505]">
+                <div className="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+            </div>
+        );
+    }
+
+    if (siteLocked && !isSiteUnlocked) {
         const handleUnlock = () => {
             if (accessKeyInput === 'root-access') {
                 localStorage.setItem('NAAGRAAZ_ACCESS_KEY', 'root-access');

@@ -33,7 +33,7 @@ service cloud.firestore {
       
       allow create: if isAuthenticated() && isOwner(userId) && 
                     request.resource.data.tokens == 15 && 
-                    request.resource.data.isAdmin == false;
+                    (request.resource.data.isAdmin == false || !('isAdmin' in request.resource.data.keys()));
     }
 
     // PAYMENT REQUESTS
@@ -55,6 +55,12 @@ service cloud.firestore {
       allow read, write: if isAdmin();
       allow read: if isAuthenticated() && isOwner(resource.data.userId);
       allow create: if isAuthenticated() && isOwner(request.resource.data.userId);
+    }
+
+    // SITE CONFIG (lock screen toggle, etc.)
+    match /config/{docId} {
+      allow read: if true; // Anyone can read site config (needed before auth)
+      allow write: if isAdmin(); // Only admins can change config
     }
   }
 }

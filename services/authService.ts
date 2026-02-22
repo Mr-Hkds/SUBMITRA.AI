@@ -53,6 +53,7 @@ export const signInWithGoogle = async (): Promise<User> => {
                     email: firebaseUser.email || "",
                     photoURL: firebaseUser.photoURL || "",
                     isPremium: false,
+                    isAdmin: false,
                     responsesUsed: 0,
                     tokens: 15, // Default starting tokens
                     createdAt: serverTimestamp(),
@@ -266,6 +267,7 @@ const ensureUserProfile = async (firebaseUser: any) => {
                 email: firebaseUser.email || "",
                 photoURL: firebaseUser.photoURL || "",
                 isPremium: false,
+                isAdmin: false,
                 responsesUsed: 0,
                 tokens: 15,
                 createdAt: serverTimestamp(),
