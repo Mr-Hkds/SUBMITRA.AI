@@ -23,6 +23,8 @@ import PremiumBackground from './components/PremiumBackground';
 import LegalPage from './components/LegalPage';
 import MatrixReveal from './components/MatrixReveal';
 import Step2Dashboard from './components/Step2Dashboard';
+import RestoreConfigModal from './components/RestoreConfigModal';
+import { saveFormConfig, loadFormConfig, SavedFormConfig } from './utils/formHistory';
 
 // --- VISUAL COMPONENTS ---
 
@@ -336,6 +338,10 @@ function App() {
     const [rateLimitCooldown, setRateLimitCooldown] = useState(0);
     const [showVideoModal, setShowVideoModal] = useState(false);
     const [questionSearch, setQuestionSearch] = useState('');
+
+    // Form History State
+    const [savedConfig, setSavedConfig] = useState<SavedFormConfig | null>(null);
+    const [showRestoreModal, setShowRestoreModal] = useState(false);
 
     // AUTOMATION STATE
     const [isAutoRunning, setIsAutoRunning] = useState(false);
@@ -695,14 +701,18 @@ function App() {
             await new Promise(r => setTimeout(r, 500));
             setProgress(85);
 
-            setAnalysis({
+            const finalAnalysis = {
                 ...statisticalResult,
                 hiddenFields: rawForm.hiddenFields
-            });
+            };
+            setAnalysis(finalAnalysis);
             setAiProgress('Analysis complete!');
 
             await new Promise(r => setTimeout(r, 400));
             setProgress(95);
+
+            // Check for saved form history
+            const saved = loadFormConfig(cleanUrl);
 
             // Ensure we waited at least the minimum time
             await minTimePromise;
@@ -713,6 +723,12 @@ function App() {
                 setLoading(false);
                 setAiProgress('');
                 setStep(2);
+
+                // Show restore modal if we have saved config
+                if (saved) {
+                    setSavedConfig(saved);
+                    setShowRestoreModal(true);
+                }
             }, 1000); // Slight delay at 100% to let user see "Complete"
 
         } catch (err: any) {
@@ -1235,6 +1251,18 @@ function App() {
 
         setAutomationLogs([]);
 
+        // Save form config to history before launching
+        if (analysis) {
+            saveFormConfig(url, analysis.title, analysis, {
+                targetCount,
+                speedMode,
+                delayMin,
+                nameSource,
+                customNamesRaw,
+                customResponses: mergedResponses,
+            });
+        }
+
         // --- ATMOSPHERIC VERIFICATION SEQUENCE (4500ms) ---
         launchPayloadRef.current = mergedResponses;
         clearLaunchSequence();
@@ -1503,6 +1531,47 @@ function App() {
                     onSelect={(val) => {
                         checkBalanceAndRedirect(val);
                         setTargetCount(val);
+                    }}
+                />
+            )}
+
+            {/* Form History Restore Modal */}
+            {showRestoreModal && savedConfig && (
+                <RestoreConfigModal
+                    config={savedConfig}
+                    onRestore={() => {
+                        // Restore weightages onto analysis questions
+                        if (analysis && savedConfig.questionWeights) {
+                            const restoredQuestions = analysis.questions.map(q => {
+                                const savedWeights = savedConfig.questionWeights[q.id];
+                                if (savedWeights && q.options.length === savedWeights.length) {
+                                    return {
+                                        ...q,
+                                        options: q.options.map((opt, i) => ({
+                                            ...opt,
+                                            weight: savedWeights[i],
+                                        })),
+                                    };
+                                }
+                                return q;
+                            });
+                            setAnalysis({ ...analysis, questions: restoredQuestions });
+                        }
+                        // Restore settings
+                        setTargetCount(savedConfig.targetCount);
+                        setSpeedMode(savedConfig.speedMode);
+                        setDelayMin(savedConfig.delayMin);
+                        setNameSource(savedConfig.nameSource);
+                        setCustomNamesRaw(savedConfig.customNamesRaw);
+                        if (savedConfig.customResponses) {
+                            setCustomResponses(savedConfig.customResponses);
+                        }
+                        setShowRestoreModal(false);
+                        setSavedConfig(null);
+                    }}
+                    onStartFresh={() => {
+                        setShowRestoreModal(false);
+                        setSavedConfig(null);
                     }}
                 />
             )}
