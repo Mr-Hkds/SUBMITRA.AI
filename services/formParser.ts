@@ -159,11 +159,11 @@ export const fetchAndParseForm = async (url: string): Promise<{ title: string; q
     // Extract hidden inputs (like fbzx, pageHistory, etc.) from HTML
     // These are CRITICAL for avoiding "fake success" and getting rejected by Google
     const hiddenFields: Record<string, string> = {};
-    const hiddenInputRegex = /<input\s+type="hidden"\s+name="([^"]+)"(?:\s+value="([^"]*)")?/g;
+    const hiddenInputRegex = /<input\s+type="hidden"\s+name="([^"]+)"\s+value="([^"]*)"/g;
     let inputMatch;
     while ((inputMatch = hiddenInputRegex.exec(html)) !== null) {
-      if (inputMatch[1]) {
-        hiddenFields[inputMatch[1]] = inputMatch[2] || '';
+      if (inputMatch[1] && inputMatch[2]) {
+        hiddenFields[inputMatch[1]] = inputMatch[2];
       }
     }
 

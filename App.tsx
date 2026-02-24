@@ -885,50 +885,85 @@ function App() {
         return false;
     };
 
-    const executeNativeSubmission = async (formUrl: string, data: Record<string, string | string[]>) => {
-        return new Promise(async (resolve, reject) => {
+    const executeNativeSubmission = async (url: string, data: Record<string, string | string[]>) => {
+        return new Promise((resolve, reject) => {
+            const iframeName = `af_bridge_${Math.random().toString(36).substring(7)}`;
+            const iframe = document.createElement('iframe');
+            iframe.name = iframeName;
+            iframe.id = iframeName;
+            iframe.style.display = 'none';
+
+            // Error detection for iframe
+            let hasError = false;
+            const errorHandler = () => {
+                hasError = true;
+                if (document.body.contains(iframe)) {
+                    cleanup();
+                    reject(new Error("Network connection lost or blocked."));
+                }
+            };
+
+            iframe.onerror = errorHandler;
+
+            document.body.appendChild(iframe);
+
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = url.split('?')[0].replace(/\/viewform$/, '/formResponse'); // Action URL
+            form.target = iframeName;
+
+            Object.entries(data).forEach(([key, value]) => {
+                const isSpecial = key.includes('entry.') || key === 'emailAddress';
+                const inputName = isSpecial ? key : `entry.${key}`;
+
+                if (Array.isArray(value)) {
+                    value.forEach(v => {
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = inputName;
+                        input.value = v;
+                        form.appendChild(input);
+                    });
+                } else {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = inputName;
+                    input.value = value as string;
+                    form.appendChild(input);
+                }
+            });
+
+            // Add page history to ensure submission works for multi-page forms
+            // If the form has questions on pages 0, 1, 2... pageHistory should be 0,1,2
+            const maxPageIndex = analysis?.questions.reduce((max, q) => Math.max(max, q.pageIndex || 0), 0) || 0;
+            const pageHistory = Array.from({ length: maxPageIndex + 1 }, (_, i) => i).join(',');
+
+            const hist = document.createElement('input');
+            hist.type = 'hidden';
+            hist.name = 'pageHistory';
+            hist.value = pageHistory;
+            form.appendChild(hist);
+
+            document.body.appendChild(form);
+
+            const cleanup = () => {
+                if (document.body.contains(form)) document.body.removeChild(form);
+                if (document.body.contains(iframe)) document.body.removeChild(iframe);
+            };
+
             try {
-                const submitUrl = formUrl.split('?')[0].replace(/\/viewform$/, '/formResponse'); // Action URL
-
-                // Use URLSearchParams for application/x-www-form-urlencoded
-                const formData = new URLSearchParams();
-
-                const SPECIAL_KEYS = ['emailAddress', 'fvv', 'draftResponse', 'pageHistory', 'fbzx', 'partialResponse', 'submissionTimestamp'];
-
-                Object.entries(data).forEach(([key, value]) => {
-                    const isSpecial = key.includes('entry.') || SPECIAL_KEYS.includes(key);
-                    const inputName = isSpecial ? key : `entry.${key}`;
-
-                    if (Array.isArray(value)) {
-                        value.forEach(v => {
-                            formData.append(inputName, v);
-                        });
-                    } else {
-                        let strValue = value as string;
-                        // Decode HTML entities that typically escape quotes in hidden fields (like partialResponse)
-                        if (isSpecial && typeof strValue === 'string') {
-                            strValue = strValue.replace(/&quot;/g, '"').replace(/&amp;/g, '&');
-                        }
-                        formData.append(inputName, strValue);
+                form.submit();
+                // Since we can't read the response due to CORS, we assume it's sent
+                // if the iframe doesn't trigger an error within 2.5 seconds
+                setTimeout(() => {
+                    if (!hasError) {
+                        cleanup();
+                        resolve(true);
                     }
-                });
-
-                // Send silently using no-cors. 
-                // Google Forms will process it, but the browser won't let us read the success response.
-                await fetch(submitUrl, {
-                    method: 'POST',
-                    mode: 'no-cors', // CRITICAL: Bypasses CORS and CSP frame-ancestors blocks
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded'
-                    },
-                    body: formData.toString()
-                });
-
-                // If fetch doesn't throw a network error, we assume success
-                resolve(true);
-
+                }, 1500);
             } catch (e) {
                 console.error("Native Submission Error:", e);
+                cleanup();
                 reject(e);
             }
         });
@@ -1243,9 +1278,7 @@ function App() {
                     if (value) submissionData[q.entryId] = value;
                 });
 
-                // Only append emailAddress if the form natively expects an emailAddress field.
-                // formParser adds a virtual 'emailAddress' question if FB_PUBLIC_LOAD_DATA indicates collection is enabled.
-                if (analysis.questions.some(q => q.entryId === 'emailAddress') && !submissionData['emailAddress']) {
+                if (!submissionData['emailAddress']) {
                     const name = namesToUse.length > 0 ? namesToUse[i % namesToUse.length].toLowerCase().replace(/\s+/g, '.') : `user${i}`;
                     submissionData['emailAddress'] = `${name}${Math.floor(Math.random() * 99)}@gmail.com`;
                 }
