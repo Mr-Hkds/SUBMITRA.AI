@@ -176,7 +176,7 @@ const Step2Dashboard = React.memo((props: Step2DashboardProps) => {
     const [showConfetti, setShowConfetti] = useState(false);
     const contentRef = useRef<HTMLDivElement>(null);
 
-    // Sync state for initialWizardStep and initialAiApplied if they change while mounted
+    // Sync state for initialWizardStep if it changes while mounted
     useEffect(() => {
         setWizardStep(initialWizardStep);
         if (initialWizardStep > 1) {
@@ -184,7 +184,8 @@ const Step2Dashboard = React.memo((props: Step2DashboardProps) => {
         } else if (initialWizardStep === 1) {
             setSetupMode(null);
         }
-    }, [initialWizardStep, initialAiApplied]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [initialWizardStep]);
 
     useEffect(() => {
         setAiApplied(initialAiApplied);

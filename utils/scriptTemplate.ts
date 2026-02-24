@@ -236,8 +236,20 @@ export const generateAutomationScript = (
   const sleep = (ms) => new Promise(r => setTimeout(r, ms));
   const randomDelay = () => sleep(Math.random() * (CONFIG.delayMax - CONFIG.delayMin) + CONFIG.delayMin);
   // Normalize: Keep alphanumeric and spaces, remove symbols
-  const normalize = (str) => (str || '').toLowerCase().replace(/[^a-z0-9 ]/g, '').replace(/\\s+/g, ' ').trim();
+  const normalize = (str) => (str || '').toLowerCase().replace(/[^a-z0-9 ]/g, '').replace(/\s+/g, ' ').trim();
   const randomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+  
+  const isPersonalName = (title) => {
+    const t = (title || "").toLowerCase();
+    if (/company|school|university|business|organization|startup|manager|boss|friend|spouse|father|mother|parent|partner|child/i.test(t)) return false;
+    return /\bname\b|full.?name|first.?name|last.?name|\bnames\b/i.test(t);
+  };
+
+  const isPersonalEmail = (title) => {
+    const t = (title || "").toLowerCase();
+    if (/company|school|university|business|organization|startup|manager|boss|friend|spouse|father|mother|parent|partner|child/i.test(t)) return false;
+    return /\bemail\b|e-mail|mail.id|mail.address|email.id/i.test(t);
+  };
   
   const selectWeighted = (options) => {
     if (!options || options.length === 0) return { value: "" };
@@ -528,12 +540,19 @@ export const generateAutomationScript = (
              
              
              // 2. NAME FIELDS: Always fill name fields with provided names
-             if (!val && itemTitle.includes('name')) {
+             if (!val && isPersonalName(itemTitleRaw)) {
                  val = CONFIG.names.length > 0 ? CONFIG.names[runIndex % CONFIG.names.length] : "Auto User";
              }
              
-             // 3. SKIP ALL OTHER TEXT FIELDS
-             // If no custom response and not a name field, leave blank
+             // 3. EMAIL FIELDS: Fill with random email if requested
+             if (!val && isPersonalEmail(itemTitleRaw)) {
+                 const baseName = CONFIG.names.length > 0 ? CONFIG.names[runIndex % CONFIG.names.length].toLowerCase().replace(/\s+/g, '.') : `user${ runIndex } `;
+                 const domains = ['gmail.com', 'yahoo.com', 'outlook.com', 'icloud.com'];
+                 val = `${ baseName }${ Math.floor(Math.random() * 99) } @${ domains[Math.floor(Math.random() * domains.length)] } `;
+             }
+             
+             // 4. SKIP ALL OTHER TEXT FIELDS
+             // If no custom response and not a name/email field, leave blank
 
 
              if (val) {

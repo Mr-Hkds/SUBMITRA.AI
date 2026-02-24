@@ -256,6 +256,55 @@ const Footer = React.memo(({ onLegalNav }: { onLegalNav: (type: 'privacy' | 'ter
     </footer>
 ));
 
+// --- SMART HEURISTICS ---
+const isPersonalName = (title: string) => {
+    const t = (title || "").toLowerCase();
+    if (/company|school|university|business|organization|startup|manager|boss|friend|spouse|father|mother|parent|partner|child/i.test(t)) return false;
+    return /\bname\b|full.?name|first.?name|last.?name|\bnames\b/i.test(t);
+};
+
+const isPersonalEmail = (title: string) => {
+    const t = (title || "").toLowerCase();
+    if (/company|school|university|business|organization|startup|manager|boss|friend|spouse|father|mother|parent|partner|child/i.test(t)) return false;
+    return /\bemail\b|e-mail|mail.id|mail.address|email.id/i.test(t);
+};
+
+const isAgeQuestion = (title: string, options: any[]) => {
+    const t = (title || "").toLowerCase();
+    if (!/\bage\b|age.?group|age.?range|how old/i.test(t)) return false;
+    return options.some((opt: any) => {
+        const val = typeof opt === 'string' ? opt : opt.value;
+        return /\d/.test(val || "") || /under|below|above|older/i.test(val || "");
+    });
+};
+
+const isProfQuestion = (title: string, options: any[]) => {
+    const t = (title || "").toLowerCase();
+    if (!/profession|occupation|employment|job\b|work|designation|working|career/i.test(t)) return false;
+    return options.some((opt: any) => {
+        const val = typeof opt === 'string' ? opt : opt.value;
+        return /student|retire|unemploy|business|self.?employ|freelance|work|profession|employ/i.test(val || "");
+    });
+};
+
+const isIncomeQuestion = (title: string, options: any[]) => {
+    const t = (title || "").toLowerCase();
+    if (!/income|salary|earn|earning|stipend|pocket.?money|monthly|annual|ctc|pay/i.test(t)) return false;
+    return options.some((opt: any) => {
+        const val = typeof opt === 'string' ? opt : opt.value;
+        return /\d|lakh|thousand|k|zero|nil|none/i.test(val || "");
+    });
+};
+
+const isEduQuestion = (title: string, options: any[]) => {
+    const t = (title || "").toLowerCase();
+    if (!/education|qualification|degree|class|standard|studying|school|college|university/i.test(t)) return false;
+    return options.some((opt: any) => {
+        const val = typeof opt === 'string' ? opt : opt.value;
+        return /school|10th|12th|secondary|ssc|hsc|class|degree|bachelor|master|phd|doctorate|grad|tech|sc|com|ba|bba|mba/i.test(val || "");
+    });
+};
+
 // DELETED: LoadingState replaced by LoadingScreen component
 
 function App() {
@@ -791,7 +840,8 @@ function App() {
             const initial: Record<string, string> = {};
             // Preserve existing
             analysis.questions.forEach(q => {
-                if ((q.type === 'SHORT_ANSWER' || q.type === 'PARAGRAPH') && !q.title.toLowerCase().includes('name')) {
+                const isTextField = q.type === 'SHORT_ANSWER' || q.type === 'PARAGRAPH';
+                if (isTextField && !isPersonalName(q.title) && !isPersonalEmail(q.title)) {
                     if (!customResponses[q.id]) initial[q.id] = "";
                 }
             });
@@ -835,7 +885,7 @@ function App() {
 
             if (nameSource === 'auto') {
                 if (namesToUse.length === 0 && generatedNames.length > 0) namesToUse = generatedNames;
-                if (namesToUse.length < targetCount && analysis.questions.some(q => q.title.toLowerCase().includes('name'))) {
+                if (namesToUse.length < targetCount && analysis.questions.some(q => isPersonalName(q.title))) {
                     namesToUse = await generateResponseSuggestions("local-mode", targetCount, 'NAMES');
                     setGeneratedNames(namesToUse);
                 }
@@ -1079,18 +1129,18 @@ function App() {
             // --- SMART DEMOGRAPHIC ALIGNMENT ENGINE ---
             const alignedDecks: Record<string, string[]> = {};
 
-            // Detect relevant question IDs by title keywords
+            // Detect relevant question IDs by title keywords and option contents
             const ageQId = analysis.questions.find(q =>
-                /\bage\b|age.?group|age.?range|how old/i.test(q.title) && unassignedDecks[q.id]
+                unassignedDecks[q.id] && isAgeQuestion(q.title, q.options)
             )?.id;
             const profQId = analysis.questions.find(q =>
-                /profession|occupation|employment|job\b|work|designation|working|career/i.test(q.title) && unassignedDecks[q.id]
+                unassignedDecks[q.id] && isProfQuestion(q.title, q.options)
             )?.id;
             const incomeQId = analysis.questions.find(q =>
-                /income|salary|earn|earning|stipend|pocket.?money|monthly|annual|ctc|pay/i.test(q.title) && unassignedDecks[q.id]
+                unassignedDecks[q.id] && isIncomeQuestion(q.title, q.options)
             )?.id;
             const eduQId = analysis.questions.find(q =>
-                /education|qualification|degree|class|standard|studying|school|college|university/i.test(q.title) && unassignedDecks[q.id]
+                unassignedDecks[q.id] && isEduQuestion(q.title, q.options)
             )?.id;
 
             const hasDemographics = ageQId || profQId || incomeQId || eduQId;
@@ -1251,9 +1301,9 @@ function App() {
                     if (processedCustomResponses[q.id]) {
                         const arr = processedCustomResponses[q.id];
                         value = arr[i % arr.length];
-                    } else if (q.title.toLowerCase().includes('name') && (q.type === 'SHORT_ANSWER' || q.type === 'PARAGRAPH')) {
+                    } else if (isPersonalName(q.title) && (q.type === 'SHORT_ANSWER' || q.type === 'PARAGRAPH')) {
                         value = namesToUse.length > 0 ? namesToUse[i % namesToUse.length] : "Auto User";
-                    } else if (q.title.toLowerCase().includes('email') && (q.type === 'SHORT_ANSWER' || q.type === 'PARAGRAPH')) {
+                    } else if (isPersonalEmail(q.title) && (q.type === 'SHORT_ANSWER' || q.type === 'PARAGRAPH')) {
                         const name = namesToUse.length > 0 ? namesToUse[i % namesToUse.length].toLowerCase().replace(/\s+/g, '.') : `user${i}`;
                         const domains = ['gmail.com', 'yahoo.com', 'outlook.com', 'icloud.com'];
                         value = `${name}${Math.floor(Math.random() * 99)}@${domains[Math.floor(Math.random() * domains.length)]}`;
@@ -1283,9 +1333,16 @@ function App() {
                     submissionData['emailAddress'] = `${name}${Math.floor(Math.random() * 99)}@gmail.com`;
                 }
 
-                // Pre-submission validation
+                // Pre-submission validation: Ensure required fields have valid values
                 const missingFields = analysis.questions
-                    .filter(q => q.required && !submissionData[q.entryId])
+                    .filter(q => {
+                        if (!q.required) return false;
+                        const val = submissionData[q.entryId];
+                        if (val === undefined || val === null) return true;
+                        if (typeof val === 'string' && val.trim() === '') return true;
+                        if (Array.isArray(val) && val.length === 0) return true;
+                        return false;
+                    })
                     .map(q => q.title);
 
                 if (missingFields.length > 0) {
@@ -1395,10 +1452,11 @@ function App() {
             return;
         }
 
-        // VALIDATION: Ensure required text fields have content (excluding names which are handled by generator)
+        // VALIDATION: Ensure required text fields have content (excluding names/emails which are handled by generator)
         const requiredTextFields = analysis?.questions.filter(q =>
             (q.type === 'SHORT_ANSWER' || q.type === 'PARAGRAPH') &&
-            !q.title.toLowerCase().includes('name') &&
+            !isPersonalName(q.title) &&
+            !isPersonalEmail(q.title) &&
             q.required
         );
 
