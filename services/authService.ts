@@ -100,34 +100,8 @@ export const subscribeToUserProfile = (uid: string, callback: (user: User | null
 export const deductTokens = async (uid: string, amount: number): Promise<{ success: boolean; newTokens?: number }> => {
     console.log(`[AuthService] Attempting to deduct ${amount} tokens for user ${uid}. Env: ${import.meta.env.DEV ? 'DEV' : 'PROD'}`);
     try {
-        // DEV MODE: Direct Firestore Update (Efficiency & Local Persistence)
-        // Now allowed by relaxed Firestore Rules (safe decrement only)
-        if (import.meta.env.DEV) {
-            console.log("[AuthService] Dev Mode: Deducting tokens directly via Firestore...");
-            const userRef = doc(db, COLLECTION, uid);
-            const userSnap = await getDoc(userRef);
-
-            if (userSnap.exists()) {
-                const currentTokens = userSnap.data().tokens || 0;
-                console.log(`[AuthService] Current tokens: ${currentTokens}. Required: ${amount}`);
-                if (currentTokens >= amount) {
-                    await updateDoc(userRef, {
-                        tokens: increment(-amount),
-                        responsesUsed: increment(amount)
-                    });
-                    console.log(`[AuthService] ✅ Firestore update successful. New balance should be ${currentTokens - amount}`);
-                    return { success: true, newTokens: currentTokens - amount };
-                } else {
-                    console.error("[AuthService] Insufficient tokens");
-                    return { success: false };
-                }
-            } else {
-                console.error("[AuthService] User document does not exist");
-            }
-            return { success: false };
-        }
-
-        // PROD MODE: Secure Server Call
+        // PROD MODE: Secure Server Call (used for DEV as well to follow rules)
+        console.log("[AuthService] Calling secure API to deduct tokens...");
         console.log("[AuthService] Prod Mode: Calling secure API...");
         const response = await fetch('/api/deduct-tokens', {
             method: 'POST',

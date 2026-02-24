@@ -913,7 +913,8 @@ function App() {
             form.target = iframeName;
 
             Object.entries(data).forEach(([key, value]) => {
-                const isSpecial = key.includes('entry.') || key === 'emailAddress';
+                const SPECIAL_KEYS = ['emailAddress', 'fvv', 'draftResponse', 'pageHistory', 'fbzx', 'partialResponse', 'submissionTimestamp'];
+                const isSpecial = key.includes('entry.') || SPECIAL_KEYS.includes(key);
                 const inputName = isSpecial ? key : `entry.${key}`;
 
                 if (Array.isArray(value)) {
