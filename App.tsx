@@ -166,17 +166,17 @@ const Footer = React.memo(({ onLegalNav }: { onLegalNav: (type: 'privacy' | 'ter
                     <div className="absolute -inset-4 bg-amber-500/5 blur-2xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
                     <div className="flex items-center gap-3 relative z-10">
                         <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.8)]" />
-                        <span className="text-xs text-slate-300 font-sans tracking-[0.3em] font-bold uppercase group-hover:text-white">
-                            Submitra<span className="text-emerald-500"> .AI</span>
+                        <span className="text-sm text-white font-serif tracking-[0.2em] font-bold uppercase">
+                            Zerviq
                         </span>
                         <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.8)]" />
                     </div>
                 </div>
 
-                <div className="h-px w-12 bg-gradient-to-r from-transparent via-white/10 to-transparent group-hover:via-amber-500/50" />
+                <div className="h-px w-16 bg-gradient-to-r from-transparent via-white/10 to-transparent group-hover:via-amber-500/50" />
 
-                <span className="text-[10px] text-slate-500 font-mono tracking-[0.25em] uppercase">
-                    Precision Form Intelligence
+                <span className="text-[9px] text-slate-500 font-mono tracking-[0.3em] uppercase">
+                    Precision Response Engine
                 </span>
 
                 <span className="text-xs md:text-sm text-amber-500/90 font-serif italic tracking-widest hover:text-amber-400 transition-colors">
@@ -224,7 +224,7 @@ const Footer = React.memo(({ onLegalNav }: { onLegalNav: (type: 'privacy' | 'ter
                         <div className="mt-0.5 text-amber-500/80 font-mono text-xs">[!]</div>
                         <div className="text-[10px] md:text-xs text-slate-400 font-mono leading-relaxed text-left">
                             <strong className="text-amber-500/90 block mb-2 tracking-widest uppercase text-[9px]">Compliance Notice // Research & Academic Use</strong>
-                            Submitra AI is an advanced automation platform designed exclusively for <span className="text-slate-200">statistical modelling, academic research, and authorised form validation</span>.
+                            Zerviq is a precision-engineered automation platform designed exclusively for <span className="text-slate-200">statistical modelling, academic research, and authorised form validation</span>.
                             Users bear full responsibility for ensuring compliance with applicable Terms of Service and regulatory frameworks.
                             Bharamratri Production disclaims all liability arising from unauthorised deployment or misapplication of this technology.
                         </div>

@@ -8,7 +8,7 @@ const COLLECTION_USAGE = "usage_logs";
 // For client-side security, we use a combination of user-specific data
 const generateSecretKey = (userId: string, timestamp: number): string => {
     // Create a deterministic but hard-to-guess key
-    return `${userId}-${timestamp}-submitra-secure-2025`;
+    return `${userId}-${timestamp}-zerviq-secure-2025`;
 };
 
 // Simple HMAC-like signature using Web Crypto API

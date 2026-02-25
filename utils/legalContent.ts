@@ -4,7 +4,7 @@ export const LEGAL_CONTENT = {
         lastUpdated: "January 18, 2026",
         content: `
             <h3>1. Data Collection</h3>
-            <p>Submitra ("we", "our", or "us") collects minimal data necessary to provide our automation services. This includes your Google profile information (name, email) when you sign in, and the URLs of forms you analyze.</p>
+            <p>Zerviq ("we", "our", or "us") collects minimal data necessary to provide our automation services. This includes your Google profile information (name, email) when you sign in, and the URLs of forms you analyze.</p>
             
             <h3>2. Use of Information</h3>
             <p>Your data is used strictly for:</p>
@@ -29,7 +29,7 @@ export const LEGAL_CONTENT = {
         lastUpdated: "January 18, 2026",
         content: `
             <h3>1. Acceptance of Terms</h3>
-            <p>By accessing Submitra, you agree to be bound by these Terms of Service and all applicable laws and regulations.</p>
+            <p>By accessing Zerviq, you agree to be bound by these Terms of Service and all applicable laws and regulations.</p>
 
             <h3>2. Use License</h3>
             <p>This is a license, not a transfer of title. You may use this software for individual research and educational purposes. You may not:</p>
@@ -43,7 +43,7 @@ export const LEGAL_CONTENT = {
             <p>Tokens are used to perform automated submissions. Tokens are non-transferable and have no cash value. Once a mission is launched and tokens are deducted, they cannot be restored except in cases of technical failure confirmed by our support team.</p>
 
             <h3>4. Disclaimer</h3>
-            <p>The materials on Submitra are provided on an 'as is' basis. We make no warranties, expressed or implied, regarding the accuracy or reliability of the results produced by the automation suite.</p>
+            <p>The materials on Zerviq are provided on an 'as is' basis. We make no warranties, expressed or implied, regarding the accuracy or reliability of the results produced by the automation suite.</p>
 
             <h3>5. Compliance</h3>
             <p>Users are solely responsible for ensuring their use of this tool complies with the target form's terms of service and any institutional policies.</p>
@@ -71,7 +71,7 @@ export const LEGAL_CONTENT = {
         lastUpdated: "January 18, 2026",
         content: `
             <h3>Merchant Information</h3>
-            <p>Submitra is a division of <span class="text-white font-bold">Naagraaz Productions</span>.</p>
+            <p>Zerviq is a division of <span class="text-white font-bold">Naagraaz Productions</span>.</p>
             
             <div class="space-y-4 mt-6">
                 <div>

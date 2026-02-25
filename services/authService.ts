@@ -246,7 +246,7 @@ export const upgradeUserToPremium = async (uid: string) => {
 };
 
 export const verifyLicenseKey = async (uid: string, key: string): Promise<boolean> => {
-    const VALID_KEYS = ["PRO-2025", "SUBMITRA-X", "ADMIN-KEY"];
+    const VALID_KEYS = ["PRO-2025", "ZERVIQ-X", "ADMIN-KEY"];
 
     if (VALID_KEYS.includes(key.toUpperCase().trim())) {
         await upgradeUserToPremium(uid);

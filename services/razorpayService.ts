@@ -146,7 +146,7 @@ export const initializeRazorpayCheckout = (
             key: RAZORPAY_CONFIG.keyId,
             amount: order.amount,
             currency: order.currency,
-            name: 'Submitra',
+            name: 'Zerviq',
             description: `${data.tokens} Tokens`,
             // Only pass order_id if it's a real Razorpay order (captured from backend)
             // If it's a mock client-side ID (contains '_mock_'), we omit it to allow "Standard Checkout"

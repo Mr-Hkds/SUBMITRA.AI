@@ -12,7 +12,7 @@ export const APP_CONFIG = {
     DEMO_VIDEO_URL: (import.meta as any).env?.VITE_DEMO_VIDEO_URL || "https://www.youtube.com/embed/dQw4w9WgXcQ",
 
     // Branding
-    BRAND_NAME: "Submitra",
+    BRAND_NAME: "Zerviq",
     TAGLINE: "A Bharamratri Studio Production",
     DEVELOPER_NAME: "Mr. Harkamal",
 };
