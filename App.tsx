@@ -167,7 +167,7 @@ const Footer = React.memo(({ onLegalNav }: { onLegalNav: (type: 'privacy' | 'ter
                     <div className="flex items-center gap-3 relative z-10">
                         <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.8)]" />
                         <span className="text-xs text-slate-300 font-sans tracking-[0.3em] font-bold uppercase group-hover:text-white">
-                            AutoForm . AI
+                            Submitra
                         </span>
                         <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.8)]" />
                     </div>
@@ -220,7 +220,7 @@ const Footer = React.memo(({ onLegalNav }: { onLegalNav: (type: 'privacy' | 'ter
                         <div className="mt-0.5 text-amber-500/80 font-mono text-xs">[!]</div>
                         <div className="text-[10px] md:text-xs text-slate-400 font-mono leading-relaxed text-left">
                             <strong className="text-amber-500/90 block mb-2 tracking-widest uppercase text-[9px]">Operational Directive // Educational Use Only</strong>
-                            The AutoForm Automation Suite is strictly engineered for <span className="text-slate-200">statistical analysis and educational research</span> purposes.
+                            The Submitra Automation Suite is strictly engineered for <span className="text-slate-200">statistical analysis and educational research</span> purposes.
                             The deployment of this technology implies full user consent and responsibility for compliance with all relevant Terms of Service and legal frameworks.
                             Bharamratri Productions assumes no liability for the operational misuse or unauthorized application of this system.
                         </div>
@@ -275,10 +275,10 @@ const isPersonalName = (title: string) => {
     if (/company|brand|product|school|university|business|organization|startup|manager|boss|friend|spouse|father|mother|parent|partner|child|pet|movie|song|game|app|book|place|city|country|team|food|website|channel|series|college|institute|hospital|store|shop/i.test(lower)) return false;
     // Match only clear "asking for your name" intent
     return /^name\s*[\*\?]?\s*$/i.test(t) || // Just "Name" or "Name *"
-           /^(your|enter|type|write|provide|give|mention|respondent|student|participant|candidate|applicant|member|employee|full|first|last|nick)\s*(name|names)/i.test(lower) ||
-           /^name\s+(of the respondent|of student|of participant|of candidate|of applicant|of member|of employee)/i.test(lower) ||
-           /^(full|first|last)\s*name/i.test(lower) ||
-           /\b(your\s+name|your\s+full\s+name|your\s+first\s+name|your\s+last\s+name)\b/i.test(lower);
+        /^(your|enter|type|write|provide|give|mention|respondent|student|participant|candidate|applicant|member|employee|full|first|last|nick)\s*(name|names)/i.test(lower) ||
+        /^name\s+(of the respondent|of student|of participant|of candidate|of applicant|of member|of employee)/i.test(lower) ||
+        /^(full|first|last)\s*name/i.test(lower) ||
+        /\b(your\s+name|your\s+full\s+name|your\s+first\s+name|your\s+last\s+name)\b/i.test(lower);
 };
 
 const isPersonalEmail = (title: string) => {
@@ -288,9 +288,9 @@ const isPersonalEmail = (title: string) => {
     if (CONTEXTUAL_POISON.test(lower)) return false;
     if (/company|brand|manager|boss|friend|spouse|father|mother|parent|partner|child|vs|or phone|communication|notification|subscribe|marketing/i.test(lower)) return false;
     return /^e?-?mail\s*(address|id)?\s*[\*\?]?\s*$/i.test(t) || // Just "Email" or "Email Address *"
-           /^(your|enter|type|write|provide|give)\s*(e?-?mail|email)/i.test(lower) ||
-           /\b(your\s+e?-?mail|your\s+mail\s*(id|address)?)\b/i.test(lower) ||
-           /^e?-?mail\s*(address|id)\b/i.test(lower);
+        /^(your|enter|type|write|provide|give)\s*(e?-?mail|email)/i.test(lower) ||
+        /\b(your\s+e?-?mail|your\s+mail\s*(id|address)?)\b/i.test(lower) ||
+        /^e?-?mail\s*(address|id)\b/i.test(lower);
 };
 
 const isPhoneQuestion = (title: string) => {
@@ -300,9 +300,9 @@ const isPhoneQuestion = (title: string) => {
     if (CONTEXTUAL_POISON.test(lower)) return false;
     if (/manager|boss|friend|spouse|father|mother|parent|partner|child|company|brand/i.test(lower)) return false;
     return /^(phone|mobile|contact|whatsapp|telephone)\s*(number|no\.?)?\s*[\*\?]?\s*$/i.test(t) ||
-           /^(your|enter|type|write|provide|give)\s*(phone|mobile|contact|whatsapp|cell)/i.test(lower) ||
-           /\b(your\s+(phone|mobile|contact|whatsapp|cell)\s*(number|no\.?)?)\b/i.test(lower) ||
-           /^(phone|mobile|contact)\s*(number|no\.?)\b/i.test(lower);
+        /^(your|enter|type|write|provide|give)\s*(phone|mobile|contact|whatsapp|cell)/i.test(lower) ||
+        /\b(your\s+(phone|mobile|contact|whatsapp|cell)\s*(number|no\.?)?)\b/i.test(lower) ||
+        /^(phone|mobile|contact)\s*(number|no\.?)\b/i.test(lower);
 };
 
 // For demographic questions (multiple choice / dropdown / checkboxes):

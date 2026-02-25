@@ -41,7 +41,7 @@ const Header: React.FC<HeaderProps> = React.memo(({ reset, step, version, user, 
                     <div className="flex flex-col justify-center">
                         <div className="flex items-center gap-2">
                             <span className="font-serif font-bold text-lg tracking-tight leading-none text-white group-hover:text-emerald-100 transition-colors">
-                                AutoForm <span className="text-emerald-500">.AI</span>
+                                Submitra
                             </span>
                         </div>
                         <span className="text-[8px] text-slate-500 font-mono uppercase tracking-[0.2em] hidden sm:block">

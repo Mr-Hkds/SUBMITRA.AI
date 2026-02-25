@@ -694,7 +694,7 @@ const AdminDashboard = ({ user, onBack }: { user: User; onBack: () => void }) =>
                                                 </td>
                                                 <td className="px-6 py-4 text-slate-400">
                                                     <a
-                                                        href={`mailto:${u.email}?subject=AutoForm AI Support`}
+                                                        href={`mailto:${u.email}?subject=Submitra Support`}
                                                         className="hover:text-amber-400 hover:underline transition-colors decoration-dotted underline-offset-4"
                                                         title="Send Email"
                                                     >

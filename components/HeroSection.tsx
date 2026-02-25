@@ -28,10 +28,10 @@ const HeroSection: React.FC<HeroSectionProps> = React.memo(({ url, setUrl, onAna
                     const [mounted, setMounted] = React.useState(false);
 
                     React.useEffect(() => {
-                        const hasVisited = localStorage.getItem('autoform_has_visited');
+                        const hasVisited = localStorage.getItem('submitra_has_visited');
                         if (!hasVisited) {
                             setIsFirstTime(true);
-                            localStorage.setItem('autoform_has_visited', 'true');
+                            localStorage.setItem('submitra_has_visited', 'true');
                         }
                         setMounted(true);
                     }, []);
