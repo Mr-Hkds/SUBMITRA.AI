@@ -256,68 +256,117 @@ const Footer = React.memo(({ onLegalNav }: { onLegalNav: (type: 'privacy' | 'ter
     </footer>
 ));
 
-// --- SMART HEURISTICS ---
+// --- SMART INTENT-BASED HEURISTICS ---
+// These functions detect whether a question is ASKING FOR specific data,
+// not just MENTIONING a keyword. This prevents false positives like
+// "What is the name of your favorite brand?" being treated as a name field.
+
+// Common contextual poison words — if the title contains these, it's asking
+// ABOUT something, not asking FOR personal data
+const CONTEXTUAL_POISON = /\b(of your|of the|favorite|favourite|prefer|which|opinion|affect|impact|influence|important|matter|agree|disagree|think|believe|rate|how often|how many|how much|do you|did you|would you|have you|can you|should|about|regarding|related|mention|describe|explain|suggest|recommend|why|reason|experience|feedback|comment|review|thought|feeling|satisfaction|interest|awareness|familiar|knowledge)\b/i;
+
 const isPersonalName = (title: string) => {
-    const t = (title || "").toLowerCase();
-    if (/company|school|university|business|organization|startup|manager|boss|friend|spouse|father|mother|parent|partner|child/i.test(t)) return false;
-    return /\bname\b|full.?name|first.?name|last.?name|\bnames\b/i.test(t);
+    const t = (title || "").trim();
+    if (t.length > 80) return false; // Long questions are contextual, not data fields
+    const lower = t.toLowerCase();
+    // Bail if contextual
+    if (CONTEXTUAL_POISON.test(lower)) return false;
+    // Bail on non-personal name contexts
+    if (/company|brand|product|school|university|business|organization|startup|manager|boss|friend|spouse|father|mother|parent|partner|child|pet|movie|song|game|app|book|place|city|country|team|food|website|channel|series|college|institute|hospital|store|shop/i.test(lower)) return false;
+    // Match only clear "asking for your name" intent
+    return /^name\s*[\*\?]?\s*$/i.test(t) || // Just "Name" or "Name *"
+           /^(your|enter|type|write|provide|give|mention|respondent|student|participant|candidate|applicant|member|employee|full|first|last|nick)\s*(name|names)/i.test(lower) ||
+           /^name\s+(of the respondent|of student|of participant|of candidate|of applicant|of member|of employee)/i.test(lower) ||
+           /^(full|first|last)\s*name/i.test(lower) ||
+           /\b(your\s+name|your\s+full\s+name|your\s+first\s+name|your\s+last\s+name)\b/i.test(lower);
 };
 
 const isPersonalEmail = (title: string) => {
-    const t = (title || "").toLowerCase();
-    if (/company|school|university|business|organization|startup|manager|boss|friend|spouse|father|mother|parent|partner|child/i.test(t)) return false;
-    return /\bemail\b|e-mail|mail.id|mail.address|email.id/i.test(t);
+    const t = (title || "").trim();
+    if (t.length > 80) return false;
+    const lower = t.toLowerCase();
+    if (CONTEXTUAL_POISON.test(lower)) return false;
+    if (/company|brand|manager|boss|friend|spouse|father|mother|parent|partner|child|vs|or phone|communication|notification|subscribe|marketing/i.test(lower)) return false;
+    return /^e?-?mail\s*(address|id)?\s*[\*\?]?\s*$/i.test(t) || // Just "Email" or "Email Address *"
+           /^(your|enter|type|write|provide|give)\s*(e?-?mail|email)/i.test(lower) ||
+           /\b(your\s+e?-?mail|your\s+mail\s*(id|address)?)\b/i.test(lower) ||
+           /^e?-?mail\s*(address|id)\b/i.test(lower);
 };
 
+const isPhoneQuestion = (title: string) => {
+    const t = (title || "").trim();
+    if (t.length > 80) return false;
+    const lower = t.toLowerCase();
+    if (CONTEXTUAL_POISON.test(lower)) return false;
+    if (/manager|boss|friend|spouse|father|mother|parent|partner|child|company|brand/i.test(lower)) return false;
+    return /^(phone|mobile|contact|whatsapp|telephone)\s*(number|no\.?)?\s*[\*\?]?\s*$/i.test(t) ||
+           /^(your|enter|type|write|provide|give)\s*(phone|mobile|contact|whatsapp|cell)/i.test(lower) ||
+           /\b(your\s+(phone|mobile|contact|whatsapp|cell)\s*(number|no\.?)?)\b/i.test(lower) ||
+           /^(phone|mobile|contact)\s*(number|no\.?)\b/i.test(lower);
+};
+
+// For demographic questions (multiple choice / dropdown / checkboxes):
+// Must check BOTH title keywords AND option contents to avoid false positives
+const DEMOGRAPHIC_POISON = /\b(affect|impact|influence|important|matter|opinion|think|believe|prefer|agree|disagree|rate|how often|how many|how much|do you|did you|would you|have you|can you|should|satisfaction|experience|feedback|awareness)\b/i;
+
 const isAgeQuestion = (title: string, options: any[]) => {
-    const t = (title || "").toLowerCase();
-    if (!/\bage\b|age.?group|age.?range|how old/i.test(t)) return false;
+    const t = (title || "").trim();
+    if (t.length > 100) return false;
+    const lower = t.toLowerCase();
+    if (DEMOGRAPHIC_POISON.test(lower)) return false;
+    if (!/\bage\b|age.?group|age.?range|how old/i.test(lower)) return false;
     return options.some((opt: any) => {
         const val = typeof opt === 'string' ? opt : opt.value;
-        return /\d/.test(val || "") || /under|below|above|older/i.test(val || "");
+        return /\d/.test(val || "") || /under|below|above|older|years/i.test(val || "");
     });
 };
 
 const isProfQuestion = (title: string, options: any[]) => {
-    const t = (title || "").toLowerCase();
-    if (!/profession|occupation|employment|job\b|work|designation|working|career/i.test(t)) return false;
+    const t = (title || "").trim();
+    if (t.length > 100) return false;
+    const lower = t.toLowerCase();
+    if (DEMOGRAPHIC_POISON.test(lower)) return false;
+    if (!/profession|occupation|employment|job\b|designation|working|career|what do you do/i.test(lower)) return false;
     return options.some((opt: any) => {
         const val = typeof opt === 'string' ? opt : opt.value;
-        return /student|retire|unemploy|business|self.?employ|freelance|work|profession|employ/i.test(val || "");
+        return /student|retire|unemploy|business|self.?employ|freelance|employed|profession|homemaker|housewife/i.test(val || "");
     });
 };
 
 const isIncomeQuestion = (title: string, options: any[]) => {
-    const t = (title || "").toLowerCase();
-    if (!/income|salary|earn|earning|stipend|pocket.?money|monthly|annual|ctc|pay/i.test(t)) return false;
+    const t = (title || "").trim();
+    if (t.length > 100) return false;
+    const lower = t.toLowerCase();
+    if (DEMOGRAPHIC_POISON.test(lower)) return false;
+    if (!/income|salary|earn|earning|stipend|pocket.?money|monthly|annual|ctc/i.test(lower)) return false;
     return options.some((opt: any) => {
         const val = typeof opt === 'string' ? opt : opt.value;
-        return /\d|lakh|thousand|k|zero|nil|none/i.test(val || "");
+        return /\d|lakh|thousand|zero|nil|none/i.test(val || "");
     });
 };
 
 const isEduQuestion = (title: string, options: any[]) => {
-    const t = (title || "").toLowerCase();
-    if (!/education|qualification|degree|class|standard|studying|school|college|university/i.test(t)) return false;
+    const t = (title || "").trim();
+    if (t.length > 100) return false;
+    const lower = t.toLowerCase();
+    if (DEMOGRAPHIC_POISON.test(lower)) return false;
+    if (!/education|qualification|degree|studying|highest.?study/i.test(lower)) return false;
     return options.some((opt: any) => {
         const val = typeof opt === 'string' ? opt : opt.value;
-        return /school|10th|12th|secondary|ssc|hsc|class|degree|bachelor|master|phd|doctorate|grad|tech|sc|com|ba|bba|mba/i.test(val || "");
+        return /school|10th|12th|secondary|ssc|hsc|degree|bachelor|master|phd|doctorate|grad|tech|bba|mba|undergrad|post.?grad/i.test(val || "");
     });
 };
 
 const isGenderQuestion = (title: string, options: any[]) => {
-    const t = (title || "").toLowerCase();
-    if (!/gender|sex\b|male|female/i.test(t)) return false;
+    const t = (title || "").trim();
+    if (t.length > 100) return false;
+    const lower = t.toLowerCase();
+    if (DEMOGRAPHIC_POISON.test(lower)) return false;
+    if (!/gender|sex\b/i.test(lower)) return false;
     return options.some((opt: any) => {
         const val = typeof opt === 'string' ? opt : opt.value;
-        return /male|female|other|binary|trans|prefer not to say/i.test(val || "");
+        return /\b(male|female|other|non.?binary|trans|prefer not)\b/i.test(val || "");
     });
-};
-
-const isPhoneQuestion = (title: string) => {
-    const t = (title || "").toLowerCase();
-    if (/manager|boss|friend|spouse|father|mother|parent|partner|child/i.test(t)) return false;
-    return /phone|mobile|contact.?number|whatsapp|tele\.?no|telephone/i.test(t);
 };
 
 // DELETED: LoadingState replaced by LoadingScreen component

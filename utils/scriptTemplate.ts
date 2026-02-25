@@ -239,30 +239,54 @@ export const generateAutomationScript = (
   const normalize = (str) => (str || '').toLowerCase().replace(/[^a-z0-9 ]/g, '').replace(/\s+/g, ' ').trim();
   const randomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
   
+  const CONTEXTUAL_POISON = /\b(of your|of the|favorite|favourite|prefer|which|opinion|affect|impact|influence|important|matter|agree|disagree|think|believe|rate|how often|how many|how much|do you|did you|would you|have you|can you|should|about|regarding|related|mention|describe|explain|suggest|recommend|why|reason|experience|feedback|comment|review|thought|feeling|satisfaction|interest|awareness|familiar|knowledge)\b/i;
+
   const isPersonalName = (title) => {
-    const t = (title || "").toLowerCase();
-    if (/company|school|university|business|organization|startup|manager|boss|friend|spouse|father|mother|parent|partner|child/i.test(t)) return false;
-    return /\bname\b|full.?name|first.?name|last.?name|\bnames\b/i.test(t);
+    const t = (title || "").trim();
+    if (t.length > 80) return false;
+    const lower = t.toLowerCase();
+    if (CONTEXTUAL_POISON.test(lower)) return false;
+    if (/company|brand|product|school|university|business|organization|startup|manager|boss|friend|spouse|father|mother|parent|partner|child|pet|movie|song|game|app|book|place|city|country|team|food|website|channel|series|college|institute|hospital|store|shop/i.test(lower)) return false;
+    return /^name\s*[\*\?]?\s*$/i.test(t) ||
+           /^(your|enter|type|write|provide|give|mention|respondent|student|participant|candidate|applicant|member|employee|full|first|last|nick)\s*(name|names)/i.test(lower) ||
+           /^name\s+(of the respondent|of student|of participant|of candidate|of applicant|of member|of employee)/i.test(lower) ||
+           /^(full|first|last)\s*name/i.test(lower) ||
+           /\b(your\s+name|your\s+full\s+name|your\s+first\s+name|your\s+last\s+name)\b/i.test(lower);
   };
 
   const isPersonalEmail = (title) => {
-    const t = (title || "").toLowerCase();
-    if (/company|school|university|business|organization|startup|manager|boss|friend|spouse|father|mother|parent|partner|child/i.test(t)) return false;
-    return /\bemail\b|e-mail|mail.id|mail.address|email.id/i.test(t);
+    const t = (title || "").trim();
+    if (t.length > 80) return false;
+    const lower = t.toLowerCase();
+    if (CONTEXTUAL_POISON.test(lower)) return false;
+    if (/company|brand|manager|boss|friend|spouse|father|mother|parent|partner|child|vs|or phone|communication|notification|subscribe|marketing/i.test(lower)) return false;
+    return /^e?-?mail\s*(address|id)?\s*[\*\?]?\s*$/i.test(t) ||
+           /^(your|enter|type|write|provide|give)\s*(e?-?mail|email)/i.test(lower) ||
+           /\b(your\s+e?-?mail|your\s+mail\s*(id|address)?)\b/i.test(lower) ||
+           /^e?-?mail\s*(address|id)\b/i.test(lower);
   };
 
   const isPhoneQuestion = (title) => {
-    const t = (title || "").toLowerCase();
-    if (/manager|boss|friend|spouse|father|mother|parent|partner|child/i.test(t)) return false;
-    return /phone|mobile|contact.?number|whatsapp|tele\.?no|telephone/i.test(t);
+    const t = (title || "").trim();
+    if (t.length > 80) return false;
+    const lower = t.toLowerCase();
+    if (CONTEXTUAL_POISON.test(lower)) return false;
+    if (/manager|boss|friend|spouse|father|mother|parent|partner|child|company|brand/i.test(lower)) return false;
+    return /^(phone|mobile|contact|whatsapp|telephone)\s*(number|no\.?)?\s*[\*\?]?\s*$/i.test(t) ||
+           /^(your|enter|type|write|provide|give)\s*(phone|mobile|contact|whatsapp|cell)/i.test(lower) ||
+           /\b(your\s+(phone|mobile|contact|whatsapp|cell)\s*(number|no\.?)?)\b/i.test(lower) ||
+           /^(phone|mobile|contact)\s*(number|no\.?)\b/i.test(lower);
   };
 
   const isGenderQuestion = (title, options) => {
-    const t = (title || "").toLowerCase();
-    if (!/gender|sex\b|male|female/i.test(t)) return false;
+    const t = (title || "").trim();
+    if (t.length > 100) return false;
+    const lower = t.toLowerCase();
+    if (/\b(affect|impact|influence|important|matter|opinion|think|believe|prefer|agree|disagree)\b/i.test(lower)) return false;
+    if (!/gender|sex\b/i.test(lower)) return false;
     return options.some((opt) => {
         const val = typeof opt === 'string' ? opt : opt.value;
-        return /male|female|other|binary|trans|prefer not to say/i.test(val || "");
+        return /\b(male|female|other|non.?binary|trans|prefer not)\b/i.test(val || "");
     });
   };
   
