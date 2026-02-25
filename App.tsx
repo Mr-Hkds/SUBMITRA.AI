@@ -180,7 +180,7 @@ const Footer = React.memo(({ onLegalNav }: { onLegalNav: (type: 'privacy' | 'ter
                 </span>
 
                 <span className="text-xs md:text-sm text-amber-500/90 font-serif italic tracking-widest hover:text-amber-400 transition-colors">
-                    A Bharamratri Studio Production
+                    A Bharamratri  Production
                 </span>
             </div>
 
@@ -226,7 +226,7 @@ const Footer = React.memo(({ onLegalNav }: { onLegalNav: (type: 'privacy' | 'ter
                             <strong className="text-amber-500/90 block mb-2 tracking-widest uppercase text-[9px]">Compliance Notice // Research & Academic Use</strong>
                             Submitra AI is an advanced automation platform designed exclusively for <span className="text-slate-200">statistical modelling, academic research, and authorised form validation</span>.
                             Users bear full responsibility for ensuring compliance with applicable Terms of Service and regulatory frameworks.
-                            Bharamratri Studio disclaims all liability arising from unauthorised deployment or misapplication of this technology.
+                            Bharamratri Production disclaims all liability arising from unauthorised deployment or misapplication of this technology.
                         </div>
                     </div>
                 </div>
@@ -1679,7 +1679,7 @@ function App() {
                             Built by Black Lotus
                         </p>
                         <p className="text-[10px] font-medium text-slate-600 uppercase tracking-widest">
-                            Bharamratri Studios
+                            Bharamratri Productions
                         </p>
                     </div>
                 </div>
