@@ -39,13 +39,14 @@ const Header: React.FC<HeaderProps> = React.memo(({ reset, step, version, user, 
                     </div>
 
                     <div className="flex flex-col justify-center">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1">
                             <span className="font-serif font-bold text-lg tracking-tight leading-none text-white group-hover:text-emerald-100 transition-colors">
                                 Submitra
                             </span>
+                            <span className="font-serif font-bold text-lg tracking-tight leading-none text-emerald-500 group-hover:text-emerald-400 transition-colors">.AI</span>
                         </div>
                         <span className="text-[8px] text-slate-500 font-mono uppercase tracking-[0.2em] hidden sm:block">
-                            A <span className="text-amber-500/80">BHARAMRATRI</span> PRODUCTION
+                            By <span className="text-amber-500/80">NaaGRaaZ</span> Studios
                         </span>
                     </div>
                 </div>
