@@ -13,6 +13,6 @@ export const APP_CONFIG = {
 
     // Branding
     BRAND_NAME: "Submitra",
-    TAGLINE: "A NaagRaaz Production",
+    TAGLINE: "A Bharamratri Studio Production",
     DEVELOPER_NAME: "Mr. Harkamal",
 };
