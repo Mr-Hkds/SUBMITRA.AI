@@ -41,7 +41,7 @@ const Header: React.FC<HeaderProps> = React.memo(({ reset, step, version, user, 
                         {/* Primary brand name */}
                         <span className="font-serif font-bold text-lg tracking-tight leading-none text-white group-hover:text-emerald-100 transition-colors">
                             Zerviq
-                        </span><br> </br>
+                        </span>
                           <div className="hidden sm:flex flex-col gap-0">
                             <span className="text-[7px] text-amber-500/70 font-mono uppercase tracking-[0.15em] leading-tight">
                                The Bharamratri Production
